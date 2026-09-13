@@ -653,6 +653,954 @@
           "date": "2026-09-07"
         }
       ]
+    },
+    {
+      "id": "CD-01",
+      "road": "Chandpole Bazar Road",
+      "sub": "Chandpole Gate to Chhoti Chaupar",
+      "coords": [
+        [
+          26.9242,
+          75.8112
+        ],
+        [
+          26.9244,
+          75.8135
+        ],
+        [
+          26.9246,
+          75.816
+        ],
+        [
+          26.9247,
+          75.8182
+        ],
+        [
+          26.9249,
+          75.8208
+        ]
+      ],
+      "authority": "Jaipur Municipal Corporation (Heritage)",
+      "ward": "Ward 62",
+      "weeks": [
+        {
+          "potholes": 7,
+          "severity": 2.8,
+          "depth_cm": 3.8,
+          "rain_mm": 0,
+          "risk": 38,
+          "grade": "B",
+          "status": "none",
+          "note": "Baseline scan, dense market traffic",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 12,
+          "severity": 3.4,
+          "depth_cm": 5.2,
+          "rain_mm": 10,
+          "risk": 58,
+          "grade": "C",
+          "status": "none",
+          "note": "Water stagnation near drainage inlets",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 18,
+          "severity": 4.1,
+          "depth_cm": 7.9,
+          "rain_mm": 18,
+          "risk": 78,
+          "grade": "D",
+          "status": "reported",
+          "note": "Urgent dispatch sent to JMC Heritage",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 20,
+          "severity": 4.3,
+          "depth_cm": 8.5,
+          "rain_mm": 2,
+          "risk": 84,
+          "grade": "F",
+          "status": "overdue",
+          "note": "Heritage zone SLA exceeded, heavy congestion",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "AG-01",
+      "road": "Agra Road",
+      "sub": "Ghat Ki Guni Tunnel to Transport Nagar",
+      "coords": [
+        [
+          26.8965,
+          75.844
+        ],
+        [
+          26.8982,
+          75.8495
+        ],
+        [
+          26.9001,
+          75.8548
+        ],
+        [
+          26.9018,
+          75.8592
+        ],
+        [
+          26.9035,
+          75.864
+        ]
+      ],
+      "authority": "PWD Jaipur Division",
+      "ward": "Ward 71",
+      "weeks": [
+        {
+          "potholes": 14,
+          "severity": 3.8,
+          "depth_cm": 6.5,
+          "rain_mm": 5,
+          "risk": 68,
+          "grade": "D",
+          "status": "none",
+          "note": "Heavy freight transit causing surface cracking",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 19,
+          "severity": 4.2,
+          "depth_cm": 8.2,
+          "rain_mm": 15,
+          "risk": 82,
+          "grade": "F",
+          "status": "reported",
+          "note": "Potholes compounding after freight braking",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 24,
+          "severity": 4.5,
+          "depth_cm": 9.8,
+          "rain_mm": 24,
+          "risk": 91,
+          "grade": "F",
+          "status": "acknowledged",
+          "note": "PWD acknowledged, scheduled asphalt resurfacing",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 26,
+          "severity": 4.6,
+          "depth_cm": 10.2,
+          "rain_mm": 4,
+          "risk": 93,
+          "grade": "F",
+          "status": "in_progress",
+          "note": "Cold mix patching commenced on left lane",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "SN-01",
+      "road": "Sahakar Marg",
+      "sub": "22 Godam Circle to Jyoti Nagar Crossing",
+      "coords": [
+        [
+          26.8998,
+          75.7942
+        ],
+        [
+          26.8965,
+          75.7954
+        ],
+        [
+          26.893,
+          75.7968
+        ],
+        [
+          26.8898,
+          75.7979
+        ],
+        [
+          26.8865,
+          75.799
+        ]
+      ],
+      "authority": "Jaipur Development Authority",
+      "ward": "Ward 33",
+      "weeks": [
+        {
+          "potholes": 12,
+          "severity": 3.5,
+          "depth_cm": 5.8,
+          "rain_mm": 2,
+          "risk": 62,
+          "grade": "D",
+          "status": "reported",
+          "note": "Initial survey flagged multiple potholes near assembly gate",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 14,
+          "severity": 3.7,
+          "depth_cm": 6.2,
+          "rain_mm": 8,
+          "risk": 69,
+          "grade": "D",
+          "status": "acknowledged",
+          "note": "JDA engineering wing assigned repair crew",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 3,
+          "severity": 1.8,
+          "depth_cm": 2.1,
+          "rain_mm": 14,
+          "risk": 24,
+          "grade": "B",
+          "status": "repaired",
+          "note": "Hot-mix mastic asphalt repair completed",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 2,
+          "severity": 1.5,
+          "depth_cm": 1.5,
+          "rain_mm": 0,
+          "risk": 16,
+          "grade": "A",
+          "status": "verified",
+          "note": "AI survey confirmed smooth riding surface; risk down 74%",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "MD-01",
+      "road": "Mansarovar Madhyam Marg",
+      "sub": "Shipra Path to VT Road Junction",
+      "coords": [
+        [
+          26.853,
+          75.7695
+        ],
+        [
+          26.8505,
+          75.7668
+        ],
+        [
+          26.848,
+          75.7645
+        ],
+        [
+          26.8455,
+          75.7622
+        ],
+        [
+          26.843,
+          75.76
+        ]
+      ],
+      "authority": "Jaipur Municipal Corporation (Greater)",
+      "ward": "Ward 29",
+      "weeks": [
+        {
+          "potholes": 4,
+          "severity": 2.0,
+          "depth_cm": 2.3,
+          "rain_mm": 0,
+          "risk": 25,
+          "grade": "B",
+          "status": "none",
+          "note": "Good residential corridor condition",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 5,
+          "severity": 2.2,
+          "depth_cm": 2.7,
+          "rain_mm": 5,
+          "risk": 29,
+          "grade": "B",
+          "status": "none",
+          "note": "Minor surface peeling near commercial complex",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 7,
+          "severity": 2.6,
+          "depth_cm": 3.4,
+          "rain_mm": 12,
+          "risk": 42,
+          "grade": "C",
+          "status": "none",
+          "note": "Moderate rutting noticed post heavy spell",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 8,
+          "severity": 2.7,
+          "depth_cm": 3.6,
+          "rain_mm": 0,
+          "risk": 44,
+          "grade": "C",
+          "status": "none",
+          "note": "Stable moderate condition, monitoring scheduled",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "GL-01",
+      "road": "Gokhale Marg",
+      "sub": "Ahinsa Circle to Raj Bhavan Road",
+      "coords": [
+        [
+          26.9118,
+          75.7995
+        ],
+        [
+          26.9095,
+          75.798
+        ],
+        [
+          26.9072,
+          75.7965
+        ],
+        [
+          26.905,
+          75.7952
+        ],
+        [
+          26.903,
+          75.794
+        ]
+      ],
+      "authority": "Jaipur Municipal Corporation (Greater)",
+      "ward": "Ward 19",
+      "weeks": [
+        {
+          "potholes": 1,
+          "severity": 1.2,
+          "depth_cm": 1.2,
+          "rain_mm": 0,
+          "risk": 11,
+          "grade": "A",
+          "status": "none",
+          "note": "Excellent asphalt pavement quality",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 1,
+          "severity": 1.3,
+          "depth_cm": 1.3,
+          "rain_mm": 4,
+          "risk": 12,
+          "grade": "A",
+          "status": "none",
+          "note": "No significant defects detected",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 2,
+          "severity": 1.4,
+          "depth_cm": 1.5,
+          "rain_mm": 10,
+          "risk": 15,
+          "grade": "A",
+          "status": "none",
+          "note": "Minor edge wear, sub-millimeter level",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 1,
+          "severity": 1.2,
+          "depth_cm": 1.2,
+          "rain_mm": 0,
+          "risk": 11,
+          "grade": "A",
+          "status": "none",
+          "note": "Optimal riding quality maintained",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "KP-01",
+      "road": "Khatipura Road",
+      "sub": "Hasanpura Crossing to Khatipura Tiraha",
+      "coords": [
+        [
+          26.9182,
+          75.7675
+        ],
+        [
+          26.9195,
+          75.762
+        ],
+        [
+          26.9205,
+          75.757
+        ],
+        [
+          26.9215,
+          75.752
+        ],
+        [
+          26.9228,
+          75.7465
+        ]
+      ],
+      "authority": "PWD Jaipur Division",
+      "ward": "Ward 16",
+      "weeks": [
+        {
+          "potholes": 8,
+          "severity": 2.9,
+          "depth_cm": 4.1,
+          "rain_mm": 0,
+          "risk": 46,
+          "grade": "C",
+          "status": "none",
+          "note": "Baseline scan on major rail feeder corridor",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 13,
+          "severity": 3.6,
+          "depth_cm": 6.0,
+          "rain_mm": 9,
+          "risk": 65,
+          "grade": "D",
+          "status": "reported",
+          "note": "Significant potholes opened after rains; reported to PWD",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 17,
+          "severity": 4.0,
+          "depth_cm": 7.6,
+          "rain_mm": 18,
+          "risk": 79,
+          "grade": "D",
+          "status": "acknowledged",
+          "note": "PWD acknowledged report, work order issued",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 11,
+          "severity": 3.2,
+          "depth_cm": 5.1,
+          "rain_mm": 1,
+          "risk": 54,
+          "grade": "C",
+          "status": "in_progress",
+          "note": "Intermediate patch repairs underway",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "MN-01",
+      "road": "Calgiri Marg",
+      "sub": "Apex Circle to Malviya Nagar Calgiri Hospital",
+      "coords": [
+        [
+          26.8592,
+          75.8142
+        ],
+        [
+          26.857,
+          75.8168
+        ],
+        [
+          26.8548,
+          75.8192
+        ],
+        [
+          26.8525,
+          75.8218
+        ],
+        [
+          26.8505,
+          75.824
+        ]
+      ],
+      "authority": "Jaipur Municipal Corporation (Greater)",
+      "ward": "Ward 40",
+      "weeks": [
+        {
+          "potholes": 5,
+          "severity": 2.4,
+          "depth_cm": 3.0,
+          "rain_mm": 0,
+          "risk": 32,
+          "grade": "B",
+          "status": "none",
+          "note": "Stable institutional corridor",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 8,
+          "severity": 3.0,
+          "depth_cm": 4.4,
+          "rain_mm": 8,
+          "risk": 49,
+          "grade": "C",
+          "status": "none",
+          "note": "Pothole development near hospital ambulance gate",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 15,
+          "severity": 3.9,
+          "depth_cm": 7.2,
+          "rain_mm": 20,
+          "risk": 73,
+          "grade": "D",
+          "status": "reported",
+          "note": "Emergency access route report lodged with JMC",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 16,
+          "severity": 4.1,
+          "depth_cm": 7.8,
+          "rain_mm": 2,
+          "risk": 77,
+          "grade": "D",
+          "status": "acknowledged",
+          "note": "JMC Greater acknowledged priority for hospital corridor",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "TG-01",
+      "road": "Tripolia Bazar",
+      "sub": "Chhoti Chaupar to Badi Chaupar",
+      "coords": [
+        [
+          26.9248,
+          75.8205
+        ],
+        [
+          26.925,
+          75.8228
+        ],
+        [
+          26.9251,
+          75.8252
+        ],
+        [
+          26.9252,
+          75.8272
+        ],
+        [
+          26.9253,
+          75.8292
+        ]
+      ],
+      "authority": "Jaipur Municipal Corporation (Heritage)",
+      "ward": "Ward 58",
+      "weeks": [
+        {
+          "potholes": 3,
+          "severity": 1.8,
+          "depth_cm": 2.2,
+          "rain_mm": 0,
+          "risk": 22,
+          "grade": "B",
+          "status": "none",
+          "note": "Historic walled city center corridor",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 6,
+          "severity": 2.5,
+          "depth_cm": 3.5,
+          "rain_mm": 7,
+          "risk": 39,
+          "grade": "B",
+          "status": "none",
+          "note": "Minor stone edging displacement",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 10,
+          "severity": 3.2,
+          "depth_cm": 5.0,
+          "rain_mm": 16,
+          "risk": 56,
+          "grade": "C",
+          "status": "reported",
+          "note": "Notified heritage conservation wing",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 10,
+          "severity": 3.1,
+          "depth_cm": 4.9,
+          "rain_mm": 0,
+          "risk": 52,
+          "grade": "C",
+          "status": "acknowledged",
+          "note": "Special heritage-compliant paving material requisitioned",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "BR-01",
+      "road": "Bais Godam Industrial Road",
+      "sub": "Hawa Sadak to Sudarshanpura Crossing",
+      "coords": [
+        [
+          26.8925,
+          75.7895
+        ],
+        [
+          26.89,
+          75.7882
+        ],
+        [
+          26.8875,
+          75.787
+        ],
+        [
+          26.885,
+          75.7858
+        ],
+        [
+          26.8825,
+          75.7845
+        ]
+      ],
+      "authority": "Jaipur Municipal Corporation (Heritage)",
+      "ward": "Ward 25",
+      "weeks": [
+        {
+          "potholes": 10,
+          "severity": 3.4,
+          "depth_cm": 5.5,
+          "rain_mm": 0,
+          "risk": 55,
+          "grade": "C",
+          "status": "none",
+          "note": "Industrial supply corridor with medium wear",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 16,
+          "severity": 4.0,
+          "depth_cm": 7.6,
+          "rain_mm": 12,
+          "risk": 75,
+          "grade": "D",
+          "status": "reported",
+          "note": "Deep craters formed along warehouse curb line",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 21,
+          "severity": 4.4,
+          "depth_cm": 9.2,
+          "rain_mm": 22,
+          "risk": 87,
+          "grade": "F",
+          "status": "overdue",
+          "note": "SLA overdue; logistics vehicle slow-down reported",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 23,
+          "severity": 4.5,
+          "depth_cm": 9.6,
+          "rain_mm": 2,
+          "risk": 90,
+          "grade": "F",
+          "status": "overdue",
+          "note": "Critical safety risk for two-wheelers and mini-trucks",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "HA-01",
+      "road": "Hawa Mahal Road",
+      "sub": "Badi Chaupar to Amer Road Junction",
+      "coords": [
+        [
+          26.9255,
+          75.829
+        ],
+        [
+          26.9278,
+          75.8298
+        ],
+        [
+          26.9302,
+          75.8305
+        ],
+        [
+          26.9325,
+          75.8312
+        ],
+        [
+          26.935,
+          75.832
+        ]
+      ],
+      "authority": "Jaipur Municipal Corporation (Heritage)",
+      "ward": "Ward 66",
+      "weeks": [
+        {
+          "potholes": 8,
+          "severity": 3.1,
+          "depth_cm": 4.8,
+          "rain_mm": 0,
+          "risk": 48,
+          "grade": "C",
+          "status": "none",
+          "note": "High tourist bus corridor baseline",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 13,
+          "severity": 3.8,
+          "depth_cm": 6.8,
+          "rain_mm": 11,
+          "risk": 71,
+          "grade": "D",
+          "status": "reported",
+          "note": "Tourist monument approach damaged by rain; report dispatched",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 2,
+          "severity": 1.6,
+          "depth_cm": 1.8,
+          "rain_mm": 15,
+          "risk": 20,
+          "grade": "A",
+          "status": "repaired",
+          "note": "Expedited emergency resurfacing executed by JMC Heritage",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 2,
+          "severity": 1.5,
+          "depth_cm": 1.6,
+          "rain_mm": 0,
+          "risk": 17,
+          "grade": "A",
+          "status": "verified",
+          "note": "Post-repair laser & camera audit verified defect-free surface",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "JP-01",
+      "road": "Jagatpura Central Spine",
+      "sub": "7 Number Bus Stand to CBI Colony Crossing",
+      "coords": [
+        [
+          26.831,
+          75.8335
+        ],
+        [
+          26.8275,
+          75.8368
+        ],
+        [
+          26.824,
+          75.8402
+        ],
+        [
+          26.8205,
+          75.8435
+        ],
+        [
+          26.8168,
+          75.8468
+        ]
+      ],
+      "authority": "Jaipur Development Authority",
+      "ward": "Ward 48",
+      "weeks": [
+        {
+          "potholes": 7,
+          "severity": 2.7,
+          "depth_cm": 3.6,
+          "rain_mm": 0,
+          "risk": 39,
+          "grade": "B",
+          "status": "none",
+          "note": "High-growth residential peripheral zone",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 11,
+          "severity": 3.3,
+          "depth_cm": 5.0,
+          "rain_mm": 10,
+          "risk": 57,
+          "grade": "C",
+          "status": "none",
+          "note": "Storm runoff created longitudinal cracks",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 16,
+          "severity": 3.9,
+          "depth_cm": 7.1,
+          "rain_mm": 19,
+          "risk": 75,
+          "grade": "D",
+          "status": "reported",
+          "note": "Citizen grievances matched with AI survey data",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 18,
+          "severity": 4.1,
+          "depth_cm": 7.8,
+          "rain_mm": 3,
+          "risk": 80,
+          "grade": "D",
+          "status": "acknowledged",
+          "note": "JDA engineering department scheduled patch squad",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "VK-01",
+      "road": "Vishwakarma (VKI) Road No. 1",
+      "sub": "Sikar Road Junction to Road No. 5 Crossing",
+      "coords": [
+        [
+          26.984,
+          75.7725
+        ],
+        [
+          26.9878,
+          75.7705
+        ],
+        [
+          26.9915,
+          75.7685
+        ],
+        [
+          26.995,
+          75.7665
+        ],
+        [
+          26.9985,
+          75.7645
+        ]
+      ],
+      "authority": "PWD Jaipur Division",
+      "ward": "Ward 03",
+      "weeks": [
+        {
+          "potholes": 15,
+          "severity": 3.9,
+          "depth_cm": 7.0,
+          "rain_mm": 3,
+          "risk": 72,
+          "grade": "D",
+          "status": "reported",
+          "note": "Heavy container transit corridor baseline",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 20,
+          "severity": 4.3,
+          "depth_cm": 8.8,
+          "rain_mm": 14,
+          "risk": 86,
+          "grade": "F",
+          "status": "overdue",
+          "note": "Severe alligator cracking expanding rapidly",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 25,
+          "severity": 4.6,
+          "depth_cm": 10.5,
+          "rain_mm": 25,
+          "risk": 94,
+          "grade": "F",
+          "status": "overdue",
+          "note": "Major hazard: 10cm+ crater depth measured",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 27,
+          "severity": 4.7,
+          "depth_cm": 11.2,
+          "rain_mm": 5,
+          "risk": 96,
+          "grade": "F",
+          "status": "in_progress",
+          "note": "Emergency PWD road gang deployed after public outcry",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
     }
   ]
 }

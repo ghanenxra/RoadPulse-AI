@@ -12,9 +12,10 @@ router = APIRouter()
 @router.post('/api/demo/reset')
 def reset_demo_data(db: Session = Depends(get_db)):
     seed_database(db)
+    road_count = db.query(RoadSegment).count()
     return {
         "success": True,
-        "message": "Demo dataset re-seeded successfully with 8 road segments and 4-week history."
+        "message": f"Demo dataset re-seeded successfully with {road_count} road segments and 4-week history."
     }
 
 @router.post('/api/demo/simulate-upload')

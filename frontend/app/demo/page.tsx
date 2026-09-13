@@ -160,15 +160,15 @@ export default function DemoPage() {
                 <CardTitle className="text-base">Dataset Seed State</CardTitle>
               </div>
               <CardDescription className="text-xs">
-                Reset database back to the verified 8-segment Jaipur dataset at any time during pitching.
+                Reset database back to the verified 20-segment Jaipur dataset at any time during pitching.
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6 pt-0 space-y-3">
               <div className="text-xs space-y-1 bg-gray-50 p-3 rounded border text-gray-600">
                 <div>• <strong>City:</strong> Jaipur, India</div>
-                <div>• <strong>Segments:</strong> 8 Urban Transit Corridors</div>
+                <div>• <strong>Segments:</strong> 20 Urban Transit Corridors</div>
                 <div>• <strong>Weeks:</strong> 4 Monitored Cycles</div>
-                <div>• <strong>Total Detections:</strong> 270 Geocoded Potholes</div>
+                <div>• <strong>Total Detections:</strong> 826 Geocoded Potholes</div>
               </div>
               <Button
                 variant="outline"
