@@ -44,7 +44,8 @@ cors_origins = [
     "https://road-pulse-ai-mu.vercel.app",
 ]
 
-if cors_origins_env:
+is_wildcard = cors_origins_env.strip() == "*"
+if not is_wildcard and cors_origins_env:
     for origin in cors_origins_env.split(","):
         origin = origin.strip()
         if origin and origin not in cors_origins:
@@ -52,9 +53,9 @@ if cors_origins_env:
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins,
-    allow_origin_regex=r"https://.*\.vercel\.app",
-    allow_credentials=True,
+    allow_origins=["*"] if is_wildcard else cors_origins,
+    allow_origin_regex=None if is_wildcard else r"https://.*\.vercel\.app",
+    allow_credentials=not is_wildcard,
     allow_methods=["*"],
     allow_headers=["*"],
 )
