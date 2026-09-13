@@ -13,7 +13,7 @@ export async function fetchAPI<T>(endpoint: string, options?: RequestInit): Prom
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 6000);
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
   try {
     const response = await fetch(url, {
@@ -30,7 +30,7 @@ export async function fetchAPI<T>(endpoint: string, options?: RequestInit): Prom
     return await response.json();
   } catch (err: any) {
     if (err.name === 'AbortError') {
-      throw new Error('Backend request timed out after 6 seconds. Please check that FastAPI is running on port 8000.');
+      throw new Error('Backend request timed out. If your Render backend is waking up from sleep, please wait a few seconds and click Retry.');
     }
     throw err;
   } finally {

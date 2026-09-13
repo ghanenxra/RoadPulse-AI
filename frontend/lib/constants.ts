@@ -17,7 +17,11 @@ export const STATUS_CONFIG = {
   failed_verification: { label: 'Failed', color: '#dc2626' },
 } as const;
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+export const API_BASE =
+  process.env.NEXT_PUBLIC_API_URL ||
+  (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1'
+    ? 'https://roadpulse-ai-wjsk.onrender.com'
+    : 'http://127.0.0.1:8000');
 
 export const NAV_ITEMS = [
   { href: '/', label: 'Overview', icon: 'LayoutDashboard' },
