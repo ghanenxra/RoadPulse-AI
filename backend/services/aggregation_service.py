@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
-from backend.models.database import RoadSegment, WeeklyRoadMetric
+from models.database import RoadSegment, WeeklyRoadMetric
 
 def aggregate_detections_to_weekly(detections, segment: RoadSegment, week: int, prev_metric: WeeklyRoadMetric = None):
     # This function is a placeholder for aggregating new detections.

@@ -4,17 +4,20 @@ from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 import os
 
-from backend.models.database import init_db, SessionLocal, RoadSegment
-from backend.data.seed import seed_database
+from models.database import init_db, SessionLocal, RoadSegment
+from data.seed import seed_database
 
-from backend.api import health, roads, metrics, processing, reports, authority, demo
+from api import health, roads, metrics, processing, reports, authority, demo
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_DIR = os.path.dirname(BASE_DIR)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Initialize DB
-    os.makedirs("C:/Users/pureg/.gemini/antigravity/scratch/roadpulse-ai/backend/data", exist_ok=True)
-    os.makedirs("C:/Users/pureg/.gemini/antigravity/scratch/roadpulse-ai/backend/reports", exist_ok=True)
-    os.makedirs("C:/Users/pureg/.gemini/antigravity/scratch/roadpulse-ai/backend/uploads", exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, 'data'), exist_ok=True)
+    os.makedirs(os.path.join(PROJECT_DIR, 'reports'), exist_ok=True)
+    os.makedirs(os.path.join(PROJECT_DIR, 'uploads'), exist_ok=True)
     
     init_db()
     
@@ -50,5 +53,5 @@ app.include_router(authority.router)
 app.include_router(demo.router)
 
 # Mount static files
-app.mount("/reports", StaticFiles(directory="C:/Users/pureg/.gemini/antigravity/scratch/roadpulse-ai/backend/reports"), name="reports")
-app.mount("/uploads", StaticFiles(directory="C:/Users/pureg/.gemini/antigravity/scratch/roadpulse-ai/backend/uploads"), name="uploads")
+app.mount("/reports", StaticFiles(directory=os.path.join(PROJECT_DIR, 'reports')), name="reports")
+app.mount("/uploads", StaticFiles(directory=os.path.join(PROJECT_DIR, 'uploads')), name="uploads")

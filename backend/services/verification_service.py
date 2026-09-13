@@ -1,6 +1,6 @@
 import os
 from sqlalchemy.orm import Session
-from backend.models.database import IssueReport, RepairVerification
+from models.database import IssueReport, RepairVerification
 from datetime import datetime
 
 def verify_repair(issue_id: str, survey_week: int, db: Session) -> RepairVerification:

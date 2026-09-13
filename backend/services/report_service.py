@@ -4,11 +4,13 @@ from datetime import datetime
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from sqlalchemy.orm import Session
-from backend.models.database import RoadSegment, Detection, WeeklyRoadMetric, IssueReport, ProcessingJob
+from models.database import RoadSegment, Detection, WeeklyRoadMetric, IssueReport, ProcessingJob
+
+REPORTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..', 'reports')
 
 def generate_weekly_pdf(week: int, db: Session, zone: str = None, authority: str = None) -> str:
-    os.makedirs("C:/Users/pureg/.gemini/antigravity/scratch/roadpulse-ai/backend/reports", exist_ok=True)
-    file_path = f"C:/Users/pureg/.gemini/antigravity/scratch/roadpulse-ai/backend/reports/weekly_report_w{week}.pdf"
+    os.makedirs(REPORTS_DIR, exist_ok=True)
+    file_path = os.path.join(REPORTS_DIR, f"weekly_report_w{week}.pdf")
     
     c = canvas.Canvas(file_path, pagesize=letter)
     c.setFont("Helvetica-Bold", 16)
@@ -22,8 +24,8 @@ def generate_weekly_pdf(week: int, db: Session, zone: str = None, authority: str
     return file_path
 
 def _write_csv(filename: str, headers: list, rows: list) -> str:
-    os.makedirs("C:/Users/pureg/.gemini/antigravity/scratch/roadpulse-ai/backend/reports", exist_ok=True)
-    file_path = f"C:/Users/pureg/.gemini/antigravity/scratch/roadpulse-ai/backend/reports/{filename}"
+    os.makedirs(REPORTS_DIR, exist_ok=True)
+    file_path = os.path.join(REPORTS_DIR, filename)
     with open(file_path, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["# SIMULATED DEMO DATA"])

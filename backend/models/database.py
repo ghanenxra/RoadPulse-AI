@@ -139,6 +139,8 @@ class IssueReport(Base):
     repair_claimed_at = Column(DateTime, nullable=True)
     notes = Column(String, nullable=True)
     data_source = Column(String, default="simulated_demo")
+    segment = relationship("RoadSegment")
+    authority = relationship("Authority")
 
 class RepairVerification(Base):
     __tablename__ = "repair_verification"
@@ -150,6 +152,7 @@ class RepairVerification(Base):
     after_score = Column(Float)
     notes = Column(String, nullable=True)
     verified_at = Column(DateTime, nullable=True)
+    issue = relationship("IssueReport")
 
 class ProcessingJob(Base):
     __tablename__ = "processing_job"
