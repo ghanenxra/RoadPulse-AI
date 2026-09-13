@@ -1,122 +1,140 @@
 "use client"
 
-import { useEffect } from 'react'
-import { MapContainer, TileLayer, Polyline, Tooltip, useMap } from 'react-leaflet'
+import React, { useEffect, useRef } from 'react'
+import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { MapFeature } from '@/types'
 import { getGradeColor } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 
-function FitBounds({ features }: { features: MapFeature[] }) {
-  const map = useMap()
-  
-  useEffect(() => {
-    if (!features || features.length === 0) return
-    
-    try {
-      const bounds: [number, number][] = []
-      features.forEach(f => {
-        f.geometry.coordinates.forEach(coord => {
-          // GeoJSON is [lon, lat], Leaflet is [lat, lon]
-          bounds.push([coord[1], coord[0]])
-        })
-      })
-      
-      if (bounds.length > 0) {
-        map.fitBounds(bounds, { padding: [30, 30] })
-      }
-    } catch (e) {
-      console.error('Error fitting bounds', e)
-    }
-  }, [map, features])
-  
-  return null
-}
-
 interface MapComponentProps {
-  features: MapFeature[];
-  height?: string;
-  interactive?: boolean;
+  features: MapFeature[]
+  height?: string
+  interactive?: boolean
 }
 
-export default function MapComponent({ features, height = "100%", interactive = true }: MapComponentProps) {
+export default function MapComponent({
+  features,
+  height = "100%",
+  interactive = true,
+}: MapComponentProps) {
   const router = useRouter()
-  
+  const mapContainerRef = useRef<HTMLDivElement | null>(null)
+  const mapInstanceRef = useRef<L.Map | null>(null)
+  const layerGroupRef = useRef<L.FeatureGroup | null>(null)
+
+  // Initialize Map
+  useEffect(() => {
+    if (!mapContainerRef.current) return
+
+    // Safely remove any existing Leaflet container id to prevent "Map container is already initialized"
+    if ((mapContainerRef.current as any)._leaflet_id) {
+      (mapContainerRef.current as any)._leaflet_id = null
+    }
+
+    if (!mapInstanceRef.current) {
+      const map = L.map(mapContainerRef.current, {
+        center: [26.9124, 75.7873],
+        zoom: 12,
+        zoomControl: interactive,
+        dragging: interactive,
+        scrollWheelZoom: interactive,
+        doubleClickZoom: interactive,
+        touchZoom: interactive,
+      })
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map)
+
+      const layerGroup = L.featureGroup().addTo(map)
+      layerGroupRef.current = layerGroup
+      mapInstanceRef.current = map
+    }
+
+    return () => {
+      if (mapInstanceRef.current) {
+        try {
+          mapInstanceRef.current.remove()
+        } catch (e) {
+          // ignore cleanup errors
+        }
+        mapInstanceRef.current = null
+        layerGroupRef.current = null
+      }
+    }
+  }, [interactive])
+
+  // Update polylines when features change
+  useEffect(() => {
+    const map = mapInstanceRef.current
+    const layerGroup = layerGroupRef.current
+    if (!map || !layerGroup) return
+
+    layerGroup.clearLayers()
+
+    const bounds: L.LatLngExpression[] = []
+
+    features.forEach((feature) => {
+      const color = getGradeColor(feature.properties.grade)
+      // GeoJSON is [lon, lat] -> Leaflet is [lat, lon]
+      const positions: [number, number][] = feature.geometry.coordinates.map(
+        (coord) => [coord[1], coord[0]]
+      )
+
+      positions.forEach((pos) => bounds.push(pos))
+
+      const polyline = L.polyline(positions, {
+        color,
+        weight: 7,
+        opacity: 0.9,
+        lineCap: 'round',
+        lineJoin: 'round',
+      })
+
+      polyline.bindTooltip(
+        `<div style="font-family: system-ui, sans-serif; padding: 3px; min-width: 140px;">
+          <div style="font-weight: 700; font-size: 13px; color: #0f172a;">${feature.properties.road_name}</div>
+          <div style="font-size: 11px; color: #64748b; margin-bottom: 4px;">${feature.properties.sub_name}</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 4px;">
+            <span style="font-weight: 600; font-size: 11px; color: ${color};">Grade ${feature.properties.grade}</span>
+            <span style="font-size: 11px; font-weight: 700; color: #1e293b;">Risk: ${feature.properties.risk_score.toFixed(1)}</span>
+          </div>
+          <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">Potholes: ${feature.properties.pothole_count}</div>
+        </div>`,
+        { sticky: true }
+      )
+
+      if (interactive) {
+        polyline.on('click', () => {
+          router.push(`/roads/${feature.properties.segment_id}`)
+        })
+        polyline.on('mouseover', (e) => {
+          e.target.setStyle({ weight: 10, opacity: 1 })
+        })
+        polyline.on('mouseout', (e) => {
+          e.target.setStyle({ weight: 7, opacity: 0.9 })
+        })
+      }
+
+      layerGroup.addLayer(polyline)
+    })
+
+    if (bounds.length > 0) {
+      try {
+        map.fitBounds(L.latLngBounds(bounds), { padding: [30, 30] })
+      } catch (e) {
+        // ignore bounds fit error
+      }
+    }
+  }, [features, interactive, router])
+
   return (
-    <div style={{ height, width: '100%', zIndex: 0 }}>
-      <MapContainer 
-        center={[26.9124, 75.7873]} 
-        zoom={12} 
-        style={{ height: '100%', width: '100%' }}
-        zoomControl={interactive}
-        dragging={interactive}
-        scrollWheelZoom={interactive}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        
-        {features.map((feature, i) => {
-          const color = getGradeColor(feature.properties.grade)
-          // Convert GeoJSON [lon, lat] to Leaflet [lat, lon]
-          const positions: [number, number][] = feature.geometry.coordinates.map(
-            coord => [coord[1], coord[0]]
-          )
-          
-          return (
-            <Polyline
-              key={`${feature.properties.segment_id}-${i}`}
-              positions={positions}
-              pathOptions={{ 
-                color, 
-                weight: 7,
-                opacity: 0.9,
-                lineCap: 'round',
-                lineJoin: 'round'
-              }}
-              eventHandlers={{
-                click: () => {
-                  if (interactive) {
-                    router.push(`/roads/${feature.properties.segment_id}`)
-                  }
-                },
-                mouseover: (e) => {
-                  const layer = e.target;
-                  layer.setStyle({ weight: 10, opacity: 1 });
-                },
-                mouseout: (e) => {
-                  const layer = e.target;
-                  layer.setStyle({ weight: 7, opacity: 0.85 });
-                }
-              }}
-            >
-              <Tooltip sticky>
-                <div className="font-sans p-1 text-slate-900">
-                  <div className="font-bold text-sm">{feature.properties.road_name}</div>
-                  <div className="text-xs text-gray-600">{feature.properties.sub_name}</div>
-                  <div className="mt-1.5 flex items-center justify-between text-xs pt-1 border-t border-gray-200">
-                    <span className="font-semibold">
-                      Grade: <span className="font-bold uppercase px-1.5 py-0.5 rounded text-white text-[10px]" style={{ backgroundColor: color }}>{feature.properties.grade}</span>
-                    </span>
-                    <span className="ml-3 font-mono font-bold">
-                      Risk: {feature.properties.risk_score.toFixed(1)}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-gray-500 mt-1">
-                    {feature.properties.pothole_count} potholes | {feature.properties.authority}
-                  </div>
-                  <div className="text-[10px] text-blue-600 font-semibold mt-1">
-                    Click to view detailed inspection &rarr;
-                  </div>
-                </div>
-              </Tooltip>
-            </Polyline>
-          )
-        })}
-        
-        <FitBounds features={features} />
-      </MapContainer>
-    </div>
+    <div
+      ref={mapContainerRef}
+      style={{ height, width: '100%', zIndex: 0 }}
+      className="relative"
+    />
   )
 }
