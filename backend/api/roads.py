@@ -66,7 +66,7 @@ def serialize_segment(seg: RoadSegment, week: int, db: Session) -> dict:
         "authority": auth_name,
         "authority_name": auth_name,
         "ward": seg.ward,
-        "coords": [[seg.start_lat, seg.start_lon], [seg.end_lat, seg.end_lon]],
+        "coords": json.loads(seg.polyline_coords) if seg.polyline_coords else [[seg.start_lat, seg.start_lon], [seg.end_lat, seg.end_lon]],
         "current_week": current_m_dict,
         "current_metrics": current_m_dict,
         "weeks": weeks_list
@@ -182,13 +182,13 @@ def get_map_geojson(week: int = 4, db: Session = Depends(get_db)):
             continue
             
         auth = db.query(Authority).filter(Authority.authority_id == seg.authority_id).first()
+        coords = json.loads(seg.polyline_coords) if seg.polyline_coords else [[seg.start_lat, seg.start_lon], [seg.end_lat, seg.end_lon]]
         feature = {
             "type": "Feature",
             "geometry": {
                 "type": "LineString",
                 "coordinates": [
-                    [seg.start_lon, seg.start_lat],
-                    [seg.end_lon, seg.end_lat]
+                    [pt[1], pt[0]] for pt in coords
                 ]
             },
             "properties": {

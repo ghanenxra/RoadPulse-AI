@@ -71,7 +71,9 @@ export default function MapComponent({ features, height = "100%", interactive = 
               pathOptions={{ 
                 color, 
                 weight: 7,
-                opacity: 0.85
+                opacity: 0.9,
+                lineCap: 'round',
+                lineJoin: 'round'
               }}
               eventHandlers={{
                 click: () => {

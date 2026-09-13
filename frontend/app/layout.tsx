@@ -4,11 +4,13 @@ import './globals.css'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { DemoDataBanner } from '@/components/layout/DemoDataBanner'
 
+import { WeekProvider } from '@/context/WeekContext'
+
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'RoadPulse AI',
-  description: 'AI-powered road health monitoring system',
+  title: 'RoadPulse AI — Municipal Road Health Intelligence',
+  description: 'AI-powered road condition auditing, defect localization, and municipal SLA monitoring',
 }
 
 export default function RootLayout({
@@ -19,15 +21,17 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="flex h-screen overflow-hidden bg-slate-50">
-          <Sidebar />
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <DemoDataBanner />
-            <main className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50">
-              {children}
-            </main>
+        <WeekProvider>
+          <div className="flex h-screen overflow-hidden bg-slate-50">
+            <Sidebar />
+            <div className="flex flex-1 flex-col overflow-hidden min-w-0">
+              <DemoDataBanner />
+              <main className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50">
+                {children}
+              </main>
+            </div>
           </div>
-        </div>
+        </WeekProvider>
       </body>
     </html>
   )

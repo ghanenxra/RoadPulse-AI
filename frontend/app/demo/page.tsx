@@ -11,9 +11,10 @@ import {
   Play, Pause, RotateCcw, Upload, FileText, CheckCircle2, 
   AlertTriangle, ArrowRight, ShieldCheck, Sparkles, Loader2, Database
 } from 'lucide-react'
+import { useWeek } from '@/context/WeekContext'
 
 export default function DemoPage() {
-  const [activeWeek, setActiveWeek] = useState<number>(4)
+  const { week: activeWeek, setWeek: setActiveWeek } = useWeek()
   const [isPlaying, setIsPlaying] = useState<boolean>(false)
   const [loading, setLoading] = useState<boolean>(false)
   const [actionMsg, setActionMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -22,11 +23,11 @@ export default function DemoPage() {
     let timer: any = null
     if (isPlaying) {
       timer = setInterval(() => {
-        setActiveWeek((prev) => (prev < 4 ? prev + 1 : 1))
+        setActiveWeek(activeWeek < 4 ? activeWeek + 1 : 1)
       }, 2500)
     }
     return () => clearInterval(timer)
-  }, [isPlaying])
+  }, [isPlaying, activeWeek, setActiveWeek])
 
   const handleAction = async (fn: () => Promise<any>, successMsg: string) => {
     try {

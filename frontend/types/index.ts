@@ -11,6 +11,7 @@ export interface RoadSegment {
   authority_id: string;
   authority_name: string;
   ward: string;
+  coords?: [number, number][];
   current_week: WeeklyMetric;
   weeks: WeeklyMetric[];
 }

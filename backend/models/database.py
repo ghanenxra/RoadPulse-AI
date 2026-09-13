@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import create_engine, Column, String, Integer, Float, Boolean, DateTime, ForeignKey
+from sqlalchemy import create_engine, Column, String, Integer, Float, Boolean, DateTime, ForeignKey, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -43,6 +43,7 @@ class RoadSegment(Base):
     road_type = Column(String, default="Urban")
     authority_id = Column(String, ForeignKey("authority.authority_id"))
     ward = Column(String)
+    polyline_coords = Column(Text, nullable=True)
     authority = relationship("Authority")
     metrics = relationship("WeeklyRoadMetric", back_populates="segment")
 

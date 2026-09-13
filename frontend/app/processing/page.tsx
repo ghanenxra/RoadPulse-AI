@@ -102,7 +102,7 @@ export default function ProcessingPage() {
     <>
       <Topbar title="Video Ingestion & AI Processing Center" />
       
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
         
         {notification && (
           <div className={`p-4 rounded-lg flex items-center justify-between ${

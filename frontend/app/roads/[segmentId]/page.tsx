@@ -55,7 +55,10 @@ export default function RoadDetailPage() {
     },
     geometry: {
       type: 'LineString',
-      coordinates: [[road.start_lat, road.start_lon], [road.end_lat, road.end_lon]]
+      coordinates: (road.coords && road.coords.length > 0
+        ? road.coords
+        : [[road.start_lat, road.start_lon], [road.end_lat, road.end_lon]]
+      ).map(c => [c[1], c[0]])
     }
   }
 
@@ -71,7 +74,7 @@ export default function RoadDetailPage() {
   return (
     <>
       <Topbar title="Road Details" />
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
         
         {/* Header Section */}
         <div className="flex items-center space-x-4 mb-2">

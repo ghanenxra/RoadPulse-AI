@@ -50,9 +50,16 @@ def seed_database(db: Session):
     
     # Road Segments & Metrics
     for seg in demo_data["segments"]:
-        start_lat, start_lon = seg["coords"][0]
-        end_lat, end_lon = seg["coords"][1]
-        length_km = round(haversine(start_lat, start_lon, end_lat, end_lon), 2)
+        coords = seg["coords"]
+        start_lat, start_lon = coords[0]
+        end_lat, end_lon = coords[-1]
+        
+        total_len = 0.0
+        for idx in range(len(coords) - 1):
+            p1 = coords[idx]
+            p2 = coords[idx + 1]
+            total_len += haversine(p1[0], p1[1], p2[0], p2[1])
+        length_km = round(total_len, 2)
         if length_km < 0.2:
             length_km = 1.25
         
@@ -65,7 +72,8 @@ def seed_database(db: Session):
             length_km=length_km,
             road_type="Arterial Urban Transit Corridor",
             authority_id=authorities[seg["authority"]],
-            ward=seg["ward"]
+            ward=seg["ward"],
+            polyline_coords=json.dumps(coords)
         ))
         
         prev_risk = None
@@ -95,11 +103,14 @@ def seed_database(db: Session):
                 coverage_confidence=0.92
             ))
             
-            # Synthetic individual pothole detections
+            # Synthetic individual pothole detections along curved polyline
             for i in range(w["potholes"]):
+                seg_idx = random.randint(0, len(coords) - 2) if len(coords) > 1 else 0
+                p1 = coords[seg_idx]
+                p2 = coords[seg_idx + 1] if len(coords) > 1 else coords[0]
                 t = random.random()
-                lat = start_lat + (end_lat - start_lat) * t + random.uniform(-0.0003, 0.0003)
-                lon = start_lon + (end_lon - start_lon) * t + random.uniform(-0.0003, 0.0003)
+                lat = p1[0] + (p2[0] - p1[0]) * t + random.uniform(-0.0002, 0.0002)
+                lon = p1[1] + (p2[1] - p1[1]) * t + random.uniform(-0.0002, 0.0002)
                 sev_label = "Low" if w["severity"] < 2.5 else "Medium" if w["severity"] < 3.8 else "High"
                 det_id = f"DET-{seg['id']}-W{w['week']}-{i+1}"
                 bus_id = f"BUS-{((i % 3) + 1)}"

@@ -118,7 +118,7 @@ export default function AuthorityPage() {
     <>
       <Topbar title="Authority Accountability & Maintenance Tracker" />
       
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
         
         {notification && (
           <div className={`p-4 rounded-lg flex items-center justify-between ${

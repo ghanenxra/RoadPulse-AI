@@ -11,9 +11,10 @@ import {
   FileText, Download, CheckCircle, AlertTriangle, 
   Layers, FileSpreadsheet, Calendar, Building, Sparkles, Loader2 
 } from 'lucide-react'
+import { useWeek } from '@/context/WeekContext'
 
 export default function ReportsPage() {
-  const [selectedWeek, setSelectedWeek] = useState<number>(4)
+  const { week, setWeek } = useWeek()
   const [selectedAuth, setSelectedAuth] = useState<string>('all')
   const [generatingPdf, setGeneratingPdf] = useState(false)
   const [metrics, setMetrics] = useState<OverviewMetrics | null>(null)
@@ -26,8 +27,8 @@ export default function ReportsPage() {
       try {
         setLoading(true)
         const [m, r] = await Promise.all([
-          api.getOverviewMetrics(selectedWeek),
-          api.getRoads(selectedWeek)
+          api.getOverviewMetrics(week),
+          api.getRoads(week)
         ])
         setMetrics(m)
         setRoads(r)
@@ -38,20 +39,20 @@ export default function ReportsPage() {
       }
     }
     loadData()
-  }, [selectedWeek])
+  }, [week])
 
   const handleDownloadPdf = async () => {
     try {
       setGeneratingPdf(true)
       setFeedback(null)
-      const url = api.getPDFReportUrl(selectedWeek)
+      const url = api.getPDFReportUrl(week)
       const link = document.createElement('a')
       link.href = url
-      link.download = `roadpulse_weekly_w${selectedWeek}.pdf`
+      link.download = `roadpulse_weekly_w${week}.pdf`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      setFeedback({ type: 'success', message: `Official ReportLab PDF report for Week ${selectedWeek} downloaded successfully.` })
+      setFeedback({ type: 'success', message: `Official ReportLab PDF report for Week ${week} downloaded successfully.` })
     } catch (e: any) {
       setFeedback({ type: 'error', message: `Failed to download PDF report: ${e.message}` })
     } finally {
@@ -60,7 +61,7 @@ export default function ReportsPage() {
   }
 
   const handleDownloadCsv = (type: string, filename: string) => {
-    const url = api.getCSVExportUrl(type, selectedWeek)
+    const url = api.getCSVExportUrl(type, week)
     const link = document.createElement('a')
     link.href = url
     link.download = filename
@@ -71,8 +72,8 @@ export default function ReportsPage() {
   }
 
   const csvExports = [
-    { type: 'road_segments', label: 'Road Segments & Risk Scores', file: `road_segments_w${selectedWeek}.csv`, desc: 'Segment geometries, coordinates, current risk scores, and grades' },
-    { type: 'detections', label: 'Pothole Detections (Raw)', file: `detections_w${selectedWeek}.csv`, desc: 'Individual timestamped GPS detections, confidence, and estimated depth' },
+    { type: 'road_segments', label: 'Road Segments & Risk Scores', file: `road_segments_w${week}.csv`, desc: 'Segment geometries, coordinates, current risk scores, and grades' },
+    { type: 'detections', label: 'Pothole Detections (Raw)', file: `detections_w${week}.csv`, desc: 'Individual timestamped GPS detections, confidence, and estimated depth' },
     { type: 'weekly_history', label: '4-Week Deterioration Timeline', file: 'weekly_history_all.csv', desc: 'Weekly road metrics across all survey cycles' },
     { type: 'authority_actions', label: 'Authority Maintenance & SLA', file: 'authority_actions.csv', desc: 'Report dispatch dates, repair verifications, and SLA audit trail' },
     { type: 'processing_jobs', label: 'NVDR Ingestion Log', file: 'processing_jobs.csv', desc: 'Bus dashcam upload logs, frame counts, and YOLO inference metrics' },
@@ -121,9 +122,9 @@ export default function ReportsPage() {
                     <Button
                       key={w}
                       type="button"
-                      variant={selectedWeek === w ? 'default' : 'outline'}
-                      className={selectedWeek === w ? 'bg-blue-600 text-white font-bold' : 'text-gray-700'}
-                      onClick={() => setSelectedWeek(w)}
+                      variant={week === w ? 'default' : 'outline'}
+                      className={week === w ? 'bg-blue-600 text-white font-bold' : 'text-gray-700'}
+                      onClick={() => setWeek(w)}
                     >
                       Week {w}
                     </Button>
@@ -193,7 +194,7 @@ export default function ReportsPage() {
             <CardHeader className="border-b bg-gray-50/50">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-lg">Executive Report Preview — Week {selectedWeek}</CardTitle>
+                  <CardTitle className="text-lg">Executive Report Preview — Week {week}</CardTitle>
                   <CardDescription>
                     Automated report compilation for Jaipur Transit Corridors
                   </CardDescription>
