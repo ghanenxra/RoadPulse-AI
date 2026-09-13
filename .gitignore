@@ -1,0 +1,34 @@
+# Dependencies
+frontend/node_modules/
+frontend/.next/
+backend/__pycache__/
+backend/**/__pycache__/
+*.pyc
+
+# Database
+backend/*.db
+*.db
+
+# Environment
+.env
+.env.local
+frontend/.env.local
+
+# Generated files
+reports/*.pdf
+reports/*.csv
+uploads/*
+!uploads/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log

@@ -1,0 +1,40 @@
+# Optional: Use this for PostgreSQL migration later
+# For prototype, SQLite is used directly (no Docker required)
+
+version: '3.8'
+
+services:
+  # Uncomment for PostgreSQL migration:
+  # db:
+  #   image: postgis/postgis:15-3.3
+  #   environment:
+  #     POSTGRES_DB: roadpulse
+  #     POSTGRES_USER: roadpulse
+  #     POSTGRES_PASSWORD: roadpulse_dev
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./roadpulse.db
+      - CORS_ORIGINS=http://localhost:3000
+    volumes:
+      - ./reports:/app/reports
+      - ./uploads:/app/uploads
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+# volumes:
+#   pgdata:

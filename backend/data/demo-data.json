@@ -1,0 +1,542 @@
+{
+  "generated_for": "RoadPulse AI prototype demo",
+  "city": "Jaipur",
+  "segments": [
+    {
+      "id": "TR-01",
+      "road": "Tonk Road",
+      "sub": "World Trade Park to Durgapura",
+      "coords": [
+        [
+          26.8547,
+          75.8064
+        ],
+        [
+          26.839,
+          75.802
+        ]
+      ],
+      "authority": "Jaipur Municipal Corporation (Greater)",
+      "ward": "Ward 42",
+      "weeks": [
+        {
+          "potholes": 6,
+          "severity": 3.1,
+          "depth_cm": 4.5,
+          "rain_mm": 0,
+          "risk": 45,
+          "grade": "C",
+          "status": "none",
+          "note": "Baseline scan",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 11,
+          "severity": 3.6,
+          "depth_cm": 6.2,
+          "rain_mm": 8,
+          "risk": 62,
+          "grade": "D",
+          "status": "none",
+          "note": "Density rising after light rain",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 19,
+          "severity": 4.2,
+          "depth_cm": 8.7,
+          "rain_mm": 22,
+          "risk": 85,
+          "grade": "F",
+          "status": "reported",
+          "note": "Report auto-sent to JMC on this date",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 21,
+          "severity": 4.4,
+          "depth_cm": 9.1,
+          "rain_mm": 3,
+          "risk": 88,
+          "grade": "F",
+          "status": "overdue",
+          "note": "No repair activity 2 weeks after report \u2014 SLA breached",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "AJ-01",
+      "road": "Ajmer Road",
+      "sub": "Sodala to Vaishali Nagar",
+      "coords": [
+        [
+          26.902,
+          75.765
+        ],
+        [
+          26.911,
+          75.735
+        ]
+      ],
+      "authority": "PWD Jaipur Division",
+      "ward": "Ward 18",
+      "weeks": [
+        {
+          "potholes": 14,
+          "severity": 3.8,
+          "depth_cm": 7.0,
+          "rain_mm": 0,
+          "risk": 58,
+          "grade": "D",
+          "status": "none",
+          "note": "Baseline scan",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 20,
+          "severity": 4.3,
+          "depth_cm": 9.4,
+          "rain_mm": 14,
+          "risk": 80,
+          "grade": "F",
+          "status": "reported",
+          "note": "Report auto-sent to PWD on this date",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 7,
+          "severity": 2.4,
+          "depth_cm": 3.1,
+          "rain_mm": 0,
+          "risk": 40,
+          "grade": "C",
+          "status": "repaired",
+          "note": "Patch work visible in follow-up frames",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 3,
+          "severity": 1.6,
+          "depth_cm": 1.5,
+          "rain_mm": 0,
+          "risk": 22,
+          "grade": "B",
+          "status": "verified",
+          "note": "Before/after evidence confirms repair held",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "SR-01",
+      "road": "Sikar Road",
+      "sub": "Jhotwara Chowraha stretch",
+      "coords": [
+        [
+          26.955,
+          75.755
+        ],
+        [
+          26.97,
+          75.74
+        ]
+      ],
+      "authority": "Jaipur Municipal Corporation (Greater)",
+      "ward": "Ward 55",
+      "weeks": [
+        {
+          "potholes": 4,
+          "severity": 2.0,
+          "depth_cm": 2.2,
+          "rain_mm": 0,
+          "risk": 25,
+          "grade": "B",
+          "status": "none",
+          "note": "Baseline scan",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 6,
+          "severity": 2.4,
+          "depth_cm": 3.0,
+          "rain_mm": 12,
+          "risk": 38,
+          "grade": "C",
+          "status": "none",
+          "note": "Light monsoon showers",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 15,
+          "severity": 4.0,
+          "depth_cm": 7.8,
+          "rain_mm": 42,
+          "risk": 75,
+          "grade": "D",
+          "status": "reported",
+          "note": "Heavy rain event \u2014 rapid deterioration",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 12,
+          "severity": 3.5,
+          "depth_cm": 6.0,
+          "rain_mm": 2,
+          "risk": 60,
+          "grade": "D",
+          "status": "in_progress",
+          "note": "Partial temporary patching seen",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "JLN-01",
+      "road": "JLN Marg",
+      "sub": "Malviya Nagar stretch",
+      "coords": [
+        [
+          26.858,
+          75.81
+        ],
+        [
+          26.845,
+          75.82
+        ]
+      ],
+      "authority": "Jaipur Development Authority",
+      "ward": "Ward 61",
+      "weeks": [
+        {
+          "potholes": 8,
+          "severity": 2.9,
+          "depth_cm": 4.0,
+          "rain_mm": 0,
+          "risk": 38,
+          "grade": "C",
+          "status": "none",
+          "note": "Baseline scan",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 9,
+          "severity": 3.0,
+          "depth_cm": 4.2,
+          "rain_mm": 4,
+          "risk": 40,
+          "grade": "C",
+          "status": "none",
+          "note": "Stable, minor increase",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 8,
+          "severity": 2.9,
+          "depth_cm": 4.1,
+          "rain_mm": 0,
+          "risk": 39,
+          "grade": "C",
+          "status": "none",
+          "note": "No significant change",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 9,
+          "severity": 3.1,
+          "depth_cm": 4.3,
+          "rain_mm": 0,
+          "risk": 41,
+          "grade": "C",
+          "status": "none",
+          "note": "Holding steady",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "JG-01",
+      "road": "Jawahar Circle - Gopalpura Bypass",
+      "sub": "Service road stretch",
+      "coords": [
+        [
+          26.85,
+          75.806
+        ],
+        [
+          26.839,
+          75.81
+        ]
+      ],
+      "authority": "Jaipur Municipal Corporation (Greater)",
+      "ward": "Ward 47",
+      "weeks": [
+        {
+          "potholes": 13,
+          "severity": 3.7,
+          "depth_cm": 6.5,
+          "rain_mm": 0,
+          "risk": 55,
+          "grade": "D",
+          "status": "reported",
+          "note": "Baseline scan, report auto-sent",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 10,
+          "severity": 3.2,
+          "depth_cm": 5.2,
+          "rain_mm": 0,
+          "risk": 45,
+          "grade": "C",
+          "status": "in_progress",
+          "note": "First patching crew observed",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 8,
+          "severity": 2.8,
+          "depth_cm": 4.0,
+          "rain_mm": 0,
+          "risk": 40,
+          "grade": "C",
+          "status": "in_progress",
+          "note": "Gradual improvement",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 4,
+          "severity": 1.9,
+          "depth_cm": 2.0,
+          "rain_mm": 0,
+          "risk": 28,
+          "grade": "B",
+          "status": "repaired",
+          "note": "Most segment resurfaced",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "CL-01",
+      "road": "Civil Lines Road",
+      "sub": "Near Rajasthan University",
+      "coords": [
+        [
+          26.912,
+          75.79
+        ],
+        [
+          26.92,
+          75.795
+        ]
+      ],
+      "authority": "Jaipur Municipal Corporation (Heritage)",
+      "ward": "Ward 5",
+      "weeks": [
+        {
+          "potholes": 1,
+          "severity": 1.2,
+          "depth_cm": 1.0,
+          "rain_mm": 0,
+          "risk": 10,
+          "grade": "A",
+          "status": "none",
+          "note": "Baseline scan",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 2,
+          "severity": 1.4,
+          "depth_cm": 1.2,
+          "rain_mm": 3,
+          "risk": 13,
+          "grade": "A",
+          "status": "none",
+          "note": "Well maintained",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 1,
+          "severity": 1.1,
+          "depth_cm": 1.0,
+          "rain_mm": 0,
+          "risk": 9,
+          "grade": "A",
+          "status": "none",
+          "note": "Well maintained",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 2,
+          "severity": 1.3,
+          "depth_cm": 1.1,
+          "rain_mm": 0,
+          "risk": 12,
+          "grade": "A",
+          "status": "none",
+          "note": "Well maintained",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "MI-01",
+      "road": "MI Road",
+      "sub": "Panch Batti to Ajmeri Gate",
+      "coords": [
+        [
+          26.9196,
+          75.8231
+        ],
+        [
+          26.9155,
+          75.813
+        ]
+      ],
+      "authority": "Jaipur Municipal Corporation (Heritage)",
+      "ward": "Ward 8",
+      "weeks": [
+        {
+          "potholes": 3,
+          "severity": 1.8,
+          "depth_cm": 1.8,
+          "rain_mm": 0,
+          "risk": 20,
+          "grade": "B",
+          "status": "none",
+          "note": "Baseline scan",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 3,
+          "severity": 1.7,
+          "depth_cm": 1.7,
+          "rain_mm": 5,
+          "risk": 19,
+          "grade": "B",
+          "status": "none",
+          "note": "Stable",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 4,
+          "severity": 2.0,
+          "depth_cm": 2.1,
+          "rain_mm": 0,
+          "risk": 24,
+          "grade": "B",
+          "status": "none",
+          "note": "Slight increase, within tolerance",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 3,
+          "severity": 1.8,
+          "depth_cm": 1.8,
+          "rain_mm": 0,
+          "risk": 21,
+          "grade": "B",
+          "status": "none",
+          "note": "Stable",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    },
+    {
+      "id": "VN-01",
+      "road": "Vidhyadhar Nagar Road",
+      "sub": "Sector 5 to Sector 9",
+      "coords": [
+        [
+          26.955,
+          75.79
+        ],
+        [
+          26.965,
+          75.795
+        ]
+      ],
+      "authority": "Jaipur Development Authority",
+      "ward": "Ward 70",
+      "weeks": [
+        {
+          "potholes": 5,
+          "severity": 2.2,
+          "depth_cm": 2.6,
+          "rain_mm": 0,
+          "risk": 30,
+          "grade": "B",
+          "status": "none",
+          "note": "Baseline scan",
+          "week": 1,
+          "date": "2026-08-17"
+        },
+        {
+          "potholes": 9,
+          "severity": 3.1,
+          "depth_cm": 4.8,
+          "rain_mm": 6,
+          "risk": 48,
+          "grade": "C",
+          "status": "none",
+          "note": "New bus route added \u2014 more coverage, more finds",
+          "week": 2,
+          "date": "2026-08-24"
+        },
+        {
+          "potholes": 14,
+          "severity": 3.7,
+          "depth_cm": 6.4,
+          "rain_mm": 0,
+          "risk": 60,
+          "grade": "D",
+          "status": "reported",
+          "note": "Report auto-sent to JDA on this date",
+          "week": 3,
+          "date": "2026-08-31"
+        },
+        {
+          "potholes": 16,
+          "severity": 3.9,
+          "depth_cm": 6.9,
+          "rain_mm": 0,
+          "risk": 65,
+          "grade": "D",
+          "status": "reported",
+          "note": "Awaiting response",
+          "week": 4,
+          "date": "2026-09-07"
+        }
+      ]
+    }
+  ]
+}
