@@ -17,7 +17,7 @@ export const STATUS_CONFIG = {
   failed_verification: { label: 'Failed', color: '#dc2626' },
 } as const;
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 export const NAV_ITEMS = [
   { href: '/', label: 'Overview', icon: 'LayoutDashboard' },

@@ -27,25 +27,29 @@ export default function Dashboard() {
   const [metrics, setMetrics] = useState<OverviewMetrics | null>(null)
   const [roads, setRoads] = useState<RoadSegment[]>([])
   const [loading, setLoading] = useState(true)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  const loadData = React.useCallback(async () => {
+    try {
+      setLoading(true)
+      setErrorMsg(null)
+      const [metricsData, roadsData] = await Promise.all([
+        api.getOverviewMetrics(week),
+        api.getRoads(week)
+      ])
+      setMetrics(metricsData)
+      setRoads(roadsData.slice(0, 6))
+    } catch (e: any) {
+      console.error('Failed to load dashboard data:', e)
+      setErrorMsg(e?.message || 'Failed to connect to backend service')
+    } finally {
+      setLoading(false)
+    }
+  }, [week])
 
   useEffect(() => {
-    async function loadData() {
-      try {
-        setLoading(true)
-        const [metricsData, roadsData] = await Promise.all([
-          api.getOverviewMetrics(week),
-          api.getRoads(week)
-        ])
-        setMetrics(metricsData)
-        setRoads(roadsData.slice(0, 6))
-      } catch (e) {
-        console.error(e)
-      } finally {
-        setLoading(false)
-      }
-    }
     loadData()
-  }, [week])
+  }, [loadData])
 
   const gradeData = metrics ? [
     { name: 'Grade A', value: metrics.grade_distribution.A, fill: getGradeColor('A') },
@@ -245,8 +249,17 @@ export default function Dashboard() {
             </div>
           </>
         ) : (
-          <div className="p-8 text-center bg-white rounded-xl border text-slate-500">
-            Failed to load metrics. Please check backend connection.
+          <div className="p-8 text-center bg-white rounded-xl border text-slate-600 shadow-sm space-y-3">
+            <div className="text-rose-600 font-semibold text-base">Backend Connection Notice</div>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto">
+              {errorMsg || "Unable to reach the FastAPI backend service on port 8000."}
+            </p>
+            <button
+              onClick={() => loadData()}
+              className="inline-flex items-center px-4 py-2 text-xs sm:text-sm font-semibold rounded-lg text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors"
+            >
+              Retry Loading
+            </button>
           </div>
         )}
       </div>

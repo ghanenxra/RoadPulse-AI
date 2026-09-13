@@ -12,17 +12,30 @@ export async function fetchAPI<T>(endpoint: string, options?: RequestInit): Prom
     Object.assign(headers, options.headers);
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-  });
-  
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => response.statusText);
-    throw new Error(`API error (${response.status}): ${errorText}`);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      signal: options?.signal || controller.signal,
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => response.statusText);
+      throw new Error(`API error (${response.status}): ${errorText}`);
+    }
+    
+    return await response.json();
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      throw new Error('Backend request timed out after 6 seconds. Please check that FastAPI is running on port 8000.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  
-  return response.json();
 }
 
 export const api = {
