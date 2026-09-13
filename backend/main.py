@@ -35,9 +35,22 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="RoadPulse AI API", version="1.0.0-prototype", lifespan=lifespan)
 
 # CORS
+cors_origins_env = os.environ.get("CORS_ORIGINS", "")
+cors_origins = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+]
+if cors_origins_env:
+    for origin in cors_origins_env.split(","):
+        origin = origin.strip()
+        if origin and origin not in cors_origins:
+            cors_origins.append(origin)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

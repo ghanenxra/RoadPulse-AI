@@ -22,7 +22,7 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=sqlite:///./roadpulse.db
-      - CORS_ORIGINS=http://localhost:3000
+      - CORS_ORIGINS=http://localhost:3001,http://localhost:3000
     volumes:
       - ./reports:/app/reports
       - ./uploads:/app/uploads
@@ -30,7 +30,7 @@ services:
   frontend:
     build: ./frontend
     ports:
-      - "3000:3000"
+      - "3001:3001"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
     depends_on:

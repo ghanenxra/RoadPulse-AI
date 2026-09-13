@@ -91,7 +91,7 @@ npm install
 npm run dev
 ```
 
-The frontend will start at http://localhost:3000.
+The frontend will start at http://localhost:3001.
 
 ### 4. Load Demo Data
 
@@ -187,7 +187,7 @@ To integrate YOLO:
 | `DATABASE_URL` | `sqlite:///./roadpulse.db` | Database connection string |
 | `BACKEND_HOST` | `0.0.0.0` | Backend host |
 | `BACKEND_PORT` | `8000` | Backend port |
-| `CORS_ORIGINS` | `http://localhost:3000` | Allowed CORS origins |
+| `CORS_ORIGINS` | `http://localhost:3001` | Allowed CORS origins |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:8000` | Backend API URL for frontend |
 
 ## Road Health Scoring
