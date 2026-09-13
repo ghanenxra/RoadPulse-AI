@@ -216,6 +216,7 @@ export default function ReportsPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg border">
                     <div>
                       <div className="text-xs text-gray-500 uppercase">Roads Monitored</div>
+                      <div className="text-2xl font-bold text-slate-900">{metrics?.roads_surveyed.current || 8}</div>
                       <div className="text-2xl font-bold text-slate-900">{metrics?.roads_surveyed.current ?? 20}</div>
                       <div className="text-xs text-emerald-600 mt-1">100% route coverage</div>
                     </div>

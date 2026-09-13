@@ -1,16 +1,31 @@
 "use client"
 
-import React, { useEffect, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import { Topbar } from '@/components/layout/Topbar'
 import { api } from '@/lib/api'
-import { MapFeature } from '@/types'
+import { MapFeature, VehicleTelemetry } from '@/types'
 import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { 
-  Search, RotateCcw, Loader2, Filter, X 
+  Search, RotateCcw, Loader2, Filter, X, Play, Pause, Compass, Radio 
 } from 'lucide-react'
 import { useWeek } from '@/context/WeekContext'
+
+function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const rad = Math.PI / 180
+  const y = Math.sin((lon2 - lon1) * rad) * Math.cos(lat2 * rad)
+  const x =
+    Math.cos(lat1 * rad) * Math.sin(lat2 * rad) -
+    Math.sin(lat1 * rad) * Math.cos(lat2 * rad) * Math.cos((lon2 - lon1) * rad)
+  return ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360
+}
+
+function getCompassDirection(heading: number): string {
+  const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW']
+  const index = Math.round(((heading %= 360) < 0 ? heading + 360 : heading) / 45) % 8
+  return directions[index]
+}
 
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { 
   ssr: false,
@@ -34,6 +49,13 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
 
+  // 5-Second GPS Vehicle Trajectory Simulation State
+  const [vehicle, setVehicle] = useState<VehicleTelemetry | null>(null)
+  const [travelledPath, setTravelledPath] = useState<[number, number][]>([])
+  const [isSimulating, setIsSimulating] = useState<boolean>(true)
+  const coordIndexRef = useRef<number>(0)
+  const routeIndexRef = useRef<number>(0)
+
   async function loadMap(currentWeek: number) {
     try {
       setLoading(true)
@@ -51,6 +73,116 @@ export default function MapPage() {
   useEffect(() => {
     loadMap(week)
   }, [week])
+
+  // Initialize vehicle trajectory when features become available
+  useEffect(() => {
+    if (allFeatures.length === 0) return
+
+    // Default to TR-01 (Tonk Road) if available, or first route
+    const defaultRouteIndex = allFeatures.findIndex(f => f.properties.segment_id === 'TR-01')
+    const initialRouteIndex = defaultRouteIndex !== -1 ? defaultRouteIndex : 0
+    routeIndexRef.current = initialRouteIndex
+    coordIndexRef.current = 0
+
+    const initialRoute = allFeatures[initialRouteIndex]
+    if (initialRoute?.geometry?.coordinates?.length > 0) {
+      const coords: [number, number][] = initialRoute.geometry.coordinates.map(c => [c[1], c[0]])
+      const startPos = coords[0]
+      const initialHeading = coords.length > 1 ? calculateBearing(startPos[0], startPos[1], coords[1][0], coords[1][1]) : 180
+
+      setVehicle({
+        vehicle_id: 'BUS-001',
+        latitude: startPos[0],
+        longitude: startPos[1],
+        timestamp: new Date().toISOString(),
+        speed: 26.5,
+        heading: Math.round(initialHeading),
+        route_id: initialRoute.properties.segment_id,
+        road_name: initialRoute.properties.road_name,
+      })
+      setTravelledPath([startPos])
+    }
+  }, [allFeatures])
+
+  // 5-Second GPS Vehicle Movement Interval
+  useEffect(() => {
+    if (!isSimulating || allFeatures.length === 0) return
+
+    const intervalId = setInterval(() => {
+      const activeRoute = allFeatures[routeIndexRef.current] || allFeatures[0]
+      if (!activeRoute?.geometry?.coordinates?.length) return
+
+      const coords: [number, number][] = activeRoute.geometry.coordinates.map(c => [c[1], c[0]])
+      let nextIdx = coordIndexRef.current + 1
+
+      // If reached end of current corridor, smoothly transition to next route
+      if (nextIdx >= coords.length) {
+        routeIndexRef.current = (routeIndexRef.current + 1) % allFeatures.length
+        coordIndexRef.current = 0
+        const nextRoute = allFeatures[routeIndexRef.current]
+        const nextCoords: [number, number][] = nextRoute.geometry.coordinates.map(c => [c[1], c[0]])
+        const newPos = nextCoords[0]
+        const heading = nextCoords.length > 1 ? calculateBearing(newPos[0], newPos[1], nextCoords[1][0], nextCoords[1][1]) : 0
+
+        const newVehicle: VehicleTelemetry = {
+          vehicle_id: 'BUS-001',
+          latitude: newPos[0],
+          longitude: newPos[1],
+          timestamp: new Date().toISOString(),
+          speed: Number((26.0 + Math.random() * 5.0).toFixed(1)),
+          heading: Math.round(heading),
+          route_id: nextRoute.properties.segment_id,
+          road_name: nextRoute.properties.road_name,
+        }
+        setVehicle(newVehicle)
+        setTravelledPath([newPos])
+        return
+      }
+
+      coordIndexRef.current = nextIdx
+      const prevPos = coords[Math.max(0, nextIdx - 1)]
+      const currentPos = coords[nextIdx]
+      const heading = calculateBearing(prevPos[0], prevPos[1], currentPos[0], currentPos[1])
+      const speed = 24.0 + Math.random() * 8.0 // realistic 24-32 km/h
+
+      const updatedVehicle: VehicleTelemetry = {
+        vehicle_id: 'BUS-001',
+        latitude: currentPos[0],
+        longitude: currentPos[1],
+        timestamp: new Date().toISOString(),
+        speed: Number(speed.toFixed(1)),
+        heading: Math.round(heading),
+        route_id: activeRoute.properties.segment_id,
+        road_name: activeRoute.properties.road_name,
+      }
+
+      setVehicle(updatedVehicle)
+      setTravelledPath(prev => [...prev, currentPos])
+    }, 5000)
+
+    return () => clearInterval(intervalId)
+  }, [isSimulating, allFeatures])
+
+  const resetSimulation = useCallback(() => {
+    if (allFeatures.length === 0) return
+    const currentRoute = allFeatures[routeIndexRef.current] || allFeatures[0]
+    const coords: [number, number][] = currentRoute.geometry.coordinates.map(c => [c[1], c[0]])
+    coordIndexRef.current = 0
+    const startPos = coords[0]
+    const heading = coords.length > 1 ? calculateBearing(startPos[0], startPos[1], coords[1][0], coords[1][1]) : 180
+
+    setVehicle({
+      vehicle_id: 'BUS-001',
+      latitude: startPos[0],
+      longitude: startPos[1],
+      timestamp: new Date().toISOString(),
+      speed: 26.5,
+      heading: Math.round(heading),
+      route_id: currentRoute.properties.segment_id,
+      road_name: currentRoute.properties.road_name,
+    })
+    setTravelledPath([startPos])
+  }, [allFeatures])
 
   const toggleGrade = (grade: string) => {
     setSelectedGrades(prev => ({ ...prev, [grade]: !prev[grade] }))
@@ -230,7 +362,75 @@ export default function MapPage() {
               Loading map data for Week {week}...
             </div>
           ) : (
-            <MapComponent features={filteredFeatures} />
+            <MapComponent 
+              features={filteredFeatures} 
+              vehicle={vehicle}
+              travelledPath={travelledPath}
+            />
+          )}
+
+          {/* Live Vehicle Telemetry HUD */}
+          {vehicle && (
+            <div className="absolute top-3 right-3 bg-slate-900/90 backdrop-blur-md text-white p-3 rounded-xl shadow-xl border border-slate-700 z-[1000] text-xs max-w-[260px] sm:max-w-xs pointer-events-auto">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-700/80 mb-2">
+                <div className="flex items-center space-x-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    {isSimulating && (
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    )}
+                    <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isSimulating ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                  </span>
+                  <span className="font-bold text-slate-100 text-xs tracking-wide">{vehicle.vehicle_id}</span>
+                  <span className="text-[10px] bg-blue-900/80 text-blue-300 font-semibold px-1.5 py-0.5 rounded border border-blue-700/60">
+                    5s GPS
+                  </span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <button
+                    onClick={() => setIsSimulating(!isSimulating)}
+                    title={isSimulating ? "Pause Simulation" : "Resume Simulation"}
+                    className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                  >
+                    {isSimulating ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                  </button>
+                  <button
+                    onClick={resetSimulation}
+                    title="Reset Trajectory"
+                    className="p-1 rounded hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5 text-[11px]">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Corridor:</span>
+                  <span className="font-semibold text-slate-200 truncate max-w-[140px]" title={vehicle.road_name}>
+                    {vehicle.road_name || vehicle.route_id}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Speed:</span>
+                  <span className="font-mono font-bold text-emerald-400">{vehicle.speed.toFixed(1)} km/h</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400">Heading:</span>
+                  <span className="font-mono text-slate-200 flex items-center">
+                    <Compass className="h-3 w-3 mr-1 text-sky-400" />
+                    {Math.round(vehicle.heading)}° {getCompassDirection(vehicle.heading)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center pt-1 border-t border-slate-800 font-mono text-[10px] text-slate-400">
+                  <span>GPS:</span>
+                  <span className="text-slate-300">{vehicle.latitude.toFixed(5)}, {vehicle.longitude.toFixed(5)}</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px] text-slate-500">
+                  <span>Survey Points:</span>
+                  <span className="text-sky-300 font-semibold">{travelledPath.length} waypoints</span>
+                </div>
+              </div>
+            </div>
           )}
           
           {/* Map Legend */}

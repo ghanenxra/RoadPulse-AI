@@ -102,3 +102,14 @@ export interface MapFeature {
 export interface WeeklyTrend {
   week: number; avg_risk: number; total_potholes: number; dangerous_count: number;
 }
+
+export interface VehicleTelemetry {
+  vehicle_id: string;
+  latitude: number;
+  longitude: number;
+  timestamp: string;
+  speed: number;
+  heading: number;
+  route_id?: string;
+  road_name?: string;
+}

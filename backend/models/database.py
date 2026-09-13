@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, Column, String, Integer, Float, Boolean, D
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
+DB_PATH = "sqlite:///./roadpulse.db"
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_FILE = os.path.join(BACKEND_DIR, "roadpulse.db")
 DB_PATH = f"sqlite:///{DB_FILE}"
