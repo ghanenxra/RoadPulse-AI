@@ -1,0 +1,45 @@
+{
+  "_comment": "Stream config — each frame is a separate push with a delay. Used by stream.py",
+  "road_segment_id": "TR-01",
+  "source": "mock_tool",
+  "location": { "lat": 26.8380, "lng": 75.8020 },
+  "frames": [
+    {
+      "session_id": "SESSION-stream-001",
+      "frame_count": 90,
+      "detections": [
+        { "class_name": "pothole", "confidence": 0.88, "severity": 3.5, "depth_cm": 5.5, "bbox": [110, 320, 75, 55], "frame_number": 22 }
+      ]
+    },
+    {
+      "session_id": "SESSION-stream-001",
+      "frame_count": 180,
+      "detections": [
+        { "class_name": "crack", "confidence": 0.74, "severity": 2.0, "depth_cm": null, "bbox": [60, 290, 180, 25], "frame_number": 95 },
+        { "class_name": "pothole", "confidence": 0.90, "severity": 4.0, "depth_cm": 6.8, "bbox": [280, 330, 85, 65], "frame_number": 140 }
+      ]
+    },
+    {
+      "session_id": "SESSION-stream-001",
+      "frame_count": 270,
+      "detections": [
+        { "class_name": "pothole", "confidence": 0.95, "severity": 4.9, "depth_cm": 9.3, "bbox": [320, 300, 95, 75], "frame_number": 210 }
+      ]
+    },
+    {
+      "session_id": "SESSION-stream-001",
+      "frame_count": 360,
+      "detections": [
+        { "class_name": "pothole", "confidence": 0.82, "severity": 3.2, "depth_cm": 4.8, "bbox": [150, 310, 70, 52], "frame_number": 295 },
+        { "class_name": "crack", "confidence": 0.69, "severity": 1.8, "depth_cm": null, "bbox": [90, 270, 160, 20], "frame_number": 340 }
+      ]
+    },
+    {
+      "session_id": "SESSION-stream-001",
+      "frame_count": 450,
+      "detections": [
+        { "class_name": "pothole", "confidence": 0.87, "severity": 4.1, "depth_cm": 7.2, "bbox": [200, 325, 80, 60], "frame_number": 420 }
+      ]
+    }
+  ]
+}

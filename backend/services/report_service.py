@@ -7,12 +7,13 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from sqlalchemy.orm import Session
 from models.database import RoadSegment, Detection, WeeklyRoadMetric, IssueReport, ProcessingJob, Authority
-
-REPORTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..', 'reports')
+from core.config import settings
 
 def generate_weekly_pdf(week: int, db: Session, zone: str = None, authority: str = None) -> str:
-    os.makedirs(REPORTS_DIR, exist_ok=True)
-    file_path = os.path.join(REPORTS_DIR, f"weekly_report_w{week}.pdf")
+    reports_dir = settings.reports_dir
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    file_path = reports_dir / f"weekly_report_w{week}.pdf"
+
     
     # Query Database Data
     segments = db.query(RoadSegment).all()
@@ -293,8 +294,9 @@ def generate_weekly_pdf(week: int, db: Session, zone: str = None, authority: str
     return file_path
 
 def _write_csv(filename: str, headers: list, rows: list) -> str:
-    os.makedirs(REPORTS_DIR, exist_ok=True)
-    file_path = os.path.join(REPORTS_DIR, filename)
+    reports_dir = settings.reports_dir
+    reports_dir.mkdir(parents=True, exist_ok=True)
+    file_path = reports_dir / filename
     with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(["# SIMULATED DEMO DATA — RoadPulse AI Municipal Intelligence Platform"])

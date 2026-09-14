@@ -7,16 +7,16 @@ from sqlalchemy.orm import Session
 from models.database import get_db, ProcessingJob, VideoAsset
 from schemas.api_schemas import ProcessingJobResponse
 from services.detection_service import get_detection_provider
+from core.config import settings
 
 router = APIRouter()
 
-UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '..', 'uploads')
 
 @router.post('/api/upload')
 @router.post('/api/jobs')
 async def upload_video(file: UploadFile = File(...), db: Session = Depends(get_db)):
-    os.makedirs(UPLOADS_DIR, exist_ok=True)
-    file_location = os.path.join(UPLOADS_DIR, file.filename)
+    settings.uploads_dir.mkdir(parents=True, exist_ok=True)
+    file_location = settings.uploads_dir / file.filename
     with open(file_location, "wb+") as file_object:
         file_object.write(file.file.read())
         

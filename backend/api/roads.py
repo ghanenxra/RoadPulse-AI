@@ -1,9 +1,86 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from models.database import get_db, RoadSegment, WeeklyRoadMetric, Detection, IssueReport, RepairVerification, Authority
+from pydantic import BaseModel
+from typing import Optional
 import json
 
 router = APIRouter()
+
+
+# ── Seed schemas (used only by mock_tools/seed_roads.py) ────────────────────
+
+class AuthoritySeed(BaseModel):
+    authority_id: str
+    name: str
+    department: Optional[str] = None
+    zone: Optional[str] = "Jaipur"
+    contact_email: Optional[str] = None
+
+
+class RoadSegmentSeed(BaseModel):
+    segment_id: str
+    road_name: str
+    sub_name: str
+    start_lat: float
+    start_lon: float
+    end_lat: float
+    end_lon: float
+    length_km: float
+    road_type: Optional[str] = "Urban"
+    authority_id: str
+    ward: Optional[str] = None
+    polyline_coords: Optional[str] = None
+
+
+@router.post("/api/roads/seed/authority", status_code=201)
+def seed_authority(payload: AuthoritySeed, db: Session = Depends(get_db)):
+    """
+    Idempotent: Insert an authority if it does not already exist.
+    Called by mock_tools/seed_roads.py — never called automatically by the server.
+    """
+    existing = db.query(Authority).filter(Authority.authority_id == payload.authority_id).first()
+    if existing:
+        raise HTTPException(status_code=409, detail=f"Authority '{payload.authority_id}' already exists")
+    auth = Authority(
+        authority_id=payload.authority_id,
+        name=payload.name,
+        department=payload.department,
+        zone=payload.zone,
+        contact_email=payload.contact_email
+    )
+    db.add(auth)
+    db.commit()
+    return {"status": "created", "authority_id": payload.authority_id}
+
+
+@router.post("/api/roads/seed/segment", status_code=201)
+def seed_road_segment(payload: RoadSegmentSeed, db: Session = Depends(get_db)):
+    """
+    Idempotent: Insert a road segment if it does not already exist.
+    Called by mock_tools/seed_roads.py — never called automatically by the server.
+    """
+    existing = db.query(RoadSegment).filter(RoadSegment.segment_id == payload.segment_id).first()
+    if existing:
+        raise HTTPException(status_code=409, detail=f"Segment '{payload.segment_id}' already exists")
+    seg = RoadSegment(
+        segment_id=payload.segment_id,
+        road_name=payload.road_name,
+        sub_name=payload.sub_name,
+        start_lat=payload.start_lat,
+        start_lon=payload.start_lon,
+        end_lat=payload.end_lat,
+        end_lon=payload.end_lon,
+        length_km=payload.length_km,
+        road_type=payload.road_type,
+        authority_id=payload.authority_id,
+        ward=payload.ward,
+        polyline_coords=payload.polyline_coords
+    )
+    db.add(seg)
+    db.commit()
+    return {"status": "created", "segment_id": payload.segment_id, "road_name": payload.road_name}
+
 
 def serialize_metric(m: WeeklyRoadMetric) -> dict:
     if not m:

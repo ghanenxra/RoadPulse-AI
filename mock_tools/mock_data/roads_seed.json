@@ -1,0 +1,140 @@
+{
+  "_comment": "Jaipur road segment definitions — run seed_roads.py to load into DB",
+  "authorities": [
+    {
+      "authority_id": "JMC-NORTH",
+      "name": "JMC North Zone",
+      "department": "Roads & Infrastructure",
+      "zone": "Jaipur",
+      "contact_email": "north@jmc.gov.in"
+    },
+    {
+      "authority_id": "JMC-SOUTH",
+      "name": "JMC South Zone",
+      "department": "Roads & Infrastructure",
+      "zone": "Jaipur",
+      "contact_email": "south@jmc.gov.in"
+    },
+    {
+      "authority_id": "NHAI-RAJ",
+      "name": "NHAI Rajasthan",
+      "department": "National Highways",
+      "zone": "Jaipur",
+      "contact_email": "rajasthan@nhai.gov.in"
+    }
+  ],
+  "road_segments": [
+    {
+      "segment_id": "TR-01",
+      "road_name": "Tonk Road",
+      "sub_name": "Durgapura to Sanganer",
+      "start_lat": 26.8472,
+      "start_lon": 75.8025,
+      "end_lat": 26.8104,
+      "end_lon": 75.8011,
+      "length_km": 4.2,
+      "road_type": "Urban Arterial",
+      "authority_id": "JMC-SOUTH",
+      "ward": "Sanganer",
+      "polyline_coords": "[[26.8472, 75.8025], [26.8380, 75.8020], [26.8280, 75.8015], [26.8104, 75.8011]]"
+    },
+    {
+      "segment_id": "AJ-01",
+      "road_name": "Ajmer Road",
+      "sub_name": "200 Feet Bypass to Heerapura",
+      "start_lat": 26.9124,
+      "start_lon": 75.7301,
+      "end_lat": 26.9200,
+      "end_lon": 75.7501,
+      "length_km": 3.8,
+      "road_type": "Urban Arterial",
+      "authority_id": "NHAI-RAJ",
+      "ward": "Heerapura",
+      "polyline_coords": "[[26.9124, 75.7301], [26.9150, 75.7380], [26.9180, 75.7450], [26.9200, 75.7501]]"
+    },
+    {
+      "segment_id": "SR-01",
+      "road_name": "Sikar Road",
+      "sub_name": "Vidyadhar Nagar to Brijlalpura",
+      "start_lat": 26.9450,
+      "start_lon": 75.7873,
+      "end_lat": 26.9600,
+      "end_lon": 75.7650,
+      "length_km": 3.1,
+      "road_type": "Urban Arterial",
+      "authority_id": "JMC-NORTH",
+      "ward": "Vidyadhar Nagar",
+      "polyline_coords": "[[26.9450, 75.7873], [26.9500, 75.7790], [26.9550, 75.7720], [26.9600, 75.7650]]"
+    },
+    {
+      "segment_id": "JLN-01",
+      "road_name": "JLN Marg",
+      "sub_name": "SMS Hospital to Jawahar Circle",
+      "start_lat": 26.9060,
+      "start_lon": 75.8235,
+      "end_lat": 26.8890,
+      "end_lon": 75.8235,
+      "length_km": 2.9,
+      "road_type": "Urban Arterial",
+      "authority_id": "JMC-SOUTH",
+      "ward": "Civil Lines",
+      "polyline_coords": "[[26.9060, 75.8235], [26.9000, 75.8235], [26.8950, 75.8235], [26.8890, 75.8235]]"
+    },
+    {
+      "segment_id": "JG-01",
+      "road_name": "Jawahar Circle",
+      "sub_name": "Circle Road Segment",
+      "start_lat": 26.8860,
+      "start_lon": 75.8200,
+      "end_lat": 26.8820,
+      "end_lon": 75.8270,
+      "length_km": 1.2,
+      "road_type": "Urban",
+      "authority_id": "JMC-SOUTH",
+      "ward": "Civil Lines",
+      "polyline_coords": "[[26.8860, 75.8200], [26.8840, 75.8235], [26.8820, 75.8270]]"
+    },
+    {
+      "segment_id": "CL-01",
+      "road_name": "Civil Lines",
+      "sub_name": "Station Road to Sansar Chandra Road",
+      "start_lat": 26.9180,
+      "start_lon": 75.7870,
+      "end_lat": 26.9105,
+      "end_lon": 75.7960,
+      "length_km": 2.3,
+      "road_type": "Urban",
+      "authority_id": "JMC-NORTH",
+      "ward": "Civil Lines",
+      "polyline_coords": "[[26.9180, 75.7870], [26.9155, 75.7900], [26.9130, 75.7930], [26.9105, 75.7960]]"
+    },
+    {
+      "segment_id": "MI-01",
+      "road_name": "MI Road",
+      "sub_name": "Ajmeri Gate to Panch Batti",
+      "start_lat": 26.9195,
+      "start_lon": 75.8085,
+      "end_lat": 26.9125,
+      "end_lon": 75.8020,
+      "length_km": 1.8,
+      "road_type": "Urban Commercial",
+      "authority_id": "JMC-NORTH",
+      "ward": "Walled City",
+      "polyline_coords": "[[26.9195, 75.8085], [26.9170, 75.8065], [26.9145, 75.8045], [26.9125, 75.8020]]"
+    },
+    {
+      "segment_id": "VN-01",
+      "road_name": "Vidhyadhar Nagar",
+      "sub_name": "Sector 4 to Sector 12",
+      "start_lat": 26.9510,
+      "start_lon": 75.8050,
+      "end_lat": 26.9600,
+      "end_lon": 75.8120,
+      "length_km": 2.5,
+      "road_type": "Urban Residential",
+      "authority_id": "JMC-NORTH",
+      "ward": "Vidyadhar Nagar",
+      "polyline_coords": "[[26.9510, 75.8050], [26.9545, 75.8075], [26.9575, 75.8100], [26.9600, 75.8120]]"
+    }
+  ]
+}
