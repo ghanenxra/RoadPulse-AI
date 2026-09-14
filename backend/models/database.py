@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 from typing import Any
 
@@ -6,11 +5,9 @@ from sqlalchemy import create_engine, Column, String, Integer, Float, Boolean, D
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
-DB_PATH = "sqlite:///./roadpulse.db"
-BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_FILE = os.path.join(BACKEND_DIR, "roadpulse.db")
-DB_PATH = f"sqlite:///{DB_FILE}"
-engine = create_engine(DB_PATH, connect_args={"check_same_thread": False})
+from core.config import settings
+
+engine = create_engine(settings.database_url, connect_args=settings.db_connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()

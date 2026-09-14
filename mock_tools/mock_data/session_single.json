@@ -1,0 +1,51 @@
+{
+  "_comment": "Single batch — simulates one bus pass over a road segment. Use with inject.py",
+  "road_segment_id": "TR-01",
+  "session_id": "SESSION-mock-001",
+  "captured_at": "2026-09-13T10:30:00Z",
+  "location": { "lat": 26.8380, "lng": 75.8020 },
+  "frame_count": 450,
+  "source": "mock_tool",
+  "detections": [
+    {
+      "class_name": "pothole",
+      "confidence": 0.91,
+      "severity": 4.2,
+      "depth_cm": 7.5,
+      "bbox": [120, 340, 80, 60],
+      "frame_number": 45
+    },
+    {
+      "class_name": "pothole",
+      "confidence": 0.85,
+      "severity": 3.1,
+      "depth_cm": 4.2,
+      "bbox": [200, 310, 65, 50],
+      "frame_number": 112
+    },
+    {
+      "class_name": "crack",
+      "confidence": 0.78,
+      "severity": 2.4,
+      "depth_cm": null,
+      "bbox": [50, 280, 200, 30],
+      "frame_number": 180
+    },
+    {
+      "class_name": "pothole",
+      "confidence": 0.93,
+      "severity": 4.8,
+      "depth_cm": 9.1,
+      "bbox": [300, 320, 90, 70],
+      "frame_number": 260
+    },
+    {
+      "class_name": "pothole",
+      "confidence": 0.72,
+      "severity": 2.0,
+      "depth_cm": 3.0,
+      "bbox": [180, 290, 55, 45],
+      "frame_number": 370
+    }
+  ]
+}
