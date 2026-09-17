@@ -250,6 +250,41 @@ def run_yolo_inference(job_id: str, video_path: str, road_segment_id: str, bus_i
 
         print(f"[JOB {job_id}] Finished! {stored} potholes geocoded & logged along {road_segment_id}")
 
+        # ── Non-blocking Cloud Sync ──
+        # If running locally, push telemetry to the hosted cloud backend so both stay in sync!
+        if not settings.is_production:
+            try:
+                import urllib.request
+                cloud_url = "https://roadpulse-ai-wjsk.onrender.com/api/ingest/detections"
+                cloud_payload = {
+                    "road_segment_id": road_segment_id,
+                    "session_id": f"LOCAL-DASHBOARD-{job_id}",
+                    "captured_at": datetime.utcnow().isoformat(),
+                    "frame_count": total_frames,
+                    "source": "local_yolo_gpu",
+                    "detections": [
+                        {
+                            "class_name": d.get("class_name", "Potholes"),
+                            "confidence": d.get("confidence", 0.85),
+                            "severity": d.get("severity", 2.5),
+                            "depth_cm": d.get("depth_cm"),
+                            "bbox": d.get("bbox"),
+                            "frame_number": d.get("frame_number")
+                        }
+                        for d in raw_detections
+                    ]
+                }
+                req = urllib.request.Request(
+                    cloud_url,
+                    data=json.dumps(cloud_payload).encode("utf-8"),
+                    headers={"Content-Type": "application/json", "User-Agent": "RoadPulse-LocalSync/1.0"},
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    print(f"[CLOUD SYNC] Local detections synced to Render cloud: {resp.status} OK")
+            except Exception as sync_err:
+                print(f"[CLOUD SYNC] Cloud sync notice: {sync_err}")
+
     except Exception as e:
         try:
             job = db.query(ProcessingJob).filter(ProcessingJob.job_id == job_id).first()

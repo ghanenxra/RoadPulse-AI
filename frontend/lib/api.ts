@@ -57,6 +57,20 @@ export const api = {
   getJobs: () => 
     fetchAPI<types.ProcessingJob[]>('/api/jobs'),
     
+  getJobDetections: (jobId: string) => 
+    fetchAPI<Array<{
+      detection_id: string;
+      frame_number: number;
+      confidence: number;
+      severity: number;
+      severity_label: string;
+      depth_cm: number | null;
+      bbox: string | null;
+      road_segment_id: string;
+      latitude?: number;
+      longitude?: number;
+    }>>(`/api/jobs/${jobId}/detections`),
+    
   uploadVideo: (formData: FormData) => 
     fetchAPI<{ job_id: string; message: string }>('/api/upload', {
       method: 'POST',
