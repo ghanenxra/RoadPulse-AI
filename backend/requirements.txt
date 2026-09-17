@@ -9,3 +9,5 @@ python-dotenv>=1.0.0
 httpx>=0.27.0
 pytest>=8.0.0
 pytest-asyncio>=0.23.2
+ultralytics>=8.0.0
+opencv-python-headless>=4.8.0

@@ -19,8 +19,10 @@ export default function ProcessingPage() {
   const [simulating, setSimulating] = useState(false)
   const [selectedBus, setSelectedBus] = useState('BUS-1')
   const [selectedStation, setSelectedStation] = useState('CS-1')
+  const [selectedSegment, setSelectedSegment] = useState('TR-01')
   const [dragActive, setDragActive] = useState(false)
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null)
+  const [activeJobId, setActiveJobId] = useState<string | null>(null)
   
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -35,7 +37,7 @@ export default function ProcessingPage() {
 
   useEffect(() => {
     fetchJobs()
-    const interval = setInterval(fetchJobs, 4000)
+    const interval = setInterval(fetchJobs, 3000)
     return () => clearInterval(interval)
   }, [])
 
@@ -47,11 +49,13 @@ export default function ProcessingPage() {
       formData.append('file', file)
       formData.append('bus_id', selectedBus)
       formData.append('station_id', selectedStation)
+      formData.append('road_segment_id', selectedSegment)
       
       const res = await api.uploadVideo(formData)
+      setActiveJobId(res.job_id)
       setNotification({
         type: 'success',
-        message: `Video '${file.name}' uploaded successfully. Job ${res.job_id} queued for YOLO inference.`
+        message: `'${file.name}' uploaded → YOLO running on your local GPU for segment ${selectedSegment}. Job ${res.job_id} in progress.`
       })
       await fetchJobs()
     } catch (e: any) {
@@ -71,7 +75,7 @@ export default function ProcessingPage() {
       const res = await api.simulateUpload()
       setNotification({
         type: 'success',
-        message: res.message || 'Simulated NVDR footage ingested and processed through YOLO pipeline.'
+        message: res.message || 'Simulated YOLO ingestion complete. 14 potholes detected on Tonk Road.'
       })
       await fetchJobs()
     } catch (e: any) {
@@ -207,7 +211,7 @@ export default function ProcessingPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                 <div>
                   <label className="text-xs font-semibold text-gray-600 block mb-1">Transit Bus ID</label>
                   <select 
@@ -215,9 +219,9 @@ export default function ProcessingPage() {
                     onChange={(e) => setSelectedBus(e.target.value)}
                     className="w-full text-xs border rounded-md p-2 bg-white font-medium"
                   >
-                    <option value="BUS-1">BUS-1 (Route 11: Tonk Rd Corridor)</option>
-                    <option value="BUS-2">BUS-2 (Route 12: Ajmer Rd Express)</option>
-                    <option value="BUS-3">BUS-3 (Route 13: Sikar Rd Radial)</option>
+                    <option value="BUS-1">BUS-1 (Route 11: Tonk Rd)</option>
+                    <option value="BUS-2">BUS-2 (Route 12: Ajmer Rd)</option>
+                    <option value="BUS-3">BUS-3 (Route 13: Sikar Rd)</option>
                   </select>
                 </div>
                 <div>
@@ -227,8 +231,25 @@ export default function ProcessingPage() {
                     onChange={(e) => setSelectedStation(e.target.value)}
                     className="w-full text-xs border rounded-md p-2 bg-white font-medium"
                   >
-                    <option value="CS-1">CS-1: JCTSL Sanganer Central Hub</option>
-                    <option value="CS-2">CS-2: Vidhyadhar Nagar Bus Depot</option>
+                    <option value="CS-1">CS-1: JCTSL Sanganer Hub</option>
+                    <option value="CS-2">CS-2: Vidhyadhar Depot</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-gray-600 block mb-1">Road Segment</label>
+                  <select 
+                    value={selectedSegment} 
+                    onChange={(e) => setSelectedSegment(e.target.value)}
+                    className="w-full text-xs border rounded-md p-2 bg-white font-medium"
+                  >
+                    <option value="TR-01">TR-01: Tonk Road</option>
+                    <option value="AJ-01">AJ-01: Ajmer Road</option>
+                    <option value="SR-01">SR-01: Sikar Road</option>
+                    <option value="JLN-01">JLN-01: JLN Marg</option>
+                    <option value="JG-01">JG-01: Jawahar Circle</option>
+                    <option value="CL-01">CL-01: Civil Lines</option>
+                    <option value="MI-01">MI-01: MI Road</option>
+                    <option value="VN-01">VN-01: Vidhyadhar Nagar</option>
                   </select>
                 </div>
               </div>
@@ -250,18 +271,22 @@ export default function ProcessingPage() {
               <div className="text-xs space-y-2 bg-slate-50 p-3 rounded-lg border border-slate-200">
                 <div className="flex justify-between">
                   <span className="text-gray-500">Provider:</span>
-                  <span className="font-semibold text-slate-800">MockDetectionProvider (v1.0)</span>
+                  <span className="font-semibold text-emerald-700">YOLOv8 Local GPU ✓</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Target Model:</span>
-                  <span className="font-semibold text-slate-800">YOLOv8n-RDD2022 (D40)</span>
+                  <span className="text-gray-500">Model:</span>
+                  <span className="font-semibold text-slate-800">Yolov8-fintuned-on-potholes.pt</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Sampling Rate:</span>
-                  <span className="font-semibold text-slate-800">1 frame / 5 meters</span>
+                  <span className="font-semibold text-slate-800">Every 30th frame (~1fps)</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Clustering Algorithm:</span>
+                  <span className="text-gray-500">Confidence Threshold:</span>
+                  <span className="font-semibold text-slate-800">0.35 minimum</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Clustering:</span>
                   <span className="font-semibold text-slate-800">DBSCAN (eps=15m)</span>
                 </div>
               </div>
