@@ -12,16 +12,35 @@ from core.config import settings
 def generate_weekly_pdf(week: int, db: Session, zone: str = None, authority: str = None) -> str:
     reports_dir = settings.reports_dir
     reports_dir.mkdir(parents=True, exist_ok=True)
-    file_path = reports_dir / f"weekly_report_w{week}.pdf"
-
     
+    auth_suffix = f"_{authority.replace(' ', '_').replace('/', '_')}" if authority and authority != "all" else ""
+    file_path = str(reports_dir / f"weekly_report_w{week}{auth_suffix}.pdf")
+
     # Query Database Data
-    segments = db.query(RoadSegment).all()
+    all_segments = db.query(RoadSegment).all()
     metrics = db.query(WeeklyRoadMetric).filter(WeeklyRoadMetric.week == week).all()
     metric_map = {m.segment_id: m for m in metrics}
     authorities = {a.authority_id: a for a in db.query(Authority).all()}
     issues = db.query(IssueReport).all()
     
+    # Filter segments if authority is specified
+    if authority and authority.lower() not in ["all", ""]:
+        auth_query = authority.lower().replace("_", " ")
+        filtered_segs = []
+        for s in all_segments:
+            auth = authorities.get(s.authority_id)
+            name_lower = auth.name.lower() if auth else ""
+            if (auth_query in name_lower or 
+                s.authority_id.lower() == authority.lower() or
+                ("greater" in auth_query and "greater" in name_lower) or
+                ("heritage" in auth_query and "heritage" in name_lower) or
+                ("pwd" in auth_query and "pwd" in name_lower) or
+                ("jda" in auth_query and "jda" in name_lower)):
+                filtered_segs.append(s)
+        segments = filtered_segs if filtered_segs else all_segments
+    else:
+        segments = all_segments
+
     doc = SimpleDocTemplate(
         file_path,
         pagesize=letter,
@@ -87,8 +106,9 @@ def generate_weekly_pdf(week: int, db: Session, zone: str = None, authority: str
     # Title Header
     story.append(Paragraph('ROADPULSE AI — MUNICIPAL ROAD HEALTH AUDIT', title_style))
     gen_time = datetime.now().strftime("%Y-%m-%d %H:%M")
+    scope_label = f"Authority: {authority}" if authority and authority != "all" else "Zone: Jaipur Urban Area (Citywide)"
     story.append(Paragraph(
-        f'Weekly Condition Assessment &amp; SLA Accountability Dossier | Survey Cycle: <b>Week {week}</b> | Generated: {gen_time} | Zone: Jaipur Urban Area',
+        f'Weekly Condition Assessment &amp; SLA Accountability Dossier | Survey Cycle: <b>Week {week}</b> | Generated: {gen_time} | {scope_label}',
         sub_style
     ))
     story.append(Spacer(1, 8))
@@ -108,9 +128,12 @@ def generate_weekly_pdf(week: int, db: Session, zone: str = None, authority: str
     
     # Executive KPI Summary Table
     total_roads = len(segments)
-    total_potholes = sum(m.pothole_count for m in metrics)
-    avg_risk = sum(m.risk_score for m in metrics) / total_roads if total_roads else 0.0
-    critical_count = sum(1 for m in metrics if m.grade in ['D', 'E'])
+    seg_ids = {s.segment_id for s in segments}
+    seg_metrics = [m for m in metrics if m.segment_id in seg_ids]
+    total_potholes = sum(m.pothole_count for m in seg_metrics)
+    avg_risk = sum(m.risk_score for m in seg_metrics) / len(seg_metrics) if seg_metrics else 0.0
+    critical_count = sum(1 for m in seg_metrics if m.grade in ['D', 'E'])
+    total_km = sum(s.length_km for s in segments)
     
     kpi_data = [
         [
@@ -120,7 +143,7 @@ def generate_weekly_pdf(week: int, db: Session, zone: str = None, authority: str
             Paragraph('Critical Corridors (D/E)', header_cell)
         ],
         [
-            Paragraph(f'<b>{total_roads}</b> Segments (21.4 km)', cell_style),
+            Paragraph(f'<b>{total_roads}</b> Segments ({total_km:.1f} km)', cell_style),
             Paragraph(f'<b>{total_potholes}</b> Verified Potholes', cell_style),
             Paragraph(f'<b>{avg_risk:.1f}</b> / 100', cell_style),
             Paragraph(f'<b>{critical_count}</b> Action Required', cell_style)
@@ -142,7 +165,7 @@ def generate_weekly_pdf(week: int, db: Session, zone: str = None, authority: str
     story.append(Spacer(1, 3))
     
     grade_counts = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0}
-    for m in metrics:
+    for m in seg_metrics:
         if m.grade in grade_counts:
             grade_counts[m.grade] += 1
             
@@ -157,26 +180,26 @@ def generate_weekly_pdf(week: int, db: Session, zone: str = None, authority: str
         ],
         [
             Paragraph('<b>Grade A</b>', cell_bold), Paragraph('Good Condition', cell_style), Paragraph('0 – 20', cell_style),
-            Paragraph(str(grade_counts['A']), cell_style), Paragraph(f'{(grade_counts["A"]/total_roads*100):.1f}%', cell_style), Paragraph('Routine bi-weekly optical surveillance', cell_style)
+            Paragraph(str(grade_counts['A']), cell_style), Paragraph(f'{(grade_counts["A"]/total_roads*100):.1f}%' if total_roads else '0.0%', cell_style), Paragraph('Routine bi-weekly optical surveillance', cell_style)
         ],
         [
             Paragraph('<b>Grade B</b>', cell_bold), Paragraph('Fair Condition', cell_style), Paragraph('21 – 40', cell_style),
-            Paragraph(str(grade_counts['B']), cell_style), Paragraph(f'{(grade_counts["B"]/total_roads*100):.1f}%', cell_style), Paragraph('Preventative seal coat monitoring', cell_style)
+            Paragraph(str(grade_counts['B']), cell_style), Paragraph(f'{(grade_counts["B"]/total_roads*100):.1f}%' if total_roads else '0.0%', cell_style), Paragraph('Preventative seal coat monitoring', cell_style)
         ],
         [
             Paragraph('<b>Grade C</b>', cell_bold), Paragraph('Moderate Wear', cell_style), Paragraph('41 – 60', cell_style),
-            Paragraph(str(grade_counts['C']), cell_style), Paragraph(f'{(grade_counts["C"]/total_roads*100):.1f}%', cell_style), Paragraph('Schedule patch works within 30 days', cell_style)
+            Paragraph(str(grade_counts['C']), cell_style), Paragraph(f'{(grade_counts["C"]/total_roads*100):.1f}%' if total_roads else '0.0%', cell_style), Paragraph('Schedule patch works within 30 days', cell_style)
         ],
         [
             Paragraph('<b>Grade D</b>', cell_bold), Paragraph('Poor / Deteriorating', cell_style), Paragraph('61 – 80', cell_style),
-            Paragraph(str(grade_counts['D']), cell_style), Paragraph(f'{(grade_counts["D"]/total_roads*100):.1f}%', cell_style), Paragraph('Issue dispatch to municipal contractor (14-day SLA)', cell_style)
+            Paragraph(str(grade_counts['D']), cell_style), Paragraph(f'{(grade_counts["D"]/total_roads*100):.1f}%' if total_roads else '0.0%', cell_style), Paragraph('Issue dispatch to municipal contractor (14-day SLA)', cell_style)
         ],
         [
             Paragraph('<b>Grade E</b>', cell_bold), Paragraph('Critical / Dangerous', cell_style), Paragraph('81 – 100', cell_style),
-            Paragraph(str(grade_counts['E']), cell_style), Paragraph(f'{(grade_counts["E"]/total_roads*100):.1f}%', cell_style), Paragraph('EMERGENCY: Cold mix repair within 72 hours', cell_style)
+            Paragraph(str(grade_counts['E']), cell_style), Paragraph(f'{(grade_counts["E"]/total_roads*100):.1f}%' if total_roads else '0.0%', cell_style), Paragraph('EMERGENCY: Cold mix repair within 72 hours', cell_style)
         ],
     ]
-    grade_table = Table(grade_rows, colWidths=[55, 95, 75, 55, 75, 185])
+    grade_table = Table(grade_rows, colWidths=[55, 95, 75, 55, 75, 185], repeatRows=1)
     grade_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#334155')),
         ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1')),
@@ -229,7 +252,7 @@ def generate_weekly_pdf(week: int, db: Session, zone: str = None, authority: str
             Paragraph(status_display, cell_style)
         ])
         
-    road_table = Table(road_rows, colWidths=[45, 135, 125, 45, 45, 40, 45, 60])
+    road_table = Table(road_rows, colWidths=[45, 135, 125, 45, 45, 40, 45, 60], repeatRows=1)
     road_table.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0f172a')),
         ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#cbd5e1')),
@@ -302,7 +325,7 @@ def _write_csv(filename: str, headers: list, rows: list) -> str:
         writer.writerow(["# SIMULATED DEMO DATA — RoadPulse AI Municipal Intelligence Platform"])
         writer.writerow(headers)
         writer.writerows(rows)
-    return file_path
+    return str(file_path)
 
 def export_detections_csv(db: Session, week: int = None) -> str:
     q = db.query(Detection)

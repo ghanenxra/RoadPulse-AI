@@ -151,13 +151,14 @@ export const api = {
       body: JSON.stringify({ issue_id: issueId }),
     }),
     
-  generateWeeklyReport: (week: number = 4) => 
-    fetchAPI<{ success: boolean; url: string; filename: string; download_url: string }>(`/api/reports/generate?week=${week}`, {
-      method: 'POST',
-    }),
+  generateWeeklyReport: (week: number = 4, authority?: string) => 
+    fetchAPI<{ success: boolean; url: string; filename: string; download_url: string }>(
+      `/api/reports/generate?week=${week}${authority && authority !== 'all' ? `&authority=${encodeURIComponent(authority)}` : ''}`, 
+      { method: 'POST' }
+    ),
     
-  getPDFReportUrl: (week: number = 4) => 
-    `${API_BASE}/api/reports/weekly?week=${week}`,
+  getPDFReportUrl: (week: number = 4, authority?: string) => 
+    `${API_BASE}/api/reports/weekly?week=${week}${authority && authority !== 'all' ? `&authority=${encodeURIComponent(authority)}` : ''}`,
     
   getCSVExportUrl: (type: string, week?: number) => 
     `${API_BASE}/api/exports/csv?type=${type}${week ? `&week=${week}` : ''}`,

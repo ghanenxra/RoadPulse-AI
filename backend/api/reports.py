@@ -15,21 +15,23 @@ def get_weekly_report(week: int = 4, zone: str = None, authority: str = None, db
     pdf_path = generate_weekly_pdf(week, db, zone, authority)
     if not os.path.exists(pdf_path):
         raise HTTPException(500, "Failed to generate report")
+    download_name = f'roadpulse_weekly_w{week}_{authority}.pdf' if authority and authority != 'all' else f'roadpulse_weekly_w{week}.pdf'
     return FileResponse(
         pdf_path,
         media_type='application/pdf',
-        filename=f'roadpulse_weekly_w{week}.pdf'
+        filename=download_name
     )
 
 @router.post('/api/reports/generate')
-def generate_report_post(week: int = Query(4), db: Session = Depends(get_db)):
-    pdf_path = generate_weekly_pdf(week, db)
+def generate_report_post(week: int = Query(4), authority: str = Query(None), db: Session = Depends(get_db)):
+    pdf_path = generate_weekly_pdf(week, db, authority=authority)
     filename = os.path.basename(pdf_path)
+    auth_param = f"&authority={authority}" if authority and authority != 'all' else ""
     return {
         "success": True,
         "filename": filename,
         "url": f"/reports/{filename}",
-        "download_url": f"/api/reports/weekly?week={week}"
+        "download_url": f"/api/reports/weekly?week={week}{auth_param}"
     }
 
 @router.get('/api/exports/csv')

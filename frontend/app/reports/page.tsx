@@ -45,30 +45,62 @@ export default function ReportsPage() {
     try {
       setGeneratingPdf(true)
       setFeedback(null)
-      const url = api.getPDFReportUrl(week)
+      const url = api.getPDFReportUrl(week, selectedAuth)
+      const response = await fetch(url)
+      if (!response.ok) {
+        let errMessage = `Server responded with status ${response.status}`
+        try {
+          const errJson = await response.json()
+          if (errJson.detail) errMessage = errJson.detail
+        } catch {
+          // fallback to status code
+        }
+        throw new Error(errMessage)
+      }
+      const blob = await response.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href = url
-      link.download = `roadpulse_weekly_w${week}.pdf`
+      link.href = blobUrl
+      const authSuffix = selectedAuth && selectedAuth !== 'all' ? `_${selectedAuth}` : ''
+      link.download = `roadpulse_weekly_w${week}${authSuffix}.pdf`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+      window.URL.revokeObjectURL(blobUrl)
       setFeedback({ type: 'success', message: `Official ReportLab PDF report for Week ${week} downloaded successfully.` })
     } catch (e: any) {
-      setFeedback({ type: 'error', message: `Failed to download PDF report: ${e.message}` })
+      setFeedback({ type: 'error', message: `Failed to download PDF report: ${e.message || e}` })
     } finally {
       setGeneratingPdf(false)
     }
   }
 
-  const handleDownloadCsv = (type: string, filename: string) => {
-    const url = api.getCSVExportUrl(type, week)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = filename
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    setFeedback({ type: 'success', message: `Exported ${filename} successfully.` })
+  const handleDownloadCsv = async (type: string, filename: string) => {
+    try {
+      setFeedback(null)
+      const url = api.getCSVExportUrl(type, week)
+      const response = await fetch(url)
+      if (!response.ok) {
+        let errMessage = `Server responded with status ${response.status}`
+        try {
+          const errJson = await response.json()
+          if (errJson.detail) errMessage = errJson.detail
+        } catch {}
+        throw new Error(errMessage)
+      }
+      const blob = await response.blob()
+      const blobUrl = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(blobUrl)
+      setFeedback({ type: 'success', message: `Exported ${filename} successfully.` })
+    } catch (e: any) {
+      setFeedback({ type: 'error', message: `Failed to export CSV: ${e.message || e}` })
+    }
   }
 
   const csvExports = [
@@ -216,7 +248,6 @@ export default function ReportsPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg border">
                     <div>
                       <div className="text-xs text-gray-500 uppercase">Roads Monitored</div>
-                      <div className="text-2xl font-bold text-slate-900">{metrics?.roads_surveyed.current || 8}</div>
                       <div className="text-2xl font-bold text-slate-900">{metrics?.roads_surveyed.current ?? 20}</div>
                       <div className="text-xs text-emerald-600 mt-1">100% route coverage</div>
                     </div>
