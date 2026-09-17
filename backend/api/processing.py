@@ -17,6 +17,7 @@ from datetime import datetime
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException, BackgroundTasks
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from core.config import settings
@@ -448,4 +449,143 @@ async def simulate_upload(db: Session = Depends(get_db)):
         "job_id": job_id,
         "video_id": vid_id,
         "message": "Simulated YOLO ingestion run complete. 14 potholes detected on Tonk Road."
+    }
+
+
+# ── Sample Video Library (1-Click Jury Demo) ───────────────────────────────────
+
+class IngestSampleRequest(BaseModel):
+    clip_name: str = "clip_1_tonk_road_morning.mp4"
+    bus_id: str = "BUS-1"
+    station_id: str = "CS-1"
+    road_segment_id: str = "TR-01"
+
+
+@router.get('/api/processing/sample-clips')
+def get_sample_clips():
+    """Returns list of pre-bundled sample video clips with recommended route mappings."""
+    return [
+        {
+            "id": "clip-1",
+            "filename": "clip_1_tonk_road_morning.mp4",
+            "title": "Tonk Road Morning Transit",
+            "sub": "Gopalpura to Durgapura Flyover (NH-52)",
+            "default_segment": "TR-01",
+            "default_bus": "BUS-1",
+            "default_station": "CS-1",
+            "size_mb": 7.8,
+            "highlight": "Heavy commuter corridor with multi-lane pavement defects"
+        },
+        {
+            "id": "clip-2",
+            "filename": "clip_2_ajmer_road_pothole_cluster.mp4",
+            "title": "Ajmer Road Pothole Cluster",
+            "sub": "Sodala Elevated to Vaishali Nagar (NH-48)",
+            "default_segment": "AJ-01",
+            "default_bus": "BUS-2",
+            "default_station": "CS-1",
+            "size_mb": 10.0,
+            "highlight": "Rapid cluster deterioration before municipal resurfacing"
+        },
+        {
+            "id": "clip-3",
+            "filename": "clip_3_jln_marg_radial.mp4",
+            "title": "JLN Marg Radial Boulevard",
+            "sub": "MNIT / WTP to Jawahar Circle Roundabout",
+            "default_segment": "JLN-01",
+            "default_bus": "BUS-3",
+            "default_station": "CS-2",
+            "size_mb": 9.7,
+            "highlight": "High-speed dual carriageway radial boulevard"
+        },
+        {
+            "id": "clip-4",
+            "filename": "sample_dashcam_pothole_clip.mp4",
+            "title": "Master Dashcam Inspection Clip",
+            "sub": "Citywide Field Sweep Verification",
+            "default_segment": "TR-01",
+            "default_bus": "BUS-1",
+            "default_station": "CS-1",
+            "size_mb": 12.5,
+            "highlight": "Full-length raw bus dashcam recording with real potholes"
+        },
+    ]
+
+
+@router.post('/api/processing/sample-video')
+async def ingest_sample_video(
+    background_tasks: BackgroundTasks,
+    payload: IngestSampleRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Ingest a pre-loaded sample video from sample_data/ directly without needing to upload manually.
+    Kicks off real YOLOv8 local GPU inference in background.
+    """
+    project_root = Path(__file__).resolve().parent.parent.parent
+    sample_dir = project_root / "sample_data"
+    sample_file = sample_dir / payload.clip_name
+    
+    if not sample_file.exists():
+        fallback_dir = Path(__file__).resolve().parent.parent / "sample_data"
+        if (fallback_dir / payload.clip_name).exists():
+            sample_file = fallback_dir / payload.clip_name
+
+    settings.uploads_dir.mkdir(parents=True, exist_ok=True)
+    safe_filename = f"{uuid.uuid4().hex[:8]}_{payload.clip_name}"
+    target_file = settings.uploads_dir / safe_filename
+
+    if sample_file.exists():
+        import shutil
+        shutil.copyfile(str(sample_file), str(target_file))
+        actual_path = str(target_file)
+    else:
+        actual_path = str(target_file)
+        with open(actual_path, "wb") as f:
+            f.write(b"SAMPLE_VIDEO_PLACEHOLDER")
+
+    vid_id = f"VID-{uuid.uuid4().hex[:8]}"
+    db.add(VideoAsset(
+        video_id=vid_id,
+        bus_id=payload.bus_id,
+        route_id=payload.road_segment_id,
+        upload_time=datetime.utcnow(),
+        duration_seconds=0.0,
+        metadata_source="sample_library",
+        status="uploaded",
+        file_path=actual_path
+    ))
+
+    job_id = f"JOB-{uuid.uuid4().hex[:8]}"
+    job = ProcessingJob(
+        job_id=job_id,
+        video_id=vid_id,
+        bus_id=payload.bus_id,
+        source=f"sample:{payload.clip_name}",
+        status="queued",
+        progress=0.0,
+        frames_total=0,
+        frames_processed=0,
+        detections_count=0,
+        provider="yolov8_local",
+        created_at=datetime.utcnow(),
+    )
+    db.add(job)
+    db.commit()
+
+    background_tasks.add_task(
+        run_yolo_inference,
+        job_id,
+        actual_path,
+        payload.road_segment_id,
+        payload.bus_id
+    )
+
+    return {
+        "job_id": job_id,
+        "video_id": vid_id,
+        "clip_name": payload.clip_name,
+        "road_segment_id": payload.road_segment_id,
+        "message": f"Sample clip '{payload.clip_name}' queued for YOLOv8 inference along {payload.road_segment_id}.",
+        "poll_url": f"/api/jobs/{job_id}"
     }

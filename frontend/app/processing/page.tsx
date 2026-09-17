@@ -19,6 +19,7 @@ export default function ProcessingPage() {
   const [jobs, setJobs] = useState<ProcessingJob[]>([])
   const [uploading, setUploading] = useState(false)
   const [simulating, setSimulating] = useState(false)
+  const [runningSample, setRunningSample] = useState<string | null>(null)
   const [selectedBus, setSelectedBus] = useState('BUS-1')
   const [selectedStation, setSelectedStation] = useState('CS-1')
   const [selectedSegment, setSelectedSegment] = useState('TR-01')
@@ -144,6 +145,83 @@ export default function ProcessingPage() {
       })
     } finally {
       setSimulating(false)
+    }
+  }
+
+  const sampleClips = [
+    {
+      id: 'clip-1',
+      filename: 'clip_1_tonk_road_morning.mp4',
+      title: 'Tonk Road Morning Transit',
+      route: 'Tonk Road (NH-52)',
+      default_segment: 'TR-01',
+      default_bus: 'BUS-1',
+      default_station: 'CS-1',
+      size: '7.8 MB',
+      badge: 'Commuter Corridor'
+    },
+    {
+      id: 'clip-2',
+      filename: 'clip_2_ajmer_road_pothole_cluster.mp4',
+      title: 'Ajmer Road Pothole Cluster',
+      route: 'Ajmer Road (NH-48)',
+      default_segment: 'AJ-01',
+      default_bus: 'BUS-2',
+      default_station: 'CS-1',
+      size: '10.0 MB',
+      badge: 'Severe Cluster'
+    },
+    {
+      id: 'clip-3',
+      filename: 'clip_3_jln_marg_radial.mp4',
+      title: 'JLN Marg Radial Boulevard',
+      route: 'JLN Marg (Airport Radial)',
+      default_segment: 'JLN-01',
+      default_bus: 'BUS-3',
+      default_station: 'CS-2',
+      size: '9.7 MB',
+      badge: 'Dual Carriageway'
+    },
+    {
+      id: 'clip-4',
+      filename: 'sample_dashcam_pothole_clip.mp4',
+      title: 'Master Dashcam Sweep',
+      route: 'Tonk Road (NH-52)',
+      default_segment: 'TR-01',
+      default_bus: 'BUS-1',
+      default_station: 'CS-1',
+      size: '12.5 MB',
+      badge: 'Full-Length 4K'
+    },
+  ]
+
+  const handleIngestSample = async (clip: typeof sampleClips[0]) => {
+    try {
+      setRunningSample(clip.filename)
+      setNotification(null)
+      setSelectedBus(clip.default_bus)
+      setSelectedStation(clip.default_station)
+      setSelectedSegment(clip.default_segment)
+      
+      const res = await api.ingestSampleVideo({
+        clip_name: clip.filename,
+        bus_id: clip.default_bus,
+        station_id: clip.default_station,
+        road_segment_id: clip.default_segment
+      })
+      setActiveJobId(res.job_id)
+      setNotification({
+        type: 'success',
+        message: `'${clip.title}' loaded → YOLO running on local GPU for ${clip.default_segment}. Job ${res.job_id} in progress.`
+      })
+      await fetchJobs()
+    } catch (e: any) {
+      setNotification({
+        type: 'error',
+        message: `Sample ingestion failed: ${e.message || e}`
+      })
+    } finally {
+      setRunningSample(null)
     }
   }
 
@@ -293,8 +371,72 @@ export default function ProcessingPage() {
                     className="text-xs"
                   >
                     {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <FileVideo className="h-3.5 w-3.5 mr-1 text-blue-600" />}
-                    Browse Files
+                    Browse Custom File
                   </Button>
+                </div>
+              </div>
+
+              {/* 1-Click Sample Video Ingestion Grid for Jury Pitch */}
+              <div className="pt-2 border-t">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-1.5">
+                    <Sparkles className="h-4 w-4 text-amber-500" />
+                    <span className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                      1-Click Sample Dashcam Ingestion (Live Jury Demo)
+                    </span>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200">
+                    Runs on Local GPU
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                  {sampleClips.map((clip) => {
+                    const isRunning = runningSample === clip.filename
+                    return (
+                      <div 
+                        key={clip.id}
+                        className="border border-slate-200 bg-white hover:border-blue-400 rounded-lg p-3 flex flex-col justify-between space-y-2.5 transition-all shadow-xs"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-mono bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded font-semibold">
+                              {clip.default_segment}
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-medium">{clip.size}</span>
+                          </div>
+                          <div className="text-xs font-semibold text-slate-900 mt-1.5 leading-snug">
+                            {clip.title}
+                          </div>
+                          <div className="text-[11px] text-gray-500 mt-0.5">
+                            {clip.route}
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          disabled={runningSample !== null || uploading}
+                          onClick={() => handleIngestSample(clip)}
+                          className={`w-full h-8 text-xs font-semibold flex items-center justify-center space-x-1.5 transition-all ${
+                            isRunning
+                              ? 'bg-amber-600 text-white'
+                              : 'bg-slate-900 hover:bg-blue-600 text-white'
+                          }`}
+                        >
+                          {isRunning ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin mr-1 text-white" />
+                              <span>Processing...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Play className="h-3.5 w-3.5 text-emerald-400 fill-emerald-400 mr-1" />
+                              <span>Ingest &amp; Run YOLO</span>
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -333,10 +475,22 @@ export default function ProcessingPage() {
                     <option value="AJ-01">AJ-01: Ajmer Road</option>
                     <option value="SR-01">SR-01: Sikar Road</option>
                     <option value="JLN-01">JLN-01: JLN Marg</option>
-                    <option value="JG-01">JG-01: Jawahar Circle</option>
-                    <option value="CL-01">CL-01: Civil Lines</option>
+                    <option value="JG-01">JG-01: Jawahar Circle Bypass</option>
+                    <option value="CL-01">CL-01: Civil Lines Road</option>
                     <option value="MI-01">MI-01: MI Road</option>
                     <option value="VN-01">VN-01: Vidhyadhar Nagar</option>
+                    <option value="CD-01">CD-01: Chandpole Bazar</option>
+                    <option value="AG-01">AG-01: Agra Road</option>
+                    <option value="SN-01">SN-01: Sahakar Marg</option>
+                    <option value="MD-01">MD-01: Mansarovar Madhyam Marg</option>
+                    <option value="GL-01">GL-01: Gokhale Marg</option>
+                    <option value="KP-01">KP-01: Khatipura Road</option>
+                    <option value="MN-01">MN-01: Calgiri Marg</option>
+                    <option value="TG-01">TG-01: Tripolia Bazar</option>
+                    <option value="BR-01">BR-01: Bais Godam Ind. Road</option>
+                    <option value="HA-01">HA-01: Hawa Mahal Road</option>
+                    <option value="JP-01">JP-01: Jagatpura Central Spine</option>
+                    <option value="VK-01">VK-01: Vishwakarma (VKI) Road 1</option>
                   </select>
                 </div>
               </div>

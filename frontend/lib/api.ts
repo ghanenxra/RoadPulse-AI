@@ -76,6 +76,25 @@ export const api = {
       method: 'POST',
       body: formData,
     }),
+
+  ingestSampleVideo: (payload: { clip_name: string; bus_id?: string; station_id?: string; road_segment_id?: string }) =>
+    fetchAPI<{ job_id: string; video_id: string; clip_name: string; road_segment_id: string; message: string; poll_url: string }>('/api/processing/sample-video', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+
+  getSampleClips: () =>
+    fetchAPI<Array<{
+      id: string;
+      filename: string;
+      title: string;
+      sub: string;
+      default_segment: string;
+      default_bus: string;
+      default_station: string;
+      size_mb: number;
+      highlight: string;
+    }>>('/api/processing/sample-clips'),
   
   getAuthorityIssues: (status?: string, authorityId?: string) => {
     const params = new URLSearchParams();
