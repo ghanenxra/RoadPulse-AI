@@ -65,19 +65,24 @@ class YOLODetectionProvider(DetectionProvider):
             model_path: Path to the .pt model file.
             frame_step: Process every Nth frame (30 = ~1 frame/second at 30fps).
         """
+        import torch
         from ultralytics import YOLO
+
+        self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model = YOLO(model_path)
         self.frame_step = frame_step
         self.model_path = model_path
         print(f"[YOLO] Model loaded: {Path(model_path).name}")
-        print(f"[YOLO] Task: {self.model.task}  |  Frame step: every {frame_step} frames")
+        print(f"[YOLO] Task: {self.model.task}  |  Device: {self.device.upper()}  |  Frame step: every {frame_step} frames")
 
-    def detect(self, video_path: str, metadata: Optional[Dict[str, Any]] = None) -> List[dict]:
+    def detect(
+        self,
+        video_path: str,
+        progress_callback: Optional[Any] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> tuple[List[dict], dict]:
         """
-        Run inference on video. Returns list of detection dicts.
-
-        Each dict matches the ingest API DetectionItem schema:
-          class_name, confidence, severity, depth_cm, bbox, frame_number
+        Run inference on video. Returns (detections, video_info).
         """
         import cv2
 
@@ -87,12 +92,16 @@ class YOLODetectionProvider(DetectionProvider):
 
         fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        if total_frames <= 0:
+            total_frames = 1
 
+        duration_sec = round(total_frames / max(fps, 1.0), 2)
         print(f"[YOLO] Processing video: {video_path}")
-        print(f"[YOLO] Total frames: {total_frames}  |  FPS: {fps:.1f}  |  Sampling every {self.frame_step} frames")
+        print(f"[YOLO] Total frames: {total_frames}  |  FPS: {fps:.1f}  |  Duration: {duration_sec}s  |  Device: {self.device.upper()}")
 
         detections = []
         frame_idx = 0
+        sampled_count = 0
 
         while True:
             ret, frame = cap.read()
@@ -100,11 +109,18 @@ class YOLODetectionProvider(DetectionProvider):
                 break
 
             if frame_idx % self.frame_step == 0:
-                results = self.model(frame, verbose=False)
+                sampled_count += 1
+                if progress_callback and total_frames > 0:
+                    try:
+                        progress_callback(min(frame_idx / total_frames, 1.0), frame_idx)
+                    except Exception:
+                        pass
+
+                results = self.model(frame, device=self.device, verbose=False)
                 for result in results:
                     for box in result.boxes:
                         conf = float(box.conf[0])
-                        if conf < 0.35:          # ignore low-confidence detections
+                        if conf < 0.25:          # standard YOLO detection confidence threshold
                             continue
 
                         xyxy = box.xyxy[0].tolist()
@@ -114,10 +130,8 @@ class YOLODetectionProvider(DetectionProvider):
                             round(x2 - x1, 1), round(y2 - y1, 1)
                         ]
 
-                        # Get class name from model names dict
                         cls_id = int(box.cls[0])
-                        class_name = self.model.names.get(cls_id, "pothole")
-
+                        class_name = self.model.names.get(cls_id, "Potholes")
                         sev = _conf_to_severity(conf)
 
                         detections.append({
@@ -135,8 +149,16 @@ class YOLODetectionProvider(DetectionProvider):
             frame_idx += 1
 
         cap.release()
-        print(f"[YOLO] Done. Frames processed: {frame_idx // self.frame_step}  |  Detections: {len(detections)}")
-        return detections
+
+        video_info = {
+            "total_frames": total_frames,
+            "fps": round(fps, 1),
+            "duration_seconds": duration_sec,
+            "frames_processed": sampled_count
+        }
+
+        print(f"[YOLO] Done. Frames sampled: {sampled_count}/{total_frames}  |  Detections: {len(detections)}")
+        return detections, video_info
 
 
 # ── Mock Provider (fallback) ───────────────────────────────────────────────────
@@ -148,7 +170,12 @@ class MockDetectionProvider(DetectionProvider):
       - model file doesn't exist
       - provider='mock' explicitly requested
     """
-    def detect(self, video_path: str, metadata: Optional[Dict[str, Any]] = None) -> List[dict]:
+    def detect(
+        self,
+        video_path: str,
+        progress_callback: Optional[Any] = None,
+        metadata: Optional[Dict[str, Any]] = None
+    ) -> tuple[List[dict], dict]:
         detections = []
         num_detections = random.randint(5, 15)
         now = datetime.utcnow()
@@ -157,7 +184,7 @@ class MockDetectionProvider(DetectionProvider):
             conf = round(random.uniform(0.55, 0.97), 3)
             detections.append({
                 "detection_id": str(uuid.uuid4()),
-                "class_name": "pothole",
+                "class_name": "Potholes",
                 "frame_number": random.randint(0, 1800),
                 "timestamp": now,
                 "confidence": conf,
@@ -171,7 +198,13 @@ class MockDetectionProvider(DetectionProvider):
                     round(random.uniform(30, 90), 1),
                 ],
             })
-        return detections
+        video_info = {
+            "total_frames": 1800,
+            "fps": 30.0,
+            "duration_seconds": 60.0,
+            "frames_processed": 60
+        }
+        return detections, video_info
 
 
 # ── Factory ────────────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { Topbar } from '@/components/layout/Topbar'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -109,14 +110,32 @@ export default function ProcessingPage() {
       <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
         
         {notification && (
-          <div className={`p-4 rounded-lg flex items-center justify-between ${
+          <div className={`p-4 rounded-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
             notification.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-rose-50 border border-rose-200 text-rose-800'
           }`}>
             <div className="flex items-center space-x-2">
-              {notification.type === 'success' ? <CheckCircle2 className="h-5 w-5 text-emerald-600" /> : <AlertCircle className="h-5 w-5 text-rose-600" />}
+              {notification.type === 'success' ? <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0" /> : <AlertCircle className="h-5 w-5 text-rose-600 shrink-0" />}
               <span className="text-sm font-medium">{notification.message}</span>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setNotification(null)}>Dismiss</Button>
+            <div className="flex items-center space-x-2 shrink-0">
+              {notification.type === 'success' && (
+                <>
+                  <Link 
+                    href={`/roads/${selectedSegment}`}
+                    className="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 rounded-md shadow-xs flex items-center transition-colors"
+                  >
+                    View Road <ArrowRight className="h-3.5 w-3.5 ml-1" />
+                  </Link>
+                  <Link 
+                    href="/map"
+                    className="text-xs bg-white hover:bg-slate-100 text-slate-700 font-medium px-3 py-1.5 rounded-md border border-slate-200 shadow-xs transition-colors"
+                  >
+                    View Map
+                  </Link>
+                </>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => setNotification(null)}>Dismiss</Button>
+            </div>
           </div>
         )}
 
@@ -184,6 +203,11 @@ export default function ProcessingPage() {
                 <p className="text-xs text-gray-500 mt-1 max-w-sm">
                   Supports MP4, MOV, or MKV camera files up to 500 MB. Metadata sidecar parsed automatically.
                 </p>
+
+                <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                  <Sparkles className="h-3 w-3 text-amber-500" />
+                  <span>Demo Video Ready: <code className="font-mono text-[10px] bg-white px-1.5 py-0.5 rounded border border-blue-200">sample_data/sample_dashcam_pothole_clip.mp4</code></span>
+                </div>
 
                 <input 
                   type="file" 
