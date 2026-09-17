@@ -1,21 +1,114 @@
+import os
+import json
 import uuid
 from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
-from models.database import get_db, RoadSegment, WeeklyRoadMetric, IssueReport, ProcessingJob, VideoAsset, RepairVerification
-from data.seed import seed_database
+from models.database import (
+    get_db, RoadSegment, WeeklyRoadMetric, IssueReport, ProcessingJob, 
+    VideoAsset, RepairVerification, Detection, PotholeCluster, Authority, Bus, ChargingStation
+)
+from data.seed import seed_database, clear_database
 from services.verification_service import verify_repair
 
 router = APIRouter()
 
+# ── 1. Add / Seed 20 Demo Roads Data ──────────────────────────────────────────
+
+@router.post('/api/demo/seed-roads')
 @router.post('/api/demo/load')
 @router.post('/api/demo/reset')
-def reset_demo_data(db: Session = Depends(get_db)):
+def seed_roads_data(db: Session = Depends(get_db)):
+    """
+    Seeds or restores the complete 20 Jaipur road corridors with their 4-week history
+    into the dashboard.
+    """
     seed_database(db)
     road_count = db.query(RoadSegment).count()
     return {
         "success": True,
-        "message": f"Demo dataset re-seeded successfully with {road_count} road segments and 4-week history."
+        "message": f"Successfully loaded {road_count} Jaipur transit corridors with complete 4-week timeline into the dashboard.",
+        "road_count": road_count
+    }
+
+
+# ── 2. Reset ONLY Video Ingested Data ─────────────────────────────────────────
+
+@router.post('/api/demo/clear-ingested')
+def clear_ingested_data(db: Session = Depends(get_db)):
+    """
+    Clears ONLY video-ingested data:
+    - Deletes detections generated from uploaded videos or local YOLO runs
+    - Deletes uploaded ProcessingJobs and VideoAssets
+    - Deletes week 0 live bucket metrics
+    - Restores Week 4 baseline metrics for the 20 road segments from demo-data.json
+    - Preserves all 20 road segments and baseline history!
+    """
+    # 1. Delete video-ingested detections
+    ingested_dets = db.query(Detection).filter(
+        (Detection.data_source.in_(["local_yolo", "edge_depot_yolov8", "upload"])) |
+        (Detection.week == 0)
+    ).delete(synchronize_session=False)
+
+    # 2. Delete uploaded ProcessingJobs & VideoAssets
+    jobs_cleared = db.query(ProcessingJob).filter(
+        ProcessingJob.source.in_(["upload", "charging_station_upload", "local_yolo", "simulated_demo"])
+    ).delete(synchronize_session=False)
+
+    videos_cleared = db.query(VideoAsset).filter(
+        VideoAsset.metadata_source.in_(["upload", "local_yolo", "NVDR_SIMULATOR"])
+    ).delete(synchronize_session=False)
+
+    # 3. Delete week=0 live metrics
+    db.query(WeeklyRoadMetric).filter(WeeklyRoadMetric.week == 0).delete(synchronize_session=False)
+
+    # 4. Restore Week 4 baseline metrics from demo-data.json for all segments
+    data_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "demo-data.json")
+    if os.path.exists(data_path):
+        with open(data_path, "r", encoding="utf-8") as f:
+            demo_data = json.load(f)
+        for seg_data in demo_data.get("segments", []):
+            sid = seg_data["id"]
+            w4_data = next((w for w in seg_data.get("weeks", []) if w["week"] == 4), None)
+            if w4_data:
+                metric = db.query(WeeklyRoadMetric).filter(
+                    WeeklyRoadMetric.segment_id == sid,
+                    WeeklyRoadMetric.week == 4
+                ).first()
+                if metric:
+                    metric.pothole_count = w4_data["potholes"]
+                    metric.severe_count = int(w4_data["potholes"] * 0.4)
+                    metric.severity_avg = w4_data["severity"]
+                    metric.depth_avg_cm = w4_data["depth_cm"]
+                    metric.risk_score = w4_data["risk"]
+                    grade_val = w4_data["grade"]
+                    metric.grade = "E" if grade_val == "F" else grade_val
+                    metric.status = w4_data.get("status", "none")
+                    metric.note = w4_data.get("note", "")
+                    metric.data_source = "simulated_demo"
+
+    db.commit()
+
+    return {
+        "success": True,
+        "message": f"Cleared {ingested_dets} video detections and {jobs_cleared} upload jobs. Baseline 20 roads restored to original seed state.",
+        "detections_cleared": ingested_dets,
+        "jobs_cleared": jobs_cleared
+    }
+
+
+# ── 3. Complete Data Reset (Wipe All) ──────────────────────────────────────────
+
+@router.post('/api/demo/clear-all')
+def clear_all_data(db: Session = Depends(get_db)):
+    """
+    Complete data reset: Wipes all tables in the database (20 roads, metrics, detections, jobs).
+    Database starts completely empty until 'Add 20 Demo Roads' is clicked.
+    """
+    clear_database(db)
+    return {
+        "success": True,
+        "message": "Complete database wipe successful. All 20 road segments and video ingested data cleared."
     }
 
 @router.post('/api/demo/simulate-upload')

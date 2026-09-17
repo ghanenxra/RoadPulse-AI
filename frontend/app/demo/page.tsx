@@ -9,7 +9,8 @@ import { api } from '@/lib/api'
 import Link from 'next/link'
 import { 
   Play, Pause, RotateCcw, Upload, FileText, CheckCircle2, 
-  AlertTriangle, ArrowRight, ShieldCheck, Sparkles, Loader2, Database
+  AlertTriangle, ArrowRight, ShieldCheck, Sparkles, Loader2, Database,
+  PlusCircle, Trash2, VideoOff, RefreshCw
 } from 'lucide-react'
 import { useWeek } from '@/context/WeekContext'
 
@@ -157,31 +158,53 @@ export default function DemoPage() {
             <CardHeader className="pb-3">
               <div className="flex items-center space-x-2">
                 <Database className="h-5 w-5 text-blue-600" />
-                <CardTitle className="text-base">Dataset Seed State</CardTitle>
+                <CardTitle className="text-base">Data Management & Reset Controls</CardTitle>
               </div>
               <CardDescription className="text-xs">
-                Reset database back to the verified 8-segment Jaipur dataset at any time during pitching.
-                Reset database back to the verified 20-segment Jaipur dataset at any time during pitching.
+                Manage presentation state, wipe test runs, or restore baseline corridors at any time.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6 pt-0 space-y-3">
+            <CardContent className="p-6 pt-0 space-y-4">
               <div className="text-xs space-y-1 bg-gray-50 p-3 rounded border text-gray-600">
                 <div>• <strong>City:</strong> Jaipur, India</div>
-                <div>• <strong>Segments:</strong> 8 Urban Transit Corridors</div>
-                <div>• <strong>Segments:</strong> 20 Urban Transit Corridors</div>
-                <div>• <strong>Weeks:</strong> 4 Monitored Cycles</div>
-                <div>• <strong>Total Detections:</strong> 270 Geocoded Potholes</div>
-                <div>• <strong>Total Detections:</strong> 826 Geocoded Potholes</div>
+                <div>• <strong>Transit Network:</strong> 20 Urban Bus Corridors</div>
+                <div>• <strong>Historical Cycles:</strong> 4 Monitored Weeks</div>
+                <div>• <strong>Baseline Detections:</strong> 826 Geocoded Potholes</div>
               </div>
-              <Button
-                variant="outline"
-                className="w-full border-slate-300 hover:bg-slate-100 flex items-center justify-center space-x-2"
-                disabled={loading}
-                onClick={() => handleAction(api.resetDemoData, 'Dataset re-seeded to original presentation state.')}
-              >
-                <RotateCcw className="h-4 w-4" />
-                <span>Reset Demo to Seed State</span>
-              </Button>
+
+              <div className="space-y-2 pt-1">
+                {/* Button 1: Add 20 Demo Roads Data */}
+                <Button
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center space-x-2 h-9 text-xs font-semibold shadow-xs"
+                  disabled={loading}
+                  onClick={() => handleAction(api.seedRoadsData, 'Successfully loaded all 20 Jaipur corridors into the dashboard.')}
+                >
+                  <PlusCircle className="h-4 w-4" />
+                  <span>Add 20 Demo Roads to Dashboard</span>
+                </Button>
+
+                {/* Button 2: Reset Only Video Ingested Data */}
+                <Button
+                  variant="outline"
+                  className="w-full border-amber-500 text-amber-700 hover:bg-amber-50 hover:text-amber-800 flex items-center justify-center space-x-2 h-9 text-xs font-semibold"
+                  disabled={loading}
+                  onClick={() => handleAction(api.clearIngestedData, 'Video ingested data cleared. Preserved all 20 baseline roads & metrics.')}
+                >
+                  <VideoOff className="h-4 w-4 text-amber-600" />
+                  <span>Reset Only Video Ingested Data</span>
+                </Button>
+
+                {/* Button 3: Complete Data Reset (Wipe All) */}
+                <Button
+                  variant="outline"
+                  className="w-full border-rose-300 text-rose-700 hover:bg-rose-50 hover:text-rose-800 flex items-center justify-center space-x-2 h-9 text-xs font-semibold"
+                  disabled={loading}
+                  onClick={() => handleAction(api.clearAllData, 'Complete database wipe successful. All 20 roads and video runs cleared.')}
+                >
+                  <Trash2 className="h-4 w-4 text-rose-600" />
+                  <span>Complete Data Reset (Wipe All)</span>
+                </Button>
+              </div>
             </CardContent>
           </Card>
 

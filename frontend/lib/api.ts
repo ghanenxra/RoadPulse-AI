@@ -114,6 +114,15 @@ export const api = {
     
   resetDemoData: () => 
     fetchAPI<{ success: boolean; message: string }>('/api/demo/reset', { method: 'POST' }),
+
+  clearAllData: () => 
+    fetchAPI<{ success: boolean; message: string }>('/api/demo/clear-all', { method: 'POST' }),
+
+  clearIngestedData: () => 
+    fetchAPI<{ success: boolean; message: string; detections_cleared?: number; jobs_cleared?: number }>('/api/demo/clear-ingested', { method: 'POST' }),
+
+  seedRoadsData: () => 
+    fetchAPI<{ success: boolean; message: string; road_count?: number }>('/api/demo/seed-roads', { method: 'POST' }),
     
   simulateUpload: () => 
     fetchAPI<{ success: boolean; job_id?: string; message: string }>('/api/demo/simulate-upload', { method: 'POST' }),

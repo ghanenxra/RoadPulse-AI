@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge'
 import { 
   UploadCloud, FileVideo, CheckCircle2, ArrowRight, 
   Cpu, HardDrive, Zap, Play, RefreshCw, AlertCircle, Loader2, Sparkles,
-  Eye, Copy, Check, Code, MapPin, ExternalLink, FileJson, X
+  Eye, Copy, Check, Code, MapPin, ExternalLink, FileJson, X, VideoOff
 } from 'lucide-react'
 
 export default function ProcessingPage() {
@@ -55,6 +55,24 @@ export default function ProcessingPage() {
       setJobDetections([])
     } finally {
       setLoadingDetections(false)
+    }
+  }
+
+  async function handleClearIngested() {
+    try {
+      const res = await api.clearIngestedData()
+      setNotification({
+        type: 'success',
+        message: res.message || 'Video ingested data cleared. Preserved all 20 baseline roads & metrics.'
+      })
+      setInspectingJob(null)
+      setJobDetections([])
+      await fetchJobs()
+    } catch (e: any) {
+      setNotification({
+        type: 'error',
+        message: `Clear failed: ${e.message}`
+      })
     }
   }
 
@@ -395,9 +413,19 @@ export default function ProcessingPage() {
                 Real-time tracking of uploaded dashcam batches, frame progress, and pothole detection counts
               </CardDescription>
             </div>
-            <Button variant="outline" size="sm" onClick={fetchJobs}>
-              <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleClearIngested}
+                className="text-xs h-8 text-amber-700 border-amber-300 hover:bg-amber-50"
+              >
+                <VideoOff className="h-3.5 w-3.5 mr-1 text-amber-600" /> Reset Ingested Data
+              </Button>
+              <Button variant="outline" size="sm" onClick={fetchJobs} className="text-xs h-8">
+                <RefreshCw className="h-3.5 w-3.5 mr-1" /> Refresh
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
