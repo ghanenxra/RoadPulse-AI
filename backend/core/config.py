@@ -132,6 +132,11 @@ class Settings:
             "http://127.0.0.1:3000",
             "http://localhost:3001",
             "http://127.0.0.1:3001",
+            "http://localhost:3002",
+            "http://127.0.0.1:3002",
+            "http://localhost:3005",
+            "http://127.0.0.1:3005",
+            "https://road-pulse-ai-mu.vercel.app",
         ]
         extra_raw = _get("CORS_ORIGINS", "")
         extra = [o.strip() for o in extra_raw.split(",") if o.strip()]

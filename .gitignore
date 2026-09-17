@@ -19,6 +19,8 @@ reports/*.pdf
 reports/*.csv
 uploads/*
 !uploads/.gitkeep
+sample_data/clip_*.mp4
+model/*.pt
 
 # IDE
 .vscode/

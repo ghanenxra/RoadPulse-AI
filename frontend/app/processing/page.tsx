@@ -244,9 +244,14 @@ export default function ProcessingPage() {
                   Supports MP4, MOV, or MKV camera files up to 500 MB. Metadata sidecar parsed automatically.
                 </p>
 
-                <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
-                  <Sparkles className="h-3 w-3 text-amber-500" />
-                  <span>Demo Video Ready: <code className="font-mono text-[10px] bg-white px-1.5 py-0.5 rounded border border-blue-200">sample_data/sample_dashcam_pothole_clip.mp4</code></span>
+                <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5 text-[11px] font-medium text-blue-700">
+                  <span className="flex items-center gap-1 text-slate-600 font-semibold">
+                    <Sparkles className="h-3 w-3 text-amber-500" />
+                    Sample Clips Ready in <code className="font-mono text-[10px] bg-slate-100 px-1 py-0.5 rounded">sample_data/</code>:
+                  </span>
+                  <span className="font-mono text-[10px] bg-blue-50 text-blue-800 border border-blue-200 px-1.5 py-0.5 rounded">clip_1_tonk_road_morning.mp4</span>
+                  <span className="font-mono text-[10px] bg-blue-50 text-blue-800 border border-blue-200 px-1.5 py-0.5 rounded">clip_2_ajmer_road_pothole_cluster.mp4</span>
+                  <span className="font-mono text-[10px] bg-blue-50 text-blue-800 border border-blue-200 px-1.5 py-0.5 rounded">clip_3_jln_marg_radial.mp4</span>
                 </div>
 
                 <input 
