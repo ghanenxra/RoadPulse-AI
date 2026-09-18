@@ -130,3 +130,4 @@ RoadPulse AI is engineered as an **Edge-to-Cloud Hybrid Intelligence Architectur
 - **Server:** Linux x86_64 container (Docker / Render / Railway / AWS EC2)
 - **Node.js:** 18.x or 20.x LTS
 - **Memory:** 1 GB minimum for dashboard & API proxy (4 GB+ for cloud CPU inference)
+

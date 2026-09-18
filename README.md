@@ -12,6 +12,7 @@ For in-depth technical specifications, review the dedicated system architecture 
 
 - 🛠️ **[Complete Technology Stack & Specifications (`TECH_STACK.md`)](TECH_STACK.md)** — Detailed breakdown of YOLOv8, PyTorch, OpenCV, OSRM, Leaflet, FastAPI, SQLAlchemy 2.0, Next.js 14, ReportLab, and hardware requirements.
 - 🔄 **[End-to-End System Pipeline (`PIPELINE.md`)](PIPELINE.md)** — 10-step capture-to-repair pipeline with Mermaid diagrams, mathematical risk formulations, DBSCAN spatial clustering, and closed-loop AI verification.
+- 📖 **[Prototype User Guide & Feature Manual (`PROTOTYPE_GUIDE.md`)](PROTOTYPE_GUIDE.md)** — Screen-by-screen walkthrough of all 9 prototype pages, interactive workflows, and a 3-minute winning jury presentation script.
 
 ---
 
