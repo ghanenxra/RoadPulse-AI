@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Sidebar } from '@/components/layout/Sidebar'
-import { DemoDataBanner } from '@/components/layout/DemoDataBanner'
 
 import { WeekProvider } from '@/context/WeekContext'
 
@@ -25,7 +24,6 @@ export default function RootLayout({
           <div className="flex h-screen overflow-hidden bg-slate-50">
             <Sidebar />
             <div className="flex flex-1 flex-col overflow-hidden min-w-0">
-              <DemoDataBanner />
               <main className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50">
                 {children}
               </main>
