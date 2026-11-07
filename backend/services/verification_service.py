@@ -1,16 +1,26 @@
-import os
 from sqlalchemy.orm import Session
-from models.database import IssueReport, RepairVerification
+from models.database import IssueReport, RepairVerification, WeeklyRoadMetric
 from datetime import datetime
 
 def verify_repair(issue_id: str, survey_week: int, db: Session) -> RepairVerification:
     issue = db.query(IssueReport).filter(IssueReport.issue_id == issue_id).first()
     if not issue:
         return None
-    
+
+    existing = db.query(RepairVerification).filter(
+        RepairVerification.issue_id == issue_id,
+        RepairVerification.survey_week == survey_week,
+    ).first()
+    if existing:
+        return existing
+
     before_score = issue.risk_score
-    after_score = before_score * 0.5 # simulated improvement
-    
+    metric = db.query(WeeklyRoadMetric).filter(
+        WeeklyRoadMetric.segment_id == issue.segment_id,
+        WeeklyRoadMetric.week == survey_week,
+    ).first()
+    after_score = metric.risk_score if metric else before_score
+
     if after_score < before_score * 0.6:
         result = 'verified'
         issue.status = 'verified'

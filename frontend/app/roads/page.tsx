@@ -101,7 +101,7 @@ export default function RoadsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredRoads.map(road => (
+                    {filteredRoads.map(road => road.current_week && (
                       <tr key={road.segment_id} className="hover:bg-slate-50/70 transition-colors">
                         <td className="px-3 sm:px-6 py-3.5 font-medium">
                           <div className="text-slate-900 font-semibold">{road.road_name}</div>

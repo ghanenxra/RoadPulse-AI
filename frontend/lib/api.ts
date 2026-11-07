@@ -48,8 +48,8 @@ export const api = {
   getRoads: (week?: number) => 
     fetchAPI<types.RoadSegment[]>(`/api/roads${week ? `?week=${week}` : ''}`),
     
-  getRoadDetail: (segmentId: string) => 
-    fetchAPI<types.RoadSegment>(`/api/roads/${segmentId}`),
+  getRoadDetail: (segmentId: string, week: number = 4) =>
+    fetchAPI<types.RoadSegment>(`/api/roads/${segmentId}?week=${week}`),
     
   getMapData: (week?: number) => 
     fetchAPI<{ type: string; features: types.MapFeature[] }>(`/api/map${week ? `?week=${week}` : ''}`),

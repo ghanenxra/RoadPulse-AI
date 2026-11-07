@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import create_engine, Column, String, Integer, Float, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import create_engine, Column, String, Integer, Float, Boolean, DateTime, ForeignKey, Text, UniqueConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -105,6 +105,9 @@ class PotholeCluster(Base):
 
 class WeeklyRoadMetric(Base):
     __tablename__ = "weekly_road_metric"
+    __table_args__ = (
+        UniqueConstraint("segment_id", "week", name="uq_weekly_road_metric_segment_week"),
+    )
     id = Column(Integer, primary_key=True, autoincrement=True)
     segment_id = Column(String, ForeignKey("road_segment.segment_id"))
     week = Column(Integer)
