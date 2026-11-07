@@ -316,13 +316,23 @@ async def upload_video(
     Saves to uploads/, creates a job record, kicks off YOLO inference in background.
     Returns immediately — frontend polls /api/jobs for progress.
     """
+    max_upload_bytes = 500 * 1024 * 1024
+    allowed_extensions = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
+    filename = file.filename or ""
+    if Path(filename).suffix.lower() not in allowed_extensions:
+        raise HTTPException(status_code=415, detail="Unsupported video format")
+
+    content = await file.read(max_upload_bytes + 1)
+    if len(content) > max_upload_bytes:
+        raise HTTPException(status_code=413, detail="Video exceeds the 500 MB upload limit")
+
     # Save file
     settings.uploads_dir.mkdir(parents=True, exist_ok=True)
-    safe_filename = f"{uuid.uuid4().hex[:8]}_{file.filename}"
+    safe_filename = f"{uuid.uuid4().hex[:8]}_{Path(filename).name}"
     file_location = settings.uploads_dir / safe_filename
 
     with open(str(file_location), "wb+") as f:
-        f.write(await file.read())
+        f.write(content)
 
     # Create VideoAsset record
     vid_id = f"VID-{uuid.uuid4().hex[:8]}"
@@ -408,50 +418,6 @@ def get_job_detections(job_id: str, db: Session = Depends(get_db)):
     } for d in dets]
 
 
-# ── Simulate ingestion (demo shortcut button) ──────────────────────────────────
-
-@router.post('/api/demo/simulate-upload')
-async def simulate_upload(db: Session = Depends(get_db)):
-    """
-    Demo shortcut: creates a completed mock job instantly.
-    Used by the 'Trigger Simulated Ingestion' button on the dashboard.
-    """
-    vid_id = f"VID-{uuid.uuid4().hex[:8]}"
-    db.add(VideoAsset(
-        video_id=vid_id,
-        bus_id="BUS-1",
-        route_id="TR-01",
-        upload_time=datetime.utcnow(),
-        duration_seconds=120.0,
-        metadata_source="simulated_demo",
-        status="processed",
-        file_path=None
-    ))
-
-    job_id = f"JOB-{uuid.uuid4().hex[:8]}"
-    db.add(ProcessingJob(
-        job_id=job_id,
-        video_id=vid_id,
-        bus_id="BUS-1",
-        source="simulated_demo",
-        status="completed",
-        progress=100.0,
-        frames_total=3600,
-        frames_processed=3600,
-        detections_count=14,
-        provider="yolov8_local (simulated)",
-        created_at=datetime.utcnow(),
-        completed_at=datetime.utcnow(),
-    ))
-    db.commit()
-
-    return {
-        "job_id": job_id,
-        "video_id": vid_id,
-        "message": "Simulated YOLO ingestion run complete. 14 potholes detected on Tonk Road."
-    }
-
-
 # ── Sample Video Library (1-Click Jury Demo) ───────────────────────────────────
 
 class IngestSampleRequest(BaseModel):
@@ -524,6 +490,10 @@ async def ingest_sample_video(
     """
     project_root = Path(__file__).resolve().parent.parent.parent
     sample_dir = project_root / "sample_data"
+    allowed_clips = {clip["filename"] for clip in get_sample_clips()}
+    if payload.clip_name not in allowed_clips:
+        raise HTTPException(status_code=400, detail="Unknown sample clip")
+
     sample_file = sample_dir / payload.clip_name
     
     if not sample_file.exists():
@@ -540,9 +510,7 @@ async def ingest_sample_video(
         shutil.copyfile(str(sample_file), str(target_file))
         actual_path = str(target_file)
     else:
-        actual_path = str(target_file)
-        with open(actual_path, "wb") as f:
-            f.write(b"SAMPLE_VIDEO_PLACEHOLDER")
+        raise HTTPException(status_code=404, detail=f"Sample clip '{payload.clip_name}' not found")
 
     vid_id = f"VID-{uuid.uuid4().hex[:8]}"
     db.add(VideoAsset(

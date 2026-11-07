@@ -1,4 +1,3 @@
-import random
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -38,16 +37,19 @@ def get_overview_metrics(week: int = 4, db: Session = Depends(get_db)):
     prev_avg_risk = sum(m.risk_score for m in metrics_prev) / prev_roads_surveyed if prev_roads_surveyed else avg_risk
     
     pending_repairs = db.query(IssueReport).filter(IssueReport.status.in_(['reported', 'acknowledged', 'in_progress'])).count()
-    prev_pending = max(0, pending_repairs + (1 if week > 1 else 0))
+    prev_pending = db.query(IssueReport).filter(
+        IssueReport.status.in_(['reported', 'acknowledged', 'in_progress'])
+    ).count() if prev_week else pending_repairs
     
     verified_repairs = db.query(RepairVerification).filter(RepairVerification.result == 'verified').count()
-    prev_verified = max(0, verified_repairs - (1 if week > 2 else 0))
+    prev_verified = verified_repairs
     
     uploads_processed = db.query(ProcessingJob).filter(ProcessingJob.status == 'completed').count()
-    prev_uploads = max(0, uploads_processed - 3)
+    prev_uploads = uploads_processed
     
-    survey_coverage_pct = 94.2
-    prev_coverage = 91.5
+    total_roads = db.query(RoadSegment).count()
+    survey_coverage_pct = round((roads_surveyed / total_roads) * 100, 1) if total_roads else 0.0
+    prev_coverage = round((prev_roads_surveyed / total_roads) * 100, 1) if total_roads else 0.0
     
     grade_dist = {'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0}
     for m in metrics_current:

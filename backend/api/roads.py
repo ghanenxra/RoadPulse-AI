@@ -181,12 +181,12 @@ def get_roads(
     return results
 
 @router.get('/api/roads/{segment_id}')
-def get_road_detail(segment_id: str, db: Session = Depends(get_db)):
+def get_road_detail(segment_id: str, week: int = Query(4, ge=1, le=4), db: Session = Depends(get_db)):
     seg = db.query(RoadSegment).filter(RoadSegment.segment_id == segment_id).first()
     if not seg:
         raise HTTPException(status_code=404, detail=f"Segment {segment_id} not found")
         
-    data = serialize_segment(seg, 4, db)
+    data = serialize_segment(seg, week, db)
     
     issues = db.query(IssueReport).filter(IssueReport.segment_id == segment_id).all()
     serialized_issues = []

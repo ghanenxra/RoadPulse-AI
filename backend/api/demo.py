@@ -10,8 +10,13 @@ from models.database import (
 )
 from data.seed import seed_database, clear_database
 from services.verification_service import verify_repair
+from core.config import settings
 
 router = APIRouter()
+
+def _require_demo_mode():
+    if settings.is_production:
+        raise HTTPException(status_code=403, detail="Demo and reset endpoints are disabled in production")
 
 # ── 1. Add / Seed 20 Demo Roads Data ──────────────────────────────────────────
 
@@ -23,6 +28,7 @@ def seed_roads_data(db: Session = Depends(get_db)):
     Seeds or restores the complete 20 Jaipur road corridors with their 4-week history
     into the dashboard.
     """
+    _require_demo_mode()
     seed_database(db)
     road_count = db.query(RoadSegment).count()
     return {
@@ -44,9 +50,11 @@ def clear_ingested_data(db: Session = Depends(get_db)):
     - Restores Week 4 baseline metrics for the 20 road segments from demo-data.json
     - Preserves all 20 road segments and baseline history!
     """
+    _require_demo_mode()
+
     # 1. Delete video-ingested detections
     ingested_dets = db.query(Detection).filter(
-        (Detection.data_source.in_(["local_yolo", "edge_depot_yolov8", "upload"])) |
+        (Detection.data_source.in_(["local_yolo", "edge_depot_yolov8", "upload", "simulated_demo"])) |
         (Detection.week == 0)
     ).delete(synchronize_session=False)
 
@@ -56,7 +64,7 @@ def clear_ingested_data(db: Session = Depends(get_db)):
     ).delete(synchronize_session=False)
 
     videos_cleared = db.query(VideoAsset).filter(
-        VideoAsset.metadata_source.in_(["upload", "local_yolo", "NVDR_SIMULATOR"])
+        VideoAsset.metadata_source.in_(["upload", "local_yolo", "NVDR_SIMULATOR", "simulated_demo"])
     ).delete(synchronize_session=False)
 
     # 3. Delete week=0 live metrics
@@ -77,9 +85,13 @@ def clear_ingested_data(db: Session = Depends(get_db)):
                 ).first()
                 if metric:
                     metric.pothole_count = w4_data["potholes"]
-                    metric.severe_count = int(w4_data["potholes"] * 0.4)
+                    metric.severe_count = max(1, int(w4_data["potholes"] * 0.35)) if w4_data["potholes"] > 0 else 0
+                    metric.density = round(w4_data["potholes"] / max(metric.segment.length_km, 1.0), 2) if metric.segment else metric.density
                     metric.severity_avg = w4_data["severity"]
                     metric.depth_avg_cm = w4_data["depth_cm"]
+                    metric.rain_mm = w4_data.get("rain_mm", metric.rain_mm)
+                    metric.trend = w4_data.get("trend", metric.trend)
+                    metric.context_score = w4_data.get("context_score", metric.context_score)
                     metric.risk_score = w4_data["risk"]
                     grade_val = w4_data["grade"]
                     metric.grade = "E" if grade_val == "F" else grade_val
@@ -105,6 +117,7 @@ def clear_all_data(db: Session = Depends(get_db)):
     Complete data reset: Wipes all tables in the database (20 roads, metrics, detections, jobs).
     Database starts completely empty until 'Add 20 Demo Roads' is clicked.
     """
+    _require_demo_mode()
     clear_database(db)
     return {
         "success": True,
@@ -113,9 +126,13 @@ def clear_all_data(db: Session = Depends(get_db)):
 
 @router.post('/api/demo/simulate-upload')
 def simulate_upload(db: Session = Depends(get_db)):
+    _require_demo_mode()
     job_id = f"JOB-SIM-{uuid.uuid4().hex[:6].upper()}"
     vid_id = f"VID-SIM-{uuid.uuid4().hex[:6].upper()}"
     now = datetime.utcnow()
+    segment = db.query(RoadSegment).filter(RoadSegment.segment_id == "TR-01").first()
+    if not segment:
+        raise HTTPException(404, "Demo road TR-01 not found; load demo roads first")
     
     video = VideoAsset(
         video_id=vid_id,
@@ -146,6 +163,22 @@ def simulate_upload(db: Session = Depends(get_db)):
         completed_at=now
     )
     db.add(job)
+    for index in range(14):
+        db.add(Detection(
+            detection_id=f"D-{uuid.uuid4().hex[:10]}",
+            video_id=vid_id,
+            bus_id="BUS-1",
+            frame_number=index * 300,
+            timestamp=now,
+            latitude=segment.start_lat,
+            longitude=segment.start_lon,
+            confidence=0.85,
+            severity=3.0,
+            severity_label="Medium",
+            road_segment_id=segment.segment_id,
+            data_source="simulated_demo",
+            week=4,
+        ))
     db.commit()
     
     return {
@@ -157,6 +190,7 @@ def simulate_upload(db: Session = Depends(get_db)):
 
 @router.post('/api/demo/simulate-repair')
 def simulate_repair(payload: dict = Body(...), db: Session = Depends(get_db)):
+    _require_demo_mode()
     segment_id = payload.get("segment_id", "TR-01")
     week = payload.get("week", 4)
     
@@ -202,6 +236,7 @@ def simulate_repair(payload: dict = Body(...), db: Session = Depends(get_db)):
 
 @router.post('/api/demo/simulate-verification')
 def simulate_verification(payload: dict = Body(...), db: Session = Depends(get_db)):
+    _require_demo_mode()
     issue_id = payload.get("issue_id", "ISS-TR-01")
     issue = db.query(IssueReport).filter(IssueReport.issue_id == issue_id).first()
     if not issue:
@@ -218,6 +253,7 @@ def simulate_verification(payload: dict = Body(...), db: Session = Depends(get_d
 
 @router.post('/api/demo/simulate-report')
 def simulate_report(payload: dict = Body(...), db: Session = Depends(get_db)):
+    _require_demo_mode()
     segment_id = payload.get("segment_id", "TR-01")
     seg = db.query(RoadSegment).filter(RoadSegment.segment_id == segment_id).first()
     if not seg:
@@ -251,6 +287,7 @@ def simulate_report(payload: dict = Body(...), db: Session = Depends(get_db)):
 
 @router.post('/api/demo/simulate-acknowledge')
 def simulate_acknowledge(payload: dict = Body(...), db: Session = Depends(get_db)):
+    _require_demo_mode()
     issue_id = payload.get("issue_id", "ISS-TR-01")
     issue = db.query(IssueReport).filter(IssueReport.issue_id == issue_id).first()
     if not issue:

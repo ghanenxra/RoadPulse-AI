@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { api } from '@/lib/api'
 import { RoadSegment, MapFeature } from '@/types'
 import { generateNarrative, getGradeColor } from '@/lib/utils'
+import { useWeek } from '@/context/WeekContext'
 import { ArrowLeft, MapPin, Camera, Download, FileText } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts'
@@ -19,6 +20,7 @@ export default function RoadDetailPage() {
   const params = useParams()
   const router = useRouter()
   const segmentId = params.segmentId as string
+  const { week } = useWeek()
   
   const [road, setRoad] = useState<RoadSegment | null>(null)
   const [loading, setLoading] = useState(true)
@@ -26,7 +28,7 @@ export default function RoadDetailPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const data = await api.getRoadDetail(segmentId)
+        const data = await api.getRoadDetail(segmentId, week)
         setRoad(data)
       } catch (e) {
         console.error(e)
@@ -35,10 +37,11 @@ export default function RoadDetailPage() {
       }
     }
     if (segmentId) loadData()
-  }, [segmentId])
+  }, [segmentId, week])
 
   if (loading) return <div>Loading...</div>
   if (!road) return <div>Road not found.</div>
+  if (!road.current_week) return <div>No metrics available for Week {week}.</div>
 
   const feature: MapFeature = {
     type: 'Feature',
