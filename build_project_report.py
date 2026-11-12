@@ -50,47 +50,77 @@ def set_cell_shading(cell, color_hex):
     shd = parse_xml(f'<w:shd xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:fill="{color_hex}"/>')
     tcPr.append(shd)
 
+
+def format_table(tbl, caption_p=None):
+    """
+    Format table so rows never split mid-cell across pages,
+    header repeats on page break, and table rows are kept together.
+    """
+    tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
+    for i, row in enumerate(tbl.rows):
+        trPr = row._tr.get_or_add_trPr()
+        trPr.append(parse_xml(r'<w:cantSplit xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'))
+        if i == 0:
+            trPr.append(parse_xml(r'<w:tblHeader xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"/>'))
+        if i < len(tbl.rows) - 1:
+            for cell in row.cells:
+                for p in cell.paragraphs:
+                    p.paragraph_format.keep_with_next = True
+    if caption_p:
+        caption_p.paragraph_format.keep_with_next = True
+
 def create_report():
     doc = Document()
     
-    # ── Page Setup (Margins) ──
-    for section in doc.sections:
-        section.top_margin = Inches(1.0)
-        section.bottom_margin = Inches(1.0)
-        section.left_margin = Inches(1.5)   # 1.5" binding margin
-        section.right_margin = Inches(1.0)
-        section.page_width = Inches(8.27)   # A4 width
-        section.page_height = Inches(11.69) # A4 height
-        section.different_first_page_header_footer = True
+    # ── Section 1 Setup: Preliminary Pages ──
+    s1 = doc.sections[0]
+    s1.top_margin = Inches(1.0)
+    s1.bottom_margin = Inches(1.0)
+    s1.left_margin = Inches(1.5)   # 1.5" binding margin
+    s1.right_margin = Inches(1.0)
+    s1.page_width = Inches(8.27)   # A4 width
+    s1.page_height = Inches(11.69) # A4 height
+    s1.different_first_page_header_footer = True  # Cover page has NO numbers/footers
 
-        # Running Header on pages 2+
-        header = section.header
-        p_head = header.paragraphs[0]
-        p_head.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        r_h = p_head.add_run("Career Point University, Kota | B.Tech Project Report: RoadPulse AI")
-        r_h.font.name = 'Times New Roman'
-        r_h.font.size = Pt(8.5)
-        r_h.font.color.rgb = RGBColor(100, 116, 139)
+    # Clear header completely (removed CPU Kota running header from all pages as requested)
+    p_h1 = s1.header.paragraphs[0]
+    pPr_h1 = p_h1._p.get_or_add_pPr()
+    for child in list(p_h1._p):
+        if child != pPr_h1:
+            p_h1._p.remove(child)
 
-        # Running Footer on pages 2+ with Page X of Y
-        footer = section.footer
-        p_foot = footer.paragraphs[0]
-        p_foot.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        r_f1 = p_foot.add_run("Department of Computer Science & Engineering  |  Page ")
-        r_f1.font.name = 'Times New Roman'
-        r_f1.font.size = Pt(9)
-        r_f1.font.color.rgb = RGBColor(100, 116, 139)
+    # First page header & footer blank
+    p_h0 = s1.first_page_header.paragraphs[0]
+    pPr_h0 = p_h0._p.get_or_add_pPr()
+    for child in list(p_h0._p):
+        if child != pPr_h0:
+            p_h0._p.remove(child)
 
-        fldSimple = parse_xml(r'<w:fldSimple xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:instr="PAGE"/>')
-        p_foot._p.append(fldSimple)
+    p_f0 = s1.first_page_footer.paragraphs[0]
+    pPr_f0 = p_f0._p.get_or_add_pPr()
+    for child in list(p_f0._p):
+        if child != pPr_f0:
+            p_f0._p.remove(child)
 
-        r_f2 = p_foot.add_run(" of ")
-        r_f2.font.name = 'Times New Roman'
-        r_f2.font.size = Pt(9)
-        r_f2.font.color.rgb = RGBColor(100, 116, 139)
+    # Prelim Footer: Roman numerals (i, ii, iii, iv...) at bottom center, Times New Roman 10pt
+    sectPr1 = s1._sectPr
+    for pnt in sectPr1.findall(qn("w:pgNumType")):
+        sectPr1.remove(pnt)
+    pgNumType1 = parse_xml(r'<w:pgNumType xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:fmt="lowerRoman" w:start="1"/>')
+    sectPr1.append(pgNumType1)
 
-        fldPages = parse_xml(r'<w:fldSimple xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:instr="NUMPAGES"/>')
-        p_foot._p.append(fldPages)
+    p_f1 = s1.footer.paragraphs[0]
+    p_f1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    pPr1 = p_f1._p.get_or_add_pPr()
+    for child in list(p_f1._p):
+        if child != pPr1:
+            p_f1._p.remove(child)
+    fld_roman = parse_xml(
+        r'<w:fldSimple xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:instr="PAGE">'
+        r'<w:r><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/><w:sz w:val="20"/></w:rPr><w:t>i</w:t></w:r>'
+        r'</w:fldSimple>'
+    )
+    p_f1._p.append(fld_roman)
 
     # ── Typography Styles Setup ──
     normal_style = doc.styles['Normal']
@@ -115,9 +145,11 @@ def create_report():
         run.font.size = Pt(12)
         return p
 
-    def add_chapter_title(num_str, title_str):
-        doc.add_page_break()
+    def add_chapter_title(num_str, title_str, is_first=False):
         p = doc.add_paragraph()
+        if not is_first:
+            p.paragraph_format.page_break_before = True  # Native page break without blank paragraphs!
+        p.paragraph_format.keep_with_next = True         # Chapter title stays bound with following text
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.paragraph_format.line_spacing = 1.5
         p.paragraph_format.space_before = Pt(18)
@@ -138,6 +170,7 @@ def create_report():
         p.paragraph_format.line_spacing = 1.5
         p.paragraph_format.space_before = Pt(14)
         p.paragraph_format.space_after = Pt(6)
+        p.paragraph_format.keep_with_next = True  # Topic heading never separates from content!
         run = p.add_run(text)
         run.bold = True
         run.font.name = 'Times New Roman'
@@ -149,6 +182,7 @@ def create_report():
         p.paragraph_format.line_spacing = 1.5
         p.paragraph_format.space_before = Pt(10)
         p.paragraph_format.space_after = Pt(4)
+        p.paragraph_format.keep_with_next = True  # Subheading never separates from content!
         run = p.add_run(text)
         run.bold = True
         run.font.name = 'Times New Roman'
@@ -160,7 +194,9 @@ def create_report():
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         p.paragraph_format.line_spacing = 1.15
         p.paragraph_format.space_before = Pt(6)
-        p.paragraph_format.space_after = Pt(8)
+        p.paragraph_format.space_after = Pt(6)
+        if is_table:
+            p.paragraph_format.keep_with_next = True  # Table caption stays bound to table!
         run = p.add_run(text)
         run.bold = True
         run.italic = True
@@ -168,16 +204,18 @@ def create_report():
         run.font.size = Pt(10)
         return p
 
-    def add_figure(img_name, caption, width_in=5.2):
+    def add_figure(img_name, caption, width_in=4.8):
         img_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "report_figures", img_name)
         if os.path.exists(img_path):
             p_img = doc.add_paragraph()
             p_img.alignment = WD_ALIGN_PARAGRAPH.CENTER
             p_img.paragraph_format.space_before = Pt(8)
             p_img.paragraph_format.space_after = Pt(2)
+            p_img.paragraph_format.keep_with_next = True  # Image is strictly bound to its caption!
             run_img = p_img.add_run()
             run_img.add_picture(img_path, width=Inches(width_in))
-        add_caption(caption)
+        p_cap = add_caption(caption, is_table=False)
+        return p_cap
 
     def add_bullet(lead, text):
         p = doc.add_paragraph(style='List Bullet')
@@ -243,6 +281,7 @@ def create_report():
 
     # Submitted To / Submitted By Table
     tbl_sub = doc.add_table(rows=1, cols=2)
+    format_table(tbl_sub)
     tbl_sub.alignment = WD_TABLE_ALIGNMENT.CENTER
     cell_left = tbl_sub.cell(0, 0)
     cell_right = tbl_sub.cell(0, 1)
@@ -274,8 +313,9 @@ def create_report():
     p_univ.runs[0].font.size = Pt(12)
 
     # ── 2. CERTIFICATE ──
-    doc.add_page_break()
     p_cert_title = add_p("CERTIFICATE", bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=16, space_after=16)
+    p_cert_title.paragraph_format.page_break_before = True
+    p_cert_title.paragraph_format.keep_with_next = True
     p_cert_title.runs[0].font.size = Pt(16)
 
     cert_text = (
@@ -296,7 +336,7 @@ def create_report():
     add_p("This is certified that the above statement made by the candidate is correct to the best of my knowledge.", align=WD_ALIGN_PARAGRAPH.JUSTIFY, space_before=10, space_after=24)
 
     tbl_cert = doc.add_table(rows=1, cols=2)
-    tbl_cert.alignment = WD_TABLE_ALIGNMENT.CENTER
+    format_table(tbl_cert)
     c1 = tbl_cert.cell(0, 0)
     c2 = tbl_cert.cell(0, 1)
     c1.width = Inches(3.2)
@@ -316,8 +356,9 @@ def create_report():
     r_sup_sign.font.size = Pt(11)
 
     # ── 3. CANDIDATE'S DECLARATION ──
-    doc.add_page_break()
     p_decl = add_p("CANDIDATE'S DECLARATION", bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=16, space_after=16)
+    p_decl.paragraph_format.page_break_before = True
+    p_decl.paragraph_format.keep_with_next = True
     p_decl.runs[0].font.size = Pt(16)
 
     decl_text = (
@@ -336,8 +377,9 @@ def create_report():
     p_decl_sig.runs[0].font.size = Pt(11)
 
     # ── 4. ACKNOWLEDGEMENT ──
-    doc.add_page_break()
     p_ack = add_p("ACKNOWLEDGEMENT", bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=16, space_after=16)
+    p_ack.paragraph_format.page_break_before = True
+    p_ack.paragraph_format.keep_with_next = True
     p_ack.runs[0].font.size = Pt(16)
 
     ack_p1 = (
@@ -370,8 +412,9 @@ def create_report():
     p_ack_sig.runs[0].font.size = Pt(11)
 
     # ── 5. ABSTRACT ──
-    doc.add_page_break()
     p_abs = add_p("ABSTRACT", bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=16, space_after=16)
+    p_abs.paragraph_format.page_break_before = True
+    p_abs.paragraph_format.keep_with_next = True
     p_abs.runs[0].font.size = Pt(16)
 
     abs_p1 = (
@@ -416,8 +459,9 @@ def create_report():
     p_kw.add_run("Edge AI, Computer Vision, YOLOv8, Pothole Detection, DBSCAN Clustering, Geospatial Analytics, OSRM Road-Snapping, Civic SLA Accountability, Smart Cities.")
 
     # ── 6. TABLE OF CONTENTS ──
-    doc.add_page_break()
     p_toc = add_p("TABLE OF CONTENTS", bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=16, space_after=16)
+    p_toc.paragraph_format.page_break_before = True
+    p_toc.paragraph_format.keep_with_next = True
     p_toc.runs[0].font.size = Pt(16)
 
     toc_items = [
@@ -512,8 +556,9 @@ def create_report():
             r_pg.bold = True
 
     # ── 7. LIST OF FIGURES ──
-    doc.add_page_break()
     p_lof = add_p("LIST OF FIGURES", bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=16, space_after=16)
+    p_lof.paragraph_format.page_break_before = True
+    p_lof.paragraph_format.keep_with_next = True
     p_lof.runs[0].font.size = Pt(16)
 
     figures_list = [
@@ -554,8 +599,9 @@ def create_report():
         r_pg.font.size = Pt(11)
 
     # ── 8. LIST OF TABLES ──
-    doc.add_page_break()
     p_lot = add_p("LIST OF TABLES", bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=16, space_after=16)
+    p_lot.paragraph_format.page_break_before = True
+    p_lot.paragraph_format.keep_with_next = True
     p_lot.runs[0].font.size = Pt(16)
 
     tables_list = [
@@ -594,9 +640,64 @@ def create_report():
     print("Preliminary pages successfully configured.")
 
     # =========================================================================
-    # CHAPTER 1: INTRODUCTION
+    # SECTION 2: MAIN BODY (CHAPTER 1 ONWARDS)
+    # Starts at Page 1: "Page 1 of 57" (PAGE of NUMPAGES), Arabic numerals
     # =========================================================================
-    add_chapter_title("1", "Introduction")
+    from docx.enum.section import WD_SECTION_START
+    s2 = doc.add_section(WD_SECTION_START.NEW_PAGE)
+    s2.top_margin = Inches(1.0)
+    s2.bottom_margin = Inches(1.0)
+    s2.left_margin = Inches(1.5)
+    s2.right_margin = Inches(1.0)
+    s2.page_width = Inches(8.27)
+    s2.page_height = Inches(11.69)
+    s2.header.is_linked_to_previous = False
+    s2.footer.is_linked_to_previous = False
+    s2.different_first_page_header_footer = False
+
+    # Clear headers completely (removes "Career Point University..." from all pages)
+    p_h2 = s2.header.paragraphs[0]
+    pPr_h2 = p_h2._p.get_or_add_pPr()
+    for child in list(p_h2._p):
+        if child != pPr_h2:
+            p_h2._p.remove(child)
+
+    # Footer: "Page 1 of 57" (PAGE of NUMPAGES) at bottom center, Times New Roman 10pt
+    sectPr2 = s2._sectPr
+    for pnt in sectPr2.findall(qn("w:pgNumType")):
+        sectPr2.remove(pnt)
+    pgNumType2 = parse_xml(r'<w:pgNumType xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:fmt="decimal" w:start="1"/>')
+    sectPr2.append(pgNumType2)
+
+    p_f2 = s2.footer.paragraphs[0]
+    p_f2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    pPr2 = p_f2._p.get_or_add_pPr()
+    for child in list(p_f2._p):
+        if child != pPr2:
+            p_f2._p.remove(child)
+
+    r_p = parse_xml(r'<w:r xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve">Page </w:t></w:r>')
+    p_f2._p.append(r_p)
+
+    fld_page = parse_xml(
+        r'<w:fldSimple xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:instr="PAGE">'
+        r'<w:r><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/><w:sz w:val="20"/></w:rPr><w:t>1</w:t></w:r>'
+        r'</w:fldSimple>'
+    )
+    p_f2._p.append(fld_page)
+
+    r_of = parse_xml(r'<w:r xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/><w:sz w:val="20"/></w:rPr><w:t xml:space="preserve"> of </w:t></w:r>')
+    p_f2._p.append(r_of)
+
+    fld_numpages = parse_xml(
+        r'<w:fldSimple xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" w:instr="NUMPAGES">'
+        r'<w:r><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman"/><w:sz w:val="20"/></w:rPr><w:t>57</w:t></w:r>'
+        r'</w:fldSimple>'
+    )
+    p_f2._p.append(fld_numpages)
+
+    # CHAPTER 1
+    add_chapter_title("1", "Introduction", is_first=True)
 
     add_heading1("1.1 Background and Problem Statement")
     add_p(
@@ -757,9 +858,16 @@ def create_report():
         "spatial deduplication, multi-criteria risk scoring, and statutory municipal SLA enforcement."
     )
 
-    # Table 2.1
-    tbl_comp = doc.add_table(rows=6, cols=6)
-    tbl_comp.alignment = WD_TABLE_ALIGNMENT.CENTER
+    # Table 2.1 (Caption above table, format_table prevents page split)
+    p_cap21 = add_caption("Table 2.1: Comparative evaluation of road condition survey paradigms and structural limitations", is_table=True)
+    comp_rows = [
+        ("Manual Visual Walk", "Low (Labor High)", "12-24 Months", "Subjective notes", "Moderate (Human)", "None (Manual audit)"),
+        ("Network Survey Veh. (NSV)", "Very High (>2.5 Cr)", "Annual / Rare", "Sub-mm Profilometry", "Extremely High", "Audit trail only"),
+        ("Citizen Portals", "Low (Mobile App)", "Event-Driven", "GPS point only", "Low (High noise)", "Advisory only"),
+        ("Accelerometer Fleet", "Low (Smartphone)", "Daily / Periodic", "Point impulse ($a_z$)", "Poor (False pos.)", "None"),
+        ("RoadPulse AI (Proposed)", "Zero (Uses NVDR)", "Continuous / Daily", "GeoJSON + BBox Depth", "High (YOLOv8 89.4%)", "Closed-Loop SLA")
+    ]
+    tbl_comp = doc.add_table(rows=len(comp_rows) + 1, cols=6)
     headers = ["Monitoring Paradigm", "Capital Cost", "Survey Frequency", "Spatial Metric", "Detection Accuracy", "Civic Accountability"]
     for i, h in enumerate(headers):
         cell = tbl_comp.cell(0, i)
@@ -768,14 +876,6 @@ def create_report():
         cell.paragraphs[0].runs[0].font.size = Pt(9)
         set_cell_shading(cell, "1E293B")
         cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
-
-    comp_rows = [
-        ("Manual Visual Walk", "Low (Labor High)", "12-24 Months", "Subjective notes", "Moderate (Human)", "None (Manual audit)"),
-        ("Network Survey Veh. (NSV)", "Very High (>2.5 Cr)", "Annual / Rare", "Sub-mm Profilometry", "Extremely High", "Audit trail only"),
-        ("Citizen Portals", "Low (Mobile App)", "Event-Driven", "GPS point only", "Low (High noise)", "Advisory only"),
-        ("Accelerometer Fleet", "Low (Smartphone)", "Daily / Periodic", "Point impulse ($a_z$)", "Poor (False pos.)", "None"),
-        ("RoadPulse AI (Proposed)", "Zero (Uses NVDR)", "Continuous / Daily", "GeoJSON + BBox Depth", "High (YOLOv8 89.4%)", "Closed-Loop SLA")
-    ]
     for row_idx, row_data in enumerate(comp_rows):
         for col_idx, val in enumerate(row_data):
             cell = tbl_comp.cell(row_idx + 1, col_idx)
@@ -783,8 +883,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-
-    add_caption("Table 2.1: Comparative evaluation of road condition survey paradigms and structural limitations")
+    format_table(tbl_comp, p_cap21)
     add_p(
         "By identifying these systemic technical gaps, RoadPulse AI formulates an entirely novel methodology: leveraging public transit "
         "assets as passive mobile edge collectors, executing automated deep learning inference upon overnight charging returns, "
@@ -838,9 +937,14 @@ def create_report():
         "demonstrations to distributed multi-depot municipal deployments. Table 3.1 details the hardware specifications across nodes."
     )
 
-    # Table 3.1
-    tbl_hw = doc.add_table(rows=4, cols=4)
-    tbl_hw.alignment = WD_TABLE_ALIGNMENT.CENTER
+    # Table 3.1 (Caption above table, format_table prevents split)
+    p_cap31 = add_caption("Table 3.1: Hardware specifications across Edge Ingestion, Local Inference, and Cloud nodes", is_table=True)
+    hw_rows = [
+        ("Transit Vehicle Edge", "Camera & Storage", "1080p NVDR Dashcam, 64GB SD", "4K Wide-Angle NVDR, 256GB SSD"),
+        ("Depot Inference Node", "Compute / GPU", "Intel i5 (8th Gen), 8GB RAM, CPU", "Intel i7/Ryzen 7, 16GB RAM, RTX 3060/4060 GPU"),
+        ("Central Cloud / Server", "Host & Storage", "2 vCPU, 4GB RAM, 50GB SSD", "4 vCPU, 16GB RAM, 250GB NVMe SSD (PostgreSQL)")
+    ]
+    tbl_hw = doc.add_table(rows=len(hw_rows) + 1, cols=4)
     hw_headers = ["Deployment Node", "Hardware Component", "Minimum Specification", "Recommended Production Spec"]
     for i, h in enumerate(hw_headers):
         cell = tbl_hw.cell(0, i)
@@ -849,12 +953,6 @@ def create_report():
         cell.paragraphs[0].runs[0].font.size = Pt(9)
         set_cell_shading(cell, "1E293B")
         cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
-
-    hw_rows = [
-        ("Transit Vehicle Edge", "Camera & Storage", "1080p NVDR Dashcam, 64GB SD", "4K Wide-Angle NVDR, 256GB SSD"),
-        ("Depot Inference Node", "Compute / GPU", "Intel i5 (8th Gen), 8GB RAM, CPU", "Intel i7/Ryzen 7, 16GB RAM, RTX 3060/4060 GPU"),
-        ("Central Cloud / Server", "Host & Storage", "2 vCPU, 4GB RAM, 50GB SSD", "4 vCPU, 16GB RAM, 250GB NVMe SSD (PostgreSQL)")
-    ]
     for row_idx, row_data in enumerate(hw_rows):
         for col_idx, val in enumerate(row_data):
             cell = tbl_hw.cell(row_idx + 1, col_idx)
@@ -862,8 +960,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-
-    add_caption("Table 3.1: Hardware specifications across Edge Ingestion, Local Inference, and Cloud nodes")
+    format_table(tbl_hw, p_cap31)
 
     add_heading1("3.4 Software Architecture & Technology Stack")
     add_p(
@@ -871,9 +968,16 @@ def create_report():
         "is built upon modern software engineering frameworks. Table 3.2 details the technology stack layers."
     )
 
-    # Table 3.2
-    tbl_sw = doc.add_table(rows=6, cols=4)
-    tbl_sw.alignment = WD_TABLE_ALIGNMENT.CENTER
+    # Table 3.2 (Caption above table, format_table prevents split)
+    p_cap32 = add_caption("Table 3.2: Complete layered technology stack specifications across RoadPulse AI", is_table=True)
+    sw_rows = [
+        ("AI / Computer Vision", "Ultralytics YOLOv8 + PyTorch", "YOLOv8.0+, PyTorch 2.0+", "Real-time pothole bounding box detection & class inference"),
+        ("Geospatial / GIS", "OSRM API + Leaflet.js + OSM", "OSRM v5, Leaflet 1.9.4", "Carriageway map snapping, coordinate georeferencing, vector UI"),
+        ("Spatial Deduplication", "Scikit-Learn (DBSCAN)", "v1.3+", "Density-based spatial clustering (eps=15m) for multi-pass merging"),
+        ("Backend Services", "FastAPI + SQLAlchemy + Pydantic", "FastAPI 0.104+, SQLA 2.0+", "Async REST APIs, declarative ORM, SLA state machine"),
+        ("Frontend & Analytics", "Next.js 14 + TypeScript + Tailwind", "Next.js 14, React 18, TS 5", "Server-rendered GIS command center, Recharts degradation curves")
+    ]
+    tbl_sw = doc.add_table(rows=len(sw_rows) + 1, cols=4)
     sw_headers = ["Layer", "Technology / Framework", "Version", "Role & Responsibility in RoadPulse AI"]
     for i, h in enumerate(sw_headers):
         cell = tbl_sw.cell(0, i)
@@ -882,14 +986,6 @@ def create_report():
         cell.paragraphs[0].runs[0].font.size = Pt(9)
         set_cell_shading(cell, "1E293B")
         cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
-
-    sw_rows = [
-        ("AI / Computer Vision", "Ultralytics YOLOv8 + PyTorch", "YOLOv8.0+, PyTorch 2.0+", "Real-time pothole bounding box detection & class inference"),
-        ("Geospatial / GIS", "OSRM API + Leaflet.js + OSM", "OSRM v5, Leaflet 1.9.4", "Carriageway map snapping, coordinate georeferencing, vector UI"),
-        ("Spatial Deduplication", "Scikit-Learn (DBSCAN)", "v1.3+", "Density-based spatial clustering (eps=15m) for multi-pass merging"),
-        ("Backend Services", "FastAPI + SQLAlchemy + Pydantic", "FastAPI 0.104+, SQLA 2.0+", "Async REST APIs, declarative ORM, SLA state machine"),
-        ("Frontend & Analytics", "Next.js 14 + TypeScript + Tailwind", "Next.js 14, React 18, TS 5", "Server-rendered GIS command center, Recharts degradation curves")
-    ]
     for row_idx, row_data in enumerate(sw_rows):
         for col_idx, val in enumerate(row_data):
             cell = tbl_sw.cell(row_idx + 1, col_idx)
@@ -897,8 +993,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-
-    add_caption("Table 3.2: Complete layered technology stack specifications across RoadPulse AI")
+    format_table(tbl_sw, p_cap32)
 
     add_heading1("3.5 Functional & Non-Functional System Requirements")
     add_p(
@@ -956,18 +1051,8 @@ def create_report():
         "hyperparameter configuration executed across 100 training epochs."
     )
 
-    # Table 4.1
-    tbl_hp = doc.add_table(rows=8, cols=3)
-    tbl_hp.alignment = WD_TABLE_ALIGNMENT.CENTER
-    hp_headers = ["Hyperparameter", "Configured Value", "Engineering Rationale"]
-    for i, h in enumerate(hp_headers):
-        cell = tbl_hp.cell(0, i)
-        cell.paragraphs[0].text = h
-        cell.paragraphs[0].runs[0].bold = True
-        cell.paragraphs[0].runs[0].font.size = Pt(9)
-        set_cell_shading(cell, "1E293B")
-        cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
-
+    # Table 4.1 (Caption above table, format_table prevents split)
+    p_cap41 = add_caption("Table 4.1: Hyperparameters and training configurations for custom fine-tuned YOLOv8", is_table=True)
     hp_rows = [
         ("Base Model", "YOLOv8s (Small)", "Optimized balance between mAP accuracy and edge inference frame rates"),
         ("Input Resolution", "640 x 640 x 3", "Standard square tensor size preserving small defect features"),
@@ -977,6 +1062,15 @@ def create_report():
         ("Weight Decay", "0.0005", "L2 regularization penalizing disproportionately large weights"),
         ("Batch Size", "16", "GPU VRAM optimization for NVIDIA RTX hardware")
     ]
+    tbl_hp = doc.add_table(rows=len(hp_rows) + 1, cols=3)
+    hp_headers = ["Hyperparameter", "Configured Value", "Engineering Rationale"]
+    for i, h in enumerate(hp_headers):
+        cell = tbl_hp.cell(0, i)
+        cell.paragraphs[0].text = h
+        cell.paragraphs[0].runs[0].bold = True
+        cell.paragraphs[0].runs[0].font.size = Pt(9)
+        set_cell_shading(cell, "1E293B")
+        cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
     for row_idx, row_data in enumerate(hp_rows):
         for col_idx, val in enumerate(row_data):
             cell = tbl_hp.cell(row_idx + 1, col_idx)
@@ -984,8 +1078,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-
-    add_caption("Table 4.1: Hyperparameters and training configurations for custom fine-tuned YOLOv8")
+    format_table(tbl_hp, p_cap41)
 
     add_heading1("4.3 Temporal Video Preprocessing & 30-Frame Decimation (1 FPS)")
     add_p(
@@ -1042,9 +1135,15 @@ def create_report():
         "matrix mapping estimated depth and bounding area to municipal priority labels."
     )
 
-    # Table 4.2
-    tbl_sev = doc.add_table(rows=5, cols=5)
-    tbl_sev.alignment = WD_TABLE_ALIGNMENT.CENTER
+    # Table 4.2 (Caption above table, format_table prevents split)
+    p_cap42 = add_caption("Table 4.2: Pothole severity classification matrix based on estimated depth and surface area", is_table=True)
+    sev_rows = [
+        ("Tier 1 (Minor)", "< 4.0 cm", "1.0 - 2.0", "Cosmetic surface spall, minor wear", "Routine monitoring; batch patching schedule"),
+        ("Tier 2 (Moderate)", "4.0 - 7.0 cm", "2.1 - 3.5", "Asphalt aggregate loss, tire impact", "Standard maintenance work order within 30 days"),
+        ("Tier 3 (Severe)", "7.1 - 10.0 cm", "3.6 - 4.5", "Sub-base penetration, tire damage hazard", "Priority municipal intervention within 21 days (SLA active)"),
+        ("Tier 4 (Critical)", "> 10.0 cm", "4.6 - 5.0", "Structural collapse, severe collision risk", "Emergency 48-hour barricading and rapid overlay")
+    ]
+    tbl_sev = doc.add_table(rows=len(sev_rows) + 1, cols=5)
     sev_headers = ["Severity Tier", "Estimated Depth", "Severity Score", "Surface Impact", "Maintenance Action Required"]
     for i, h in enumerate(sev_headers):
         cell = tbl_sev.cell(0, i)
@@ -1053,13 +1152,6 @@ def create_report():
         cell.paragraphs[0].runs[0].font.size = Pt(9)
         set_cell_shading(cell, "1E293B")
         cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
-
-    sev_rows = [
-        ("Tier 1 (Minor)", "< 4.0 cm", "1.0 - 2.0", "Cosmetic surface spall, minor wear", "Routine monitoring; batch patching schedule"),
-        ("Tier 2 (Moderate)", "4.0 - 7.0 cm", "2.1 - 3.5", "Asphalt aggregate loss, tire impact", "Standard maintenance work order within 30 days"),
-        ("Tier 3 (Severe)", "7.1 - 10.0 cm", "3.6 - 4.5", "Sub-base penetration, tire damage hazard", "Priority municipal intervention within 21 days (SLA active)"),
-        ("Tier 4 (Critical)", "> 10.0 cm", "4.6 - 5.0", "Structural collapse, severe collision risk", "Emergency 48-hour barricading and rapid overlay")
-    ]
     for row_idx, row_data in enumerate(sev_rows):
         for col_idx, val in enumerate(row_data):
             cell = tbl_sev.cell(row_idx + 1, col_idx)
@@ -1067,8 +1159,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-
-    add_caption("Table 4.2: Pothole severity classification matrix based on estimated depth and surface area")
+    format_table(tbl_sev, p_cap42)
 
     print("Chapter 4 generated.")
 
@@ -1160,7 +1251,8 @@ def create_report():
         "strictly satisfying the unity constraint $\\sum w = 1.00$. Table 6.1 details the parameter weights and input boundaries."
     )
 
-    # Table 6.1
+    # Table 6.1 (Caption above table, format_table prevents split)
+    p_cap61 = add_caption("Table 6.1: Multi-criteria risk scoring sub-component weights and mathematical boundaries", is_table=True)
     t61_rows = [
         ("Defect Severity Index (S)", "40% (0.40)", "Max / Avg Estimated Depth (cm)", "Directly reflects physical impact risk to vehicle tires and structural sub-base integrity"),
         ("Defect Spatial Density (D)", "25% (0.25)", "Pothole Count per Kilometer", "Quantifies cumulative frequency of road distress along the surveyed transit segment"),
@@ -1168,7 +1260,6 @@ def create_report():
         ("Precipitation Context (C)", "15% (0.15)", "Cumulative 7-Day Rainfall (mm)", "Environmental factor that accelerates hydraulic asphalt cracking and base erosion")
     ]
     tbl_61 = doc.add_table(rows=len(t61_rows) + 1, cols=4)
-    tbl_61.alignment = WD_TABLE_ALIGNMENT.CENTER
     t61_headers = ["Component Parameter", "Weight", "Mathematical Input Metric", "Engineering Rationale & Normalization"]
     for i, h in enumerate(t61_headers):
         cell = tbl_61.cell(0, i)
@@ -1184,7 +1275,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-    add_caption("Table 6.1: Multi-criteria risk scoring sub-component weights and mathematical boundaries")
+    format_table(tbl_61, p_cap61)
     add_figure("fig_6_1_risk_distribution.png", "Figure 6.1: Multi-criteria road health scoring distribution curves across condition tiers")
 
     add_heading1("6.2 Sub-Component Normalization Formulations")
@@ -1211,9 +1302,16 @@ def create_report():
         "the condition grade thresholds, color indicators, and statutory administrative action protocols."
     )
 
-    # Table 6.2
-    tbl_gr = doc.add_table(rows=6, cols=5)
-    tbl_gr.alignment = WD_TABLE_ALIGNMENT.CENTER
+    # Table 6.2 (Caption above table, format_table prevents split)
+    p_cap62 = add_caption("Table 6.2: Standardized municipal condition grade boundaries and statutory intervention actions", is_table=True)
+    gr_rows = [
+        ("Grade A", "0.0 - 20.0", "Emerald Green", "Excellent / Pristine", "Routine preventive monitoring on scheduled transit cycles"),
+        ("Grade B", "20.1 - 40.0", "Light Green", "Fair / Minor Wear", "Continuous monitoring; scheduled micro-surfacing within 90 days"),
+        ("Grade C", "40.1 - 60.0", "Amber Yellow", "Moderate Deterioration", "Formal maintenance notice; batch patching within 45 days"),
+        ("Grade D", "60.1 - 80.0", "Vivid Orange", "Poor / Hazardous", "Statutory 21-Day SLA ticket dispatched; mandatory contractor repair"),
+        ("Grade E", "80.1 - 100.0", "Crimson Red", "Critical / Danger", "Emergency 48-hr SLA escalation; executive commissioner alert issued")
+    ]
+    tbl_gr = doc.add_table(rows=len(gr_rows) + 1, cols=5)
     gr_headers = ["Condition Grade", "Risk Score Range", "Visual Indicator", "Corridor Health Status", "Statutory Municipal Action Protocol"]
     for i, h in enumerate(gr_headers):
         cell = tbl_gr.cell(0, i)
@@ -1222,14 +1320,6 @@ def create_report():
         cell.paragraphs[0].runs[0].font.size = Pt(9)
         set_cell_shading(cell, "1E293B")
         cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
-
-    gr_rows = [
-        ("Grade A", "0.0 - 20.0", "Emerald Green", "Excellent / Pristine", "Routine preventive monitoring on scheduled transit cycles"),
-        ("Grade B", "20.1 - 40.0", "Light Green", "Fair / Minor Wear", "Continuous monitoring; scheduled micro-surfacing within 90 days"),
-        ("Grade C", "40.1 - 60.0", "Amber Yellow", "Moderate Deterioration", "Formal maintenance notice; batch patching within 45 days"),
-        ("Grade D", "60.1 - 80.0", "Vivid Orange", "Poor / Hazardous", "Statutory 21-Day SLA ticket dispatched; mandatory contractor repair"),
-        ("Grade E", "80.1 - 100.0", "Crimson Red", "Critical / Danger", "Emergency 48-hr SLA escalation; executive commissioner alert issued")
-    ]
     for row_idx, row_data in enumerate(gr_rows):
         for col_idx, val in enumerate(row_data):
             cell = tbl_gr.cell(row_idx + 1, col_idx)
@@ -1237,8 +1327,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-
-    add_caption("Table 6.2: Standardized municipal condition grade boundaries and statutory intervention actions")
+    format_table(tbl_gr, p_cap62)
 
     print("Chapter 6 generated.")
 
@@ -1272,9 +1361,15 @@ def create_report():
         "In the Jaipur metropolitan pilot, all 20 transit corridors are explicitly mapped to their legal administrative custodian:"
     )
 
-    # Table 7.1
-    tbl_jur = doc.add_table(rows=5, cols=4)
-    tbl_jur.alignment = WD_TABLE_ALIGNMENT.CENTER
+    # Table 7.1 (Caption above table, format_table prevents split)
+    p_cap71 = add_caption("Table 7.1: Multi-jurisdictional municipal authorities in Jaipur and operational road ownership", is_table=True)
+    jur_rows = [
+        ("AUTH-JMC-GRT", "Jaipur Municipal Corporation (Greater)", "Urban commercial arterials, southern & western city wards", "Tonk Road (TR-01), Vidhyadhar Nagar (VN-01)"),
+        ("AUTH-JMC-HRT", "Jaipur Municipal Corporation (Heritage)", "Old Walled City, historic bazaars, heritage radials", "MI Road (MI-01), Civil Lines (CL-01)"),
+        ("AUTH-PWD-RAJ", "Public Works Department (Rajasthan)", "State highways, major inter-city thoroughfares", "Ajmer Road (AJ-01), Sikar Road (SR-01)"),
+        ("AUTH-JDA", "Jaipur Development Authority", "Master plan bypasses, ring roads, grade flyovers", "JLN Marg (JLN-01), Jawahar Circle (JG-01)")
+    ]
+    tbl_jur = doc.add_table(rows=len(jur_rows) + 1, cols=4)
     jur_headers = ["Authority Identifier", "Official Municipal Entity", "Administrative Jurisdiction", "Example Monitored Corridors"]
     for i, h in enumerate(jur_headers):
         cell = tbl_jur.cell(0, i)
@@ -1283,13 +1378,6 @@ def create_report():
         cell.paragraphs[0].runs[0].font.size = Pt(9)
         set_cell_shading(cell, "1E293B")
         cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
-
-    jur_rows = [
-        ("AUTH-JMC-GRT", "Jaipur Municipal Corporation (Greater)", "Urban commercial arterials, southern & western city wards", "Tonk Road (TR-01), Vidhyadhar Nagar (VN-01)"),
-        ("AUTH-JMC-HRT", "Jaipur Municipal Corporation (Heritage)", "Old Walled City, historic bazaars, heritage radials", "MI Road (MI-01), Civil Lines (CL-01)"),
-        ("AUTH-PWD-RAJ", "Public Works Department (Rajasthan)", "State highways, major inter-city thoroughfares", "Ajmer Road (AJ-01), Sikar Road (SR-01)"),
-        ("AUTH-JDA", "Jaipur Development Authority", "Master plan bypasses, ring roads, grade flyovers", "JLN Marg (JLN-01), Jawahar Circle (JG-01)")
-    ]
     for row_idx, row_data in enumerate(jur_rows):
         for col_idx, val in enumerate(row_data):
             cell = tbl_jur.cell(row_idx + 1, col_idx)
@@ -1297,8 +1385,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-
-    add_caption("Table 7.1: Multi-jurisdictional municipal authorities in Jaipur and operational road ownership")
+    format_table(tbl_jur, p_cap71)
 
     add_heading1("7.3 Closed-Loop AI Verification Protocol")
     add_p(
@@ -1326,7 +1413,8 @@ def create_report():
     add_bullet("Branch 2: Failed Verification (Delta R% < 20%):", "Physical defects and craters persist despite contractor claims. The ticket is immediately escalated to 'Failed Verification', triggering automated default notices to the Chief Engineer and freezing contractor disbursement.")
     add_bullet("Branch 3: Partial Repair (20% <= Delta R% < 40%):", "Minor improvements observed, but substantial hazardous defects remain unaddressed. Status updates to 'Partially Repaired', issuing a 7-day secondary remediation notice.")
 
-    # Table 7.2
+    # Table 7.2 (Caption above table, format_table prevents split)
+    p_cap72 = add_caption("Table 7.2: Closed-loop repair verification outcomes, risk delta thresholds, and actions", is_table=True)
     t72_rows = [
         ("ΔRisk ≤ -40%", "Clusters reduced by > 75%", "VERIFIED_FIX (Closed)", "Work order officially closed; contractor repair invoice released for payment"),
         ("-40% < ΔRisk ≤ -20%", "Clusters reduced by 40-75%", "PARTIAL_REPAIR", "Notice issued for secondary seal-coat inspection within 7 days"),
@@ -1334,7 +1422,6 @@ def create_report():
         ("ΔRisk > 0% (Worsened)", "Clusters increased / enlarged", "ESCALATED_BREACH", "Emergency audit trigger; executive notification dispatched to Municipal Commissioner")
     ]
     tbl_72 = doc.add_table(rows=len(t72_rows) + 1, cols=4)
-    tbl_72.alignment = WD_TABLE_ALIGNMENT.CENTER
     t72_headers = ["Post-Repair Risk Delta", "Pothole Count Change", "Verification Status", "Automated Municipal Action Protocol"]
     for i, h in enumerate(t72_headers):
         cell = tbl_72.cell(0, i)
@@ -1350,7 +1437,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-    add_caption("Table 7.2: Closed-loop repair verification outcomes, risk delta thresholds, and actions")
+    format_table(tbl_72, p_cap72)
 
     print("Chapter 7 generated.")
 
@@ -1366,7 +1453,8 @@ def create_report():
         "Table 8.1 details the primary entities and structural constraints."
     )
 
-    # Table 8.1
+    # Table 8.1 (Caption above table, format_table prevents split)
+    p_cap81 = add_caption("Table 8.1: Relational database schema dictionary and data storage specifications", is_table=True)
     db_rows = [
         ("road_segment", "segment_id", "authority_id", "Stores corridor polylines, start/end GPS, ward, length (km), and OSM tags"),
         ("authority", "authority_id", "None", "Registry of civic bodies (JMC, PWD, JDA), contact emails, and zones"),
@@ -1377,7 +1465,6 @@ def create_report():
         ("issue_report", "issue_id", "segment_id, authority_id", "21-day municipal repair SLA state machine, due dates, and audit notes")
     ]
     tbl_db = doc.add_table(rows=len(db_rows) + 1, cols=4)
-    tbl_db.alignment = WD_TABLE_ALIGNMENT.CENTER
     db_headers = ["Table Name", "Primary Key", "Foreign Keys", "Core Responsibilities & Schema Role"]
     for i, h in enumerate(db_headers):
         cell = tbl_db.cell(0, i)
@@ -1393,8 +1480,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-
-    add_caption("Table 8.1: Relational database schema dictionary and data storage specifications")
+    format_table(tbl_db, p_cap81)
     add_figure("fig_8_1_erd_diagram.png", "Figure 8.1: Entity-Relationship Diagram (ERD) of the RoadPulse AI relational database")
 
     add_heading1("8.2 High-Throughput FastAPI Asynchronous Backend")
@@ -1439,9 +1525,14 @@ def create_report():
         "mean Average Precision (mAP) at IoU thresholds of 0.50 and 0.50:0.95. Table 9.1 documents the empirical benchmark results."
     )
 
-    # Table 9.1
-    tbl_bm = doc.add_table(rows=4, cols=5)
-    tbl_bm.alignment = WD_TABLE_ALIGNMENT.CENTER
+    # Table 9.1 (Caption above table, format_table prevents split)
+    p_cap91 = add_caption("Table 9.1: YOLOv8 model performance metrics (Precision, Recall, mAP@50, mAP@50-95)", is_table=True)
+    bm_rows = [
+        ("Potholes (Class D40)", "0.912", "0.874", "0.894", "0.621"),
+        ("Severe Longitudinal Cracks", "0.865", "0.820", "0.841", "0.554"),
+        ("All Classes (Mean Composite)", "0.888", "0.847", "0.868", "0.588")
+    ]
+    tbl_bm = doc.add_table(rows=len(bm_rows) + 1, cols=5)
     bm_headers = ["Defect Category", "Precision (P)", "Recall (R)", "mAP@50", "mAP@50-95"]
     for i, h in enumerate(bm_headers):
         cell = tbl_bm.cell(0, i)
@@ -1450,12 +1541,6 @@ def create_report():
         cell.paragraphs[0].runs[0].font.size = Pt(9)
         set_cell_shading(cell, "1E293B")
         cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
-
-    bm_rows = [
-        ("Potholes (Class D40)", "0.912", "0.874", "0.894", "0.621"),
-        ("Severe Longitudinal Cracks", "0.865", "0.820", "0.841", "0.554"),
-        ("All Classes (Mean Composite)", "0.888", "0.847", "0.868", "0.588")
-    ]
     for row_idx, row_data in enumerate(bm_rows):
         for col_idx, val in enumerate(row_data):
             cell = tbl_bm.cell(row_idx + 1, col_idx)
@@ -1463,8 +1548,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-
-    add_caption("Table 9.1: YOLOv8 model performance metrics (Precision, Recall, mAP@50, mAP@50-95)")
+    format_table(tbl_bm, p_cap91)
     add_figure("fig_9_1_precision_recall.png", "Figure 9.1: Precision-Recall curves and confusion matrix for custom fine-tuned YOLOv8 model")
 
     add_heading1("9.2 Video Ingestion, Decimation, and GPU Inference Throughput")
@@ -1475,7 +1559,8 @@ def create_report():
         "in only 13.04 seconds—representing a 29.9x throughput acceleration with zero defect loss. Table 9.2 summarizes the decimation benchmark comparisons."
     )
 
-    # Table 9.2
+    # Table 9.2 (Caption above table, format_table prevents split)
+    p_cap92 = add_caption("Table 9.2: Compute benchmarks demonstrating decimation efficiency and GPU frame rates", is_table=True)
     t92_rows = [
         ("Raw 30 FPS Ingestion (Full)", "18,000", "391.3 s", "46.0 FPS", "High (Redundant frames at bus stops)"),
         ("15-Frame Decimation (2 FPS)", "1,200", "26.1 s", "45.9 FPS", "Moderate (Still 50% spatial overlap)"),
@@ -1483,7 +1568,6 @@ def create_report():
         ("60-Frame Decimation (0.5 FPS)", "300", "6.5 s", "46.0 FPS", "Risky (Small defects bypassed at >40 km/h)")
     ]
     tbl_92 = doc.add_table(rows=len(t92_rows) + 1, cols=5)
-    tbl_92.alignment = WD_TABLE_ALIGNMENT.CENTER
     t92_headers = ["Sampling Pipeline", "Frames Processed", "Total Processing Time", "GPU Inference Rate", "Operational Assessment"]
     for i, h in enumerate(t92_headers):
         cell = tbl_92.cell(0, i)
@@ -1499,7 +1583,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-    add_caption("Table 9.2: Compute benchmarks demonstrating decimation efficiency and GPU frame rates")
+    format_table(tbl_92, p_cap92)
 
     add_heading1("9.3 Jaipur 20-Corridor Municipal Transit Pilot Case Study")
     add_p(
@@ -1507,9 +1591,16 @@ def create_report():
         "The monitored corridors span 94.2 linear kilometers across major urban radials. Table 9.3 summarizes condition progression."
     )
 
-    # Table 9.3
-    tbl_jp = doc.add_table(rows=6, cols=6)
-    tbl_jp.alignment = WD_TABLE_ALIGNMENT.CENTER
+    # Table 9.3 (Caption above table, format_table prevents split)
+    p_cap93 = add_caption("Table 9.3: Empirical 4-week condition progression of monitored Jaipur transit corridors", is_table=True)
+    jp_rows = [
+        ("TR-01", "Tonk Road", "JMC Greater", "Grade C (Score 45)", "Grade E (Score 88)", "Severe degradation; 21-day SLA breached (OVERDUE)"),
+        ("AJ-01", "Ajmer Road", "PWD Rajasthan", "Grade D (Score 58)", "Grade B (Score 22)", "Successful PWD repair; AI verified 72% risk drop"),
+        ("SR-01", "Sikar Road", "PWD Rajasthan", "Grade B (Score 25)", "Grade D (Score 60)", "Monsoon rainfall surge (42mm rain); patching active"),
+        ("CL-01", "Civil Lines", "JMC Heritage", "Grade A (Score 10)", "Grade A (Score 12)", "Consistently maintained VIP baseline control corridor"),
+        ("JLN-01", "JLN Marg", "JDA", "Grade C (Score 48)", "Grade C (Score 50)", "Stable arterial; moderate surface wear under heavy traffic")
+    ]
+    tbl_jp = doc.add_table(rows=len(jp_rows) + 1, cols=6)
     jp_headers = ["Segment ID", "Corridor Name", "Jurisdiction", "Week 1 (Baseline)", "Week 4 (Outcome)", "Observed Civic Phenomenon"]
     for i, h in enumerate(jp_headers):
         cell = tbl_jp.cell(0, i)
@@ -1518,14 +1609,6 @@ def create_report():
         cell.paragraphs[0].runs[0].font.size = Pt(9)
         set_cell_shading(cell, "1E293B")
         cell.paragraphs[0].runs[0].font.color.rgb = RGBColor(255, 255, 255)
-
-    jp_rows = [
-        ("TR-01", "Tonk Road", "JMC Greater", "Grade C (Score 45)", "Grade E (Score 88)", "Severe degradation; 21-day SLA breached (OVERDUE)"),
-        ("AJ-01", "Ajmer Road", "PWD Rajasthan", "Grade D (Score 58)", "Grade B (Score 22)", "Successful PWD repair; AI verified 72% risk drop"),
-        ("SR-01", "Sikar Road", "PWD Rajasthan", "Grade B (Score 25)", "Grade D (Score 60)", "Monsoon rainfall surge (42mm rain); patching active"),
-        ("CL-01", "Civil Lines", "JMC Heritage", "Grade A (Score 10)", "Grade A (Score 12)", "Consistently maintained VIP baseline control corridor"),
-        ("JLN-01", "JLN Marg", "JDA", "Grade C (Score 48)", "Grade C (Score 50)", "Stable arterial; moderate surface wear under heavy traffic")
-    ]
     for row_idx, row_data in enumerate(jp_rows):
         for col_idx, val in enumerate(row_data):
             cell = tbl_jp.cell(row_idx + 1, col_idx)
@@ -1533,8 +1616,7 @@ def create_report():
             cell.paragraphs[0].runs[0].font.size = Pt(9)
             set_cell_shading(cell, "F8FAFC" if row_idx % 2 == 0 else "FFFFFF")
             set_cell_border(cell, top=dict(sz=4, color="CBD5E1"), bottom=dict(sz=4, color="CBD5E1"), left=dict(sz=4, color="CBD5E1"), right=dict(sz=4, color="CBD5E1"))
-
-    add_caption("Table 9.3: Empirical 4-week condition progression of monitored Jaipur transit corridors")
+    format_table(tbl_jp, p_cap93)
     add_figure("fig_9_2_jaipur_pilot_curves.png", "Figure 9.2: 4-Week Jaipur empirical transit pilot road condition progression (TR-01 vs AJ-01)")
 
     add_heading1("9.4 Empirical Closed-Loop Repair Verification Evaluation")
@@ -1597,8 +1679,9 @@ def create_report():
     # =========================================================================
     # REFERENCES (IEEE FORMAT)
     # =========================================================================
-    doc.add_page_break()
     p_ref = add_p("REFERENCES", bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=16, space_after=16)
+    p_ref.paragraph_format.page_break_before = True
+    p_ref.paragraph_format.keep_with_next = True
     p_ref.runs[0].font.size = Pt(16)
 
     references = [
@@ -1641,8 +1724,9 @@ def create_report():
     # =========================================================================
     # APPENDICES
     # =========================================================================
-    doc.add_page_break()
     p_app = add_p("APPENDICES", bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_before=16, space_after=16)
+    p_app.paragraph_format.page_break_before = True
+    p_app.paragraph_format.keep_with_next = True
     p_app.runs[0].font.size = Pt(16)
 
     add_heading1("APPENDIX A: RESTful API Endpoint Specifications")
