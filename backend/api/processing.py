@@ -13,7 +13,7 @@ import os
 import uuid
 import asyncio
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException, BackgroundTasks
@@ -62,7 +62,7 @@ def _update_live_metric(segment_id: str, new_detections: list, db: Session):
         rain_mm=0.0
     )
     grade = get_grade(risk)
-    now_str = datetime.utcnow().strftime("%Y-%m-%d")
+    now_str = datetime.now(timezone.utc).replace(tzinfo=None).strftime("%Y-%m-%d")
     high_count = sum(1 for d in w4_detections if d.severity_label == "High")
     avg_depth = round(
         sum(d.depth_cm for d in w4_detections if d.depth_cm) /
@@ -220,7 +220,7 @@ def run_yolo_inference(job_id: str, video_path: str, road_segment_id: str, bus_i
                 video_id=job.video_id,
                 bus_id=bus_id,
                 frame_number=det.get("frame_number"),
-                timestamp=det.get("timestamp") or datetime.utcnow(),
+                timestamp=det.get("timestamp") or datetime.now(timezone.utc).replace(tzinfo=None),
                 latitude=lat,
                 longitude=lon,
                 confidence=det.get("confidence", 0.85),
@@ -246,7 +246,7 @@ def run_yolo_inference(job_id: str, video_path: str, road_segment_id: str, bus_i
         # ── Mark Job Completed ──
         job.status = "completed"
         job.progress = 100.0
-        job.completed_at = datetime.utcnow()
+        job.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
         db.commit()
 
         print(f"[JOB {job_id}] Finished! {stored} potholes geocoded & logged along {road_segment_id}")
@@ -260,7 +260,7 @@ def run_yolo_inference(job_id: str, video_path: str, road_segment_id: str, bus_i
                 cloud_payload = {
                     "road_segment_id": road_segment_id,
                     "session_id": f"LOCAL-DASHBOARD-{job_id}",
-                    "captured_at": datetime.utcnow().isoformat(),
+                    "captured_at": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
                     "frame_count": total_frames,
                     "source": "local_yolo_gpu",
                     "detections": [
@@ -340,7 +340,7 @@ async def upload_video(
         video_id=vid_id,
         bus_id=bus_id,
         route_id=road_segment_id,
-        upload_time=datetime.utcnow(),
+        upload_time=datetime.now(timezone.utc).replace(tzinfo=None),
         duration_seconds=0.0,         # will be known after inference
         metadata_source="upload",
         status="uploaded",
@@ -360,7 +360,7 @@ async def upload_video(
         frames_processed=0,
         detections_count=0,
         provider="yolov8_local",      # will be confirmed after model loads
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc).replace(tzinfo=None),
     )
     db.add(job)
     db.commit()
@@ -517,7 +517,7 @@ async def ingest_sample_video(
         video_id=vid_id,
         bus_id=payload.bus_id,
         route_id=payload.road_segment_id,
-        upload_time=datetime.utcnow(),
+        upload_time=datetime.now(timezone.utc).replace(tzinfo=None),
         duration_seconds=0.0,
         metadata_source="sample_library",
         status="uploaded",
@@ -536,7 +536,7 @@ async def ingest_sample_video(
         frames_processed=0,
         detections_count=0,
         provider="yolov8_local",
-        created_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc).replace(tzinfo=None),
     )
     db.add(job)
     db.commit()

@@ -55,3 +55,26 @@ def test_csv_export():
     response = client.get("/api/exports/csv?type=road_segments")
     assert response.status_code == 200
     assert response.headers["content-type"] == "text/csv; charset=utf-8"
+
+def test_risk_score_calculation():
+    from services.scoring_service import calculate_risk_score, get_grade
+    # Pristine road
+    score_low = calculate_risk_score(severity=1.0, density=0.0, trend=0.0, rain_mm=0.0)
+    assert 0 <= score_low <= 30
+    assert get_grade(score_low) in ["A", "B"]
+
+    # Critical severe road
+    score_high = calculate_risk_score(severity=5.0, density=30.0, trend=50.0, rain_mm=50.0)
+    assert score_high >= 80
+    assert get_grade(score_high) == "E"
+
+def test_get_jobs_queue():
+    response = client.get("/api/jobs")
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
+def test_clear_ingested_data():
+    response = client.post("/api/demo/clear-ingested")
+    assert response.status_code == 200
+    assert response.json()["success"] == True
+    assert "cleared" in response.json()["message"].lower()

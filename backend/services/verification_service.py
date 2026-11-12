@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from models.database import IssueReport, RepairVerification, WeeklyRoadMetric
-from datetime import datetime
+from datetime import datetime, timezone
 
 def verify_repair(issue_id: str, survey_week: int, db: Session) -> RepairVerification:
     issue = db.query(IssueReport).filter(IssueReport.issue_id == issue_id).first()
@@ -38,7 +38,7 @@ def verify_repair(issue_id: str, survey_week: int, db: Session) -> RepairVerific
         result=result,
         before_score=before_score,
         after_score=after_score,
-        verified_at=datetime.utcnow()
+        verified_at=datetime.now(timezone.utc).replace(tzinfo=None)
     )
     db.add(ver)
     db.commit()
@@ -49,11 +49,12 @@ def simulate_authority_response(issue_id: str, action: str, db: Session):
     issue = db.query(IssueReport).filter(IssueReport.issue_id == issue_id).first()
     if not issue:
         return False
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     if action == "acknowledge":
         issue.status = "acknowledged"
-        issue.acknowledged_at = datetime.utcnow()
+        issue.acknowledged_at = now_utc
     elif action == "repair":
         issue.status = "repaired"
-        issue.repair_claimed_at = datetime.utcnow()
+        issue.repair_claimed_at = now_utc
     db.commit()
     return True

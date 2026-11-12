@@ -1,7 +1,7 @@
 import os
 import json
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from models.database import (
@@ -129,7 +129,7 @@ def simulate_upload(db: Session = Depends(get_db)):
     _require_demo_mode()
     job_id = f"JOB-SIM-{uuid.uuid4().hex[:6].upper()}"
     vid_id = f"VID-SIM-{uuid.uuid4().hex[:6].upper()}"
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     segment = db.query(RoadSegment).filter(RoadSegment.segment_id == "TR-01").first()
     if not segment:
         raise HTTPException(404, "Demo road TR-01 not found; load demo roads first")
@@ -199,20 +199,21 @@ def simulate_repair(payload: dict = Body(...), db: Session = Depends(get_db)):
         seg = db.query(RoadSegment).filter(RoadSegment.segment_id == segment_id).first()
         if not seg:
             raise HTTPException(404, f"Road segment {segment_id} not found")
+        now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
         issue = IssueReport(
             issue_id=f"ISS-{segment_id}",
             segment_id=segment_id,
             authority_id=seg.authority_id,
             priority="High",
             risk_score=75.0,
-            sent_at=datetime.utcnow() - timedelta(days=10),
+            sent_at=now_utc - timedelta(days=10),
             status="reported"
         )
         db.add(issue)
         db.commit()
         
     issue.status = "repaired"
-    issue.repair_claimed_at = datetime.utcnow()
+    issue.repair_claimed_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     metric = db.query(WeeklyRoadMetric).filter(
         WeeklyRoadMetric.segment_id == segment_id,
@@ -260,6 +261,7 @@ def simulate_report(payload: dict = Body(...), db: Session = Depends(get_db)):
         raise HTTPException(404, "Segment not found")
         
     issue = db.query(IssueReport).filter(IssueReport.segment_id == segment_id).first()
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     if not issue:
         issue = IssueReport(
             issue_id=f"ISS-{segment_id}",
@@ -267,13 +269,13 @@ def simulate_report(payload: dict = Body(...), db: Session = Depends(get_db)):
             authority_id=seg.authority_id,
             priority="High",
             risk_score=82.0,
-            sent_at=datetime.utcnow(),
+            sent_at=now_utc,
             status="reported"
         )
         db.add(issue)
     else:
         issue.status = "reported"
-        issue.sent_at = datetime.utcnow()
+        issue.sent_at = now_utc
         
     metric = db.query(WeeklyRoadMetric).filter(
         WeeklyRoadMetric.segment_id == segment_id,
@@ -296,7 +298,7 @@ def simulate_acknowledge(payload: dict = Body(...), db: Session = Depends(get_db
             raise HTTPException(404, "No issue found")
         
     issue.status = "acknowledged"
-    issue.acknowledged_at = datetime.utcnow()
+    issue.acknowledged_at = datetime.now(timezone.utc).replace(tzinfo=None)
     
     metric = db.query(WeeklyRoadMetric).filter(
         WeeklyRoadMetric.segment_id == issue.segment_id,

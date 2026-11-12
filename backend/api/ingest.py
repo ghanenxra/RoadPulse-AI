@@ -11,7 +11,7 @@ No video file is uploaded here — only structured JSON detection results.
 
 import uuid
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -27,7 +27,7 @@ router = APIRouter()
 # ── Pydantic schemas ──────────────────────────────────────────────────────────
 
 class DetectionItem(BaseModel):
-    class_name: str = Field(..., example="pothole")
+    class_name: str = Field(..., json_schema_extra={"example": "pothole"})
     confidence: float = Field(..., ge=0.0, le=1.0)
     severity: float = Field(..., ge=1.0, le=5.0, description="1=Low, 5=Critical")
     depth_cm: Optional[float] = Field(None, ge=0.0)
@@ -41,12 +41,12 @@ class Location(BaseModel):
 
 
 class IngestPayload(BaseModel):
-    road_segment_id: str = Field(..., example="TR-01")
-    session_id: str = Field(..., example="SESSION-abc123", description="Unique ID for this capture session")
+    road_segment_id: str = Field(..., json_schema_extra={"example": "TR-01"})
+    session_id: str = Field(..., json_schema_extra={"example": "SESSION-abc123"}, description="Unique ID for this capture session")
     captured_at: Optional[datetime] = Field(None, description="ISO timestamp; defaults to now if omitted")
     location: Optional[Location] = None
     frame_count: Optional[int] = Field(None, ge=1)
-    detections: List[DetectionItem] = Field(..., min_items=0)
+    detections: List[DetectionItem] = Field(..., min_length=0)
     source: Optional[str] = Field("local_yolo", description="'local_yolo' or 'mock_tool'")
 
 
@@ -95,7 +95,7 @@ def _compute_and_update_metric(segment_id: str, new_detections: List[Detection],
         WeeklyRoadMetric.week == 0
     ).first()
 
-    now_str = datetime.utcnow().strftime("%Y-%m-%d")
+    now_str = datetime.now(timezone.utc).replace(tzinfo=None).strftime("%Y-%m-%d")
     if metric:
         metric.pothole_count = count
         metric.severe_count = sum(1 for d in all_live if d.severity_label == "High")
@@ -160,7 +160,7 @@ def ingest_detections(payload: IngestPayload, db: Session = Depends(get_db)):
                    f"Run: python mock_tools/seed_roads.py  to seed road definitions."
         )
 
-    captured_at = payload.captured_at or datetime.utcnow()
+    captured_at = payload.captured_at or datetime.now(timezone.utc).replace(tzinfo=None)
     stored_ids = []
 
     # 2. Store each detection

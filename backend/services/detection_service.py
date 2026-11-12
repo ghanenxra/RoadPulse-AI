@@ -14,7 +14,7 @@ import os
 import random
 import uuid
 import math
-from datetime import datetime
+from datetime import datetime, timezone
 from abc import ABC, abstractmethod
 from typing import List, Optional, Dict, Any
 from pathlib import Path
@@ -143,7 +143,7 @@ class YOLODetectionProvider(DetectionProvider):
                             "severity_label": _severity_label(sev),
                             "depth_cm": _depth_estimate(sev),
                             "bbox": bbox_xywh,
-                            "timestamp": datetime.utcnow(),
+                            "timestamp": datetime.now(timezone.utc).replace(tzinfo=None),
                         })
 
             frame_idx += 1
@@ -178,7 +178,7 @@ class MockDetectionProvider(DetectionProvider):
     ) -> tuple[List[dict], dict]:
         detections = []
         num_detections = random.randint(5, 15)
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         for i in range(num_detections):
             sev = round(random.uniform(1.5, 4.8), 2)
             conf = round(random.uniform(0.55, 0.97), 3)

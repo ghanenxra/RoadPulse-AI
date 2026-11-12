@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from datetime import datetime
+from datetime import datetime, timezone
 from models.database import get_db, IssueReport, RoadSegment, Authority, WeeklyRoadMetric
 from schemas.api_schemas import IssueStatusUpdate
 from services.verification_service import verify_repair, simulate_authority_response
@@ -12,7 +12,7 @@ def serialize_issue(issue: IssueReport, db: Session) -> dict:
     seg = db.query(RoadSegment).filter(RoadSegment.segment_id == issue.segment_id).first()
     auth = db.query(Authority).filter(Authority.authority_id == issue.authority_id).first()
     
-    days_unresolved = (datetime.utcnow() - issue.sent_at).days if issue.sent_at else 0
+    days_unresolved = (datetime.now(timezone.utc).replace(tzinfo=None) - issue.sent_at).days if issue.sent_at else 0
     
     return {
         "issue_id": issue.issue_id,
@@ -86,10 +86,11 @@ def update_issue_status(issue_id: str, payload: dict = Body(...), db: Session = 
     if notes:
         issue.notes = notes
         
+    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)
     if status == "acknowledged" and not issue.acknowledged_at:
-        issue.acknowledged_at = datetime.utcnow()
+        issue.acknowledged_at = now_utc
     elif status in ["repaired", "claimed_repaired"] and not issue.repair_claimed_at:
-        issue.repair_claimed_at = datetime.utcnow()
+        issue.repair_claimed_at = now_utc
         
     metric = db.query(WeeklyRoadMetric).filter(
         WeeklyRoadMetric.segment_id == issue.segment_id,

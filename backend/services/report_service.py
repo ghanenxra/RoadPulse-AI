@@ -1,6 +1,6 @@
 import os
 import csv
-from datetime import datetime
+from datetime import datetime, timezone
 from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, KeepTogether, HRFlowable
@@ -408,7 +408,7 @@ def export_authority_actions_csv(db: Session) -> str:
         auth_name = auth.name if auth else i.authority_id
         seg = db.query(RoadSegment).filter(RoadSegment.segment_id == i.segment_id).first()
         road_name = seg.road_name if seg else i.segment_id
-        days_unres = (datetime.utcnow() - i.sent_at).days if i.sent_at else 0
+        days_unres = (datetime.now(timezone.utc).replace(tzinfo=None) - i.sent_at).days if i.sent_at else 0
         rows.append([
             i.issue_id,
             i.segment_id,

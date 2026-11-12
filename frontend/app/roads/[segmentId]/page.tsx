@@ -10,7 +10,7 @@ import { api } from '@/lib/api'
 import { RoadSegment, MapFeature } from '@/types'
 import { generateNarrative, getGradeColor } from '@/lib/utils'
 import { useWeek } from '@/context/WeekContext'
-import { ArrowLeft, MapPin, Camera, Download, FileText } from 'lucide-react'
+import { ArrowLeft, MapPin, Camera, Download, FileText, Loader2, AlertCircle } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend } from 'recharts'
 
@@ -39,9 +39,37 @@ export default function RoadDetailPage() {
     if (segmentId) loadData()
   }, [segmentId, week])
 
-  if (loading) return <div>Loading...</div>
-  if (!road) return <div>Road not found.</div>
-  if (!road.current_week) return <div>No metrics available for Week {week}.</div>
+  if (loading) {
+    return (
+      <>
+        <Topbar title="Road Details" />
+        <div className="flex flex-col items-center justify-center min-h-[50vh] p-6 text-slate-500">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-2" />
+          <p className="text-sm font-medium">Loading road corridor forensic telemetry...</p>
+        </div>
+      </>
+    )
+  }
+
+  if (!road || !road.current_week) {
+    return (
+      <>
+        <Topbar title="Road Details" />
+        <div className="flex flex-col items-center justify-center min-h-[50vh] p-6 text-center">
+          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+            <AlertCircle className="h-6 w-6 text-slate-400" />
+          </div>
+          <h2 className="text-base font-bold text-slate-900">Corridor Not Found</h2>
+          <p className="text-xs text-slate-500 mt-1 max-w-sm">
+            Could not find forensic data for segment &quot;{segmentId}&quot; in Week {week}.
+          </p>
+          <Button variant="outline" size="sm" onClick={() => router.push('/roads')} className="mt-4 text-xs">
+            <ArrowLeft className="h-3.5 w-3.5 mr-1.5" /> Back to Road Network
+          </Button>
+        </div>
+      </>
+    )
+  }
 
   const feature: MapFeature = {
     type: 'Feature',

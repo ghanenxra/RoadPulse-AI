@@ -3,7 +3,7 @@ import json
 import math
 import uuid
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from models.database import (
     Base, engine, Authority, RoadSegment, Bus, ChargingStation, VideoAsset,
@@ -31,7 +31,7 @@ def seed_database(db: Session):
         demo_data = json.load(f)
         
     random.seed(42)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     
     # Authorities
     authorities = {}

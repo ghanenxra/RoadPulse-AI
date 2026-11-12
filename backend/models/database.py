@@ -2,12 +2,11 @@ from datetime import datetime
 from typing import Any
 
 from sqlalchemy import create_engine, Column, String, Integer, Float, Boolean, DateTime, ForeignKey, Text, UniqueConstraint
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
+from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 
 from core.config import settings
 
-engine = create_engine(settings.database_url, connect_args=settings.db_connect_args)
+engine = create_engine(settings.database_url, connect_args=settings.db_connect_args, pool_pre_ping=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
