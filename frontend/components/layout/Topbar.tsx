@@ -107,16 +107,16 @@ export function Topbar({ title }: { title?: string }) {
       <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
         {/* Timeline Week Selector */}
         <div className="flex items-center space-x-1.5 sm:space-x-2 sm:border-r sm:pr-4">
-          <Calendar className="h-4 w-4 text-blue-600 hidden sm:inline-block" />
-          <span className="text-xs sm:text-sm text-slate-500 font-medium hidden xs:inline">
+          <Calendar className="h-4 w-4 text-blue-600 hidden sm:inline-block shrink-0" />
+          <span className="text-xs sm:text-sm text-slate-500 font-medium hidden xs:inline shrink-0">
             Cycle:
           </span>
-          <div className="w-24 sm:w-36">
+          <div className="w-auto min-w-[155px] sm:min-w-[170px]">
             <Select value={String(week)} onValueChange={(val) => setWeek(Number(val))}>
-              <SelectTrigger className="h-8 text-xs sm:text-sm bg-slate-50 border-slate-200 font-medium text-slate-800">
+              <SelectTrigger className="h-9 px-3 py-1.5 text-xs sm:text-sm bg-slate-50/80 border-slate-200 font-medium text-slate-800 rounded-lg whitespace-nowrap shadow-2xs hover:bg-slate-100 hover:border-slate-300 transition-colors">
                 <SelectValue placeholder="Select week" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="min-w-[170px] rounded-lg shadow-lg">
                 <SelectItem value="1">Week 1 (Aug 17)</SelectItem>
                 <SelectItem value="2">Week 2 (Aug 24)</SelectItem>
                 <SelectItem value="3">Week 3 (Aug 31)</SelectItem>
@@ -130,17 +130,17 @@ export function Topbar({ title }: { title?: string }) {
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="relative p-2 text-slate-500 hover:text-slate-800 rounded-md hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="relative h-9 w-9 flex items-center justify-center text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Notifications"
             aria-expanded={isOpen}
           >
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 flex h-2 w-2">
+              <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-600"></span>
               </span>
             )}
-            <Bell className="h-5 w-5" />
+            <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
 
           {isOpen && (
