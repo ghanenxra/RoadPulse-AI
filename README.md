@@ -1,106 +1,110 @@
-# RoadPulse AI — Road Health Intelligence Dashboard
+# RoadPulse AI — Road Health Intelligence Platform
 
-> **"From Road Detection to Road Accountability"**
+> **From Road Detection to Civic Accountability**
 
-An AI-powered road-health monitoring platform engineered for municipal transit networks and electric city buses. RoadPulse AI leverages existing Network Vehicle Digital Recorders (NVDR) already mounted on public bus windshields to continuously monitor road infrastructure, detect pavement defects using custom fine-tuned deep learning models, stitch coordinates to real OpenStreetMap carriageways, and enforce strict accountability for civic repairs.
+An AI-powered road-health monitoring platform engineered for municipal transit networks and electric city buses. RoadPulse AI leverages existing Network Vehicle Digital Recorders (NVDR) already mounted on public bus windshields to continuously monitor road infrastructure, detect pavement defects using custom fine-tuned deep learning models, snap coordinates to OpenStreetMap carriageways, and enforce strict accountability for civic repairs.
 
 ---
 
-## 📚 Architectural & Technical Documentation
+## Architectural & Technical Documentation
 
 For in-depth technical specifications, review the dedicated system architecture documents:
 
-- 🛠️ **[Complete Technology Stack & Specifications (`TECH_STACK.md`)](TECH_STACK.md)** — Detailed breakdown of YOLOv8, PyTorch, OpenCV, OSRM, Leaflet, FastAPI, SQLAlchemy 2.0, Next.js 14, ReportLab, and hardware requirements.
-- 🔄 **[End-to-End System Pipeline (`PIPELINE.md`)](PIPELINE.md)** — 10-step capture-to-repair pipeline with Mermaid diagrams, mathematical risk formulations, DBSCAN spatial clustering, and closed-loop AI verification.
-- 📖 **[Prototype User Guide & Feature Manual (`PROTOTYPE_GUIDE.md`)](PROTOTYPE_GUIDE.md)** — Screen-by-screen walkthrough of all 9 prototype pages, interactive workflows, and a 3-minute winning jury presentation script.
+- **[Production Target Architecture (`docs/PRODUCTION_ARCHITECTURE.md`)](docs/PRODUCTION_ARCHITECTURE.md)** — Architectural specification for transitioning from the local demonstrator to city-scale PostgreSQL + PostGIS, Celery/Redis asynchronous workers, spatial clustering (DBSCAN), and S3/GCS object storage.
+- **[Complete Technology Stack & Specifications (`TECH_STACK.md`)](TECH_STACK.md)** — Detailed breakdown of YOLOv8, PyTorch, OpenCV, OSRM, Leaflet, FastAPI, SQLAlchemy 2.0, Next.js 14, ReportLab, and hardware requirements.
+- **[End-to-End System Pipeline (`PIPELINE.md`)](PIPELINE.md)** — 10-step capture-to-repair pipeline with architecture diagrams, mathematical risk formulations, spatial clustering, and closed-loop AI verification.
+- **[Prototype User Guide & Feature Manual (`PROTOTYPE_GUIDE.md`)](PROTOTYPE_GUIDE.md)** — Screen-by-screen walkthrough of all prototype pages, interactive workflows, and demonstration procedures.
 
 ---
 
-## 🚀 Key Features
+## Key Capabilities & Engineering Architecture
 
-- **Interactive Road Health Map** — Vector mapping powered by Leaflet and OpenStreetMap with OSRM-stitched geometry across 20 high-traffic Jaipur transit corridors and color-coded condition gradients ($A\text{--}E$).
-- **Deep Learning Inference Engine** — Integrated fine-tuned YOLOv8 model (`model/Yolov8-fintuned-on-potholes.pt`) with CUDA GPU acceleration and CPU fallback for real-time pothole bounding box detection.
-- **Geometric Depth & Severity Estimation** — Estimates physical pothole depth ($0\text{--}15\text{ cm}$) using vehicle horizon pitch heuristics and classifies defects into Minor, Moderate, Severe, and Critical.
-- **Spatial Clustering & Deduplication** — Scikit-Learn DBSCAN clustering ($\varepsilon = 15\text{m}$) merges repeat detections across multiple bus passes into persistent physical defect records.
-- **Road-Snapping Infrastructure** — Snaps raw GPS points to real OpenStreetMap carriageways and flyovers via Open Source Routing Machine (OSRM) integration.
-- **1-Click Sample Dashcam Ingestion** — Pre-bundled Jaipur dashcam video clips accessible directly from the Processing Center UI for instant offline jury demonstrations.
-- **Multi-Criteria Road Health Scoring** — Standardized 0–100 index combining Severity ($40\%$), Defect Density ($25\%$), Degradation Velocity ($20\%$), and Environmental Context ($15\%$).
-- **Statutory Municipal SLA Tracker** — Automated ticket dispatch with 21-day repair countdowns for Jaipur Municipal Corporation (Greater & Heritage), PWD Rajasthan, and Jaipur Development Authority (JDA).
-- **Closed-Loop AI Verification** — Re-surveys repaired corridors on subsequent bus cycles, automatically validating repairs ($\ge 40\%$ risk reduction) or escalating failed fixes ($<20\%$ reduction).
-- **Executive Dossiers & Open Data** — Automated programmatic ReportLab PDF generation and sanitized CSV data streaming for departmental audit trails.
+- **Interactive Road Health Map:** Vector mapping powered by Leaflet and OpenStreetMap with OSRM-stitched geometry across 20 high-traffic Jaipur transit corridors and color-coded condition gradients ($A\text{--}E$).
+- **Deep Learning Inference Engine:** Integrated fine-tuned YOLOv8 model (`model/Yolov8-fintuned-on-potholes.pt`) with CUDA GPU acceleration and CPU fallback for real-time pothole bounding-box detection.
+- **Decoupled Confidence & Visual Severity:** Model confidence is kept strictly as independent algorithmic classification certainty. Physical defect severity is derived from calibrated bounding-box area relative to frame geometry ($1.0\text{--}5.0$), avoiding false severity inflation from high detection certainty.
+- **Honest Monocular Optical Telemetry:** Does not fabricate physical depth measurements from monocular RGB video. In real YOLO inference, missing vertical depth is returned honestly as `null` (`N/A`) without breaking aggregations, while simulated depth remains strictly isolated to synthetic demo generators.
+- **Deterministic Corridor Geocoding:** Snaps detections deterministically along road polylines with municipal bounding box validation, marking coordinates with explicit telemetry source tags (`yolo_interpolated_corridor` vs `mock_synthetic_demo`).
+- **Audit-Safe Ingestion Separation:** Live dashcam ingestion and synthetic injection stream exclusively to `week = 0` (live telemetry buffer), keeping the 4-week municipal audit baseline (`week = 1..4`) strictly immutable.
+- **Multi-Criteria Road Health Scoring:** Standardized 0–100 index combining Severity ($40\%$), Defect Density ($25\%$), Degradation Velocity ($20\%$), and Environmental Context ($15\%$). Includes input weight validation, score clamping to $[0.0, 100.0]$, and documented fallbacks for missing meteorological telemetry.
+- **Statutory Municipal SLA Tracking:** Automated ticket dispatch with 21-day repair countdowns for Jaipur Municipal Corporation (Greater & Heritage), PWD Rajasthan, and Jaipur Development Authority (JDA). Authority response metrics are computed dynamically from issuance-to-acknowledgement timestamps.
+- **Closed-Loop AI Verification:** Re-surveys repaired corridors on subsequent bus cycles, requiring an explicit `repaired` precondition before executing idempotent verification sweeps.
+- **Executive Dossiers & Open Data:** Automated programmatic ReportLab PDF generation and sanitized CSV data streaming for departmental audit trails.
 
 ---
 
-## 🛠️ Technology Stack Summary
+## Technology Stack Summary
 
 | Layer | Technology | Description |
 | :--- | :--- | :--- |
 | **Deep Learning** | **YOLOv8 + PyTorch** | Fine-tuned pothole detection network (`model/Yolov8-fintuned-on-potholes.pt`) |
 | **Computer Vision** | **OpenCV (`opencv-python`)** | Video container parsing, 1 FPS keyframe decimation, frame normalization |
 | **Geospatial & Mapping**| **OSRM + Leaflet.js + OSM** | Real road vector geometry, OSRM road-snapping, and interactive map UI |
-| **Spatial Deduplication**| **Scikit-Learn (DBSCAN)** | Density-based spatial clustering ($\varepsilon = 15\text{m}$) across bus passes |
+| **Spatial Deduplication**| **Scikit-Learn (DBSCAN)** | Density-based spatial clustering across bus passes |
 | **Backend Service** | **FastAPI + Uvicorn** | High-concurrency async Python framework with automated OpenAPI docs |
-| **Database & ORM** | **SQLAlchemy 2.0 + SQLite**| Modern declarative relational models with migration compatibility |
+| **Database & ORM** | **SQLAlchemy 2.0 + SQLite**| Modern declarative relational models with migration compatibility for PostGIS |
 | **Frontend UI** | **Next.js 14 (App Router)** | TypeScript 5, React 18, Tailwind CSS, shadcn/ui, and Radix primitives |
 | **Data Analytics** | **Recharts** | Interactive 4-week degradation trajectories and SLA compliance charts |
 | **Reporting Engine** | **ReportLab 4.0 + HTML5 Blob** | Programmatic PDF executive summaries and cross-origin CSV downloads |
 
 ---
 
-## 🏗️ Repository Architecture
+## Repository Architecture
 
 ```
 RoadPulse AI/
-├── TECH_STACK.md                  # Comprehensive technology stack reference
-├── PIPELINE.md                    # 10-step end-to-end system pipeline & architecture
-├── model/                         # Fine-tuned deep learning models
+├── docs/
+│   └── PRODUCTION_ARCHITECTURE.md     # Production blueprint: PostgreSQL + PostGIS, Celery/Redis, S3
+├── TECH_STACK.md                      # Comprehensive technology stack reference
+├── PIPELINE.md                        # 10-step end-to-end system pipeline & architecture
+├── model/                             # Fine-tuned deep learning models
 │   └── Yolov8-fintuned-on-potholes.pt
-├── backend/                       # FastAPI backend service
-│   ├── api/                       # API route modules (roads, metrics, processing, reports, demo)
-│   ├── services/                  # Business logic (scoring, detection, verification, reportLab)
-│   ├── models/                    # SQLAlchemy declarative relational models
-│   ├── schemas/                   # Pydantic request and response schemas
-│   ├── data/                      # 20-corridor OSRM road dataset & database seeder
-│   ├── main.py                    # Application entry point & CORS configuration
-│   └── requirements.txt           # Python dependency specifications
-├── frontend/                      # Next.js 14 frontend application
-│   ├── app/                       # App router pages (Overview, Map, Roads, Processing, Reports)
-│   ├── components/                # Modular UI components (Leaflet map, Sidebar, KPI cards)
-│   ├── lib/                       # API clients, spatial utilities, and constants
-│   ├── types/                     # TypeScript definitions
-│   └── package.json               # Frontend dependencies & scripts
-├── sample_data/                   # Pre-bundled dashcam video clips for 1-click ingestion
-├── reports/                       # Auto-generated ReportLab PDFs and CSV audit files
-└── uploads/                       # Ingested municipal dashcam footage
+├── backend/                           # FastAPI backend service
+│   ├── api/                           # API route modules (roads, metrics, processing, reports, authority)
+│   ├── core/                          # Application settings, database sessions, and configuration
+│   ├── services/                      # Domain logic (scoring, detection, verification, aggregation)
+│   ├── models/                        # SQLAlchemy declarative relational models
+│   ├── schemas/                       # Pydantic request and response schemas
+│   ├── tests/                         # Pytest test suite with isolated in-memory SQLite fixtures
+│   ├── data/                          # 20-corridor OSRM road dataset & database seeder
+│   ├── main.py                        # Application entry point & CORS configuration
+│   └── requirements.txt               # Python dependency specifications
+├── frontend/                          # Next.js 14 frontend application
+│   ├── app/                           # App router pages (Overview, Map, Roads, Processing, Authority)
+│   ├── components/                    # UI components (Leaflet map, Sidebar, Topbar, KPI cards)
+│   ├── lib/                           # API clients, spatial utilities, and constants
+│   ├── types/                         # Strict TypeScript definitions
+│   └── package.json                   # Frontend dependencies & scripts
+├── sample_data/                       # Pre-bundled dashcam video clips for local demonstrations
+├── reports/                           # Auto-generated ReportLab PDFs and CSV audit files
+└── uploads/                           # Ingested municipal dashcam footage
 ```
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ### Prerequisites
-- Python 3.9+ (CUDA-capable GPU recommended for deep learning inference, CPU fallback supported)
+- Python 3.9+ (CUDA-capable GPU recommended for deep learning inference; CPU fallback supported)
 - Node.js 18+ & npm
 
 ### 1. Configure Environment
 ```bash
-# Copy and configure environment variables
 cp .env.example .env
 ```
 
 ### 2. Start the Backend Service
 ```bash
-# In backend directory
+cd backend
 pip install -r requirements.txt
 python main.py
 ```
 - Server starts at `http://localhost:8000`
-- Interactive OpenAPI / Swagger documentation: `http://localhost:8000/docs`
-- On first launch, the database automatically initializes and populates all 20 road corridors.
+- Interactive OpenAPI documentation: `http://localhost:8000/docs`
+- On first launch, the database automatically initializes with all 20 monitored road corridors.
 
 ### 3. Start the Frontend Dashboard
 ```bash
-# In frontend directory
+cd frontend
 npm install
 npm run dev -- -p 3001
 ```
@@ -108,7 +112,34 @@ npm run dev -- -p 3001
 
 ---
 
-## 🗺️ Monitored Transit Corridors (Jaipur Pilot)
+## Quality Assurance & Automated Testing
+
+The codebase includes an automated test harness designed to run with complete isolation from user demonstration data:
+
+### Run Backend Test Suite
+```bash
+cd backend
+pytest
+```
+- **34 unit and integration tests** validating:
+  - Detection provider modes, visual severity scaling, and confidence independence (`test_detection.py`).
+  - Defect aggregation, missing depth handling, and density normalization (`test_aggregation.py`).
+  - Risk scoring monotonicity, weather fallback, weight normalization, and clamping (`test_scoring.py`).
+  - Municipal repair verification preconditions and dynamic SLA response time calculation (`test_verification_and_authority.py`).
+  - API endpoint contracts, streaming upload validation, and credential masking (`test_api.py`).
+- Tests utilize an in-memory SQLite instance (`sqlite:///:memory:`), guaranteeing `backend/roadpulse.db` is never modified during test runs.
+
+### Run Frontend Quality Checks
+```bash
+cd frontend
+npm run lint         # Runs ESLint (0 errors, 0 warnings)
+npx tsc --noEmit     # Validates TypeScript compilation
+npm run build        # Confirms production Next.js build and static page generation
+```
+
+---
+
+## Monitored Transit Corridors (Jaipur Pilot)
 
 The platform actively monitors 20 major transit corridors across the Jaipur municipal network:
 
@@ -128,7 +159,7 @@ The platform actively monitors 20 major transit corridors across the Jaipur muni
 
 ---
 
-## 📊 Road Health Risk Scoring Model
+## Road Health Risk Scoring Model
 
 $$\text{Risk Score} = 0.40 \times \text{Severity} + 0.25 \times \text{Density} + 0.20 \times \text{Trend} + 0.15 \times \text{Context}$$
 
@@ -142,7 +173,7 @@ $$\text{Risk Score} = 0.40 \times \text{Severity} + 0.25 \times \text{Density} +
 
 ---
 
-## 🔄 Closed-Loop Verification Workflow
+## Closed-Loop Verification Workflow
 
 1. **Detection & SLA Dispatch:** Autonomous issue reporting triggered when a corridor drops to Grade D or E.
 2. **Municipal Repair Claim:** Authority registers repair completion.
@@ -154,6 +185,6 @@ $$\text{Risk Score} = 0.40 \times \text{Severity} + 0.25 \times \text{Density} +
 
 ---
 
-## 👥 Project Team
+## Project Team
 
 **The Cartel (IS2603)** — Idea Sprint, National Level Inter-University Innovation Challenge.
