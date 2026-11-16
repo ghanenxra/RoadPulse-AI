@@ -8,14 +8,14 @@ class WeeklyMetricResponse(BaseModel):
     potholes: int
     severe_count: int
     severity: float
-    depth_cm: float
-    rain_mm: float
+    depth_cm: Optional[float] = None
+    rain_mm: Optional[float] = None
     risk: float
     grade: str
     status: str
     note: str
     density: float
-    trend: float
+    trend: Optional[float] = None
 
 class RoadSegmentResponse(BaseModel):
     id: str
@@ -68,9 +68,10 @@ class RoadSegmentDetailResponse(RoadSegmentResponse):
 
 class KPIValue(BaseModel):
     value: float
-    previous: float
-    change: float
-    change_pct: float
+    current: Optional[float] = None
+    previous: Optional[float] = None
+    change: Optional[float] = None
+    change_pct: Optional[float] = None
 
 class OverviewMetricsResponse(BaseModel):
     roads_surveyed: KPIValue

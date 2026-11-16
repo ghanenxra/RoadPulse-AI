@@ -367,7 +367,11 @@ export default function AuthorityPage() {
                 </div>
                 <div>
                   <span className="text-gray-500">Avg SLA:</span>
-                  <span className="font-bold ml-1 text-slate-700">{auth.avg_response_days}d</span>
+                  <span className="font-bold ml-1 text-slate-700">
+                    {auth.avg_response_days !== null && auth.avg_response_days !== undefined
+                      ? `${auth.avg_response_days}d`
+                      : 'N/A'}
+                  </span>
                 </div>
               </div>
             </Card>

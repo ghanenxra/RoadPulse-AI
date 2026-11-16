@@ -2,11 +2,11 @@
 processing.py — Video Upload & YOLO Inference API
 ───────────────────────────────────────────────────
 Flow:
-  1. User drags video onto Processing Center dashboard
-  2. POST /api/upload  → video saved to uploads/, job created in DB
-  3. Background task fires: real YOLOv8 runs on local GPU
-  4. Detections stored via ingest logic (week=0 live bucket)
-  5. Job status/progress tracked in DB (frontend polls every 4s)
+  1. User selects/drags video onto Processing Center dashboard
+  2. POST /api/upload (or sample ingest) → video saved/verified, job created in DB
+  3. Background task fires: YOLOv8 model runs on local GPU (or mock if requested)
+  4. Detections stored into week=0 (live real-time bucket, isolated from historical surveys)
+  5. Job status/progress tracked in DB (frontend polls /api/jobs)
 """
 
 import os
@@ -15,6 +15,7 @@ import asyncio
 import json
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import List, Optional
 
 from fastapi import APIRouter, Depends, File, UploadFile, Form, HTTPException, BackgroundTasks
 from pydantic import BaseModel
@@ -34,82 +35,82 @@ router = APIRouter()
 
 def _update_live_metric(segment_id: str, new_detections: list, db: Session):
     """
-    Update both week=4 (active survey cycle) and week=0 (live real-time bucket).
-    Recalculates density, average severity, depth, risk score, and grade so that
-    Overview, Map, and Road Detail pages immediately reflect newly detected potholes.
+    Update strictly week=0 (the rolling live/real-time bucket).
+    Preserves historical survey weeks (week=1, 2, 3, 4) intact.
+    Recalculates density, average severity, depth, risk score, and grade for week=0.
     """
     seg = db.query(RoadSegment).filter(RoadSegment.segment_id == segment_id).first()
     if not seg:
         return
 
-    w4_detections = db.query(Detection).filter(
+    # Ingested video detections populate week=0 (live real-time bucket)
+    live_detections = db.query(Detection).filter(
         Detection.road_segment_id == segment_id,
-        Detection.week == 4
+        Detection.week == 0
     ).all()
 
-    count = len(w4_detections)
+    count = len(live_detections)
     if count == 0:
         return
 
     length_km = seg.length_km if (seg.length_km and seg.length_km > 0) else 1.0
-    avg_sev = sum(d.severity for d in w4_detections) / count
+    avg_sev = sum(d.severity for d in live_detections) / count
     density = count / length_km
 
+    # Calculate risk score with documented baseline
     risk = calculate_risk_score(
         severity=avg_sev,
         density=density,
-        trend=5.0,
-        rain_mm=0.0
+        trend=0.0,
+        rain_mm=None  # live feed has no physical rain sensor attached; treated as unavailable
     )
     grade = get_grade(risk)
     now_str = datetime.now(timezone.utc).replace(tzinfo=None).strftime("%Y-%m-%d")
-    high_count = sum(1 for d in w4_detections if d.severity_label == "High")
-    avg_depth = round(
-        sum(d.depth_cm for d in w4_detections if d.depth_cm) /
-        max(1, sum(1 for d in w4_detections if d.depth_cm)), 1
-    )
+    high_count = sum(1 for d in live_detections if d.severity_label == "High")
 
-    # Sync to week 4 (active UI cycle) and week 0 (live ingestion bucket)
-    for target_week in [4, 0]:
-        metric = db.query(WeeklyRoadMetric).filter(
-            WeeklyRoadMetric.segment_id == segment_id,
-            WeeklyRoadMetric.week == target_week
-        ).first()
+    depths = [d.depth_cm for d in live_detections if d.depth_cm is not None]
+    avg_depth = round(sum(depths) / len(depths), 1) if depths else None
 
-        if metric:
-            metric.pothole_count = count
-            metric.severe_count = high_count
-            metric.density = round(density, 2)
-            metric.severity_avg = round(avg_sev, 2)
-            metric.depth_avg_cm = avg_depth
-            metric.risk_score = risk
-            metric.grade = grade
-            metric.status = "live_updated"
-            metric.note = f"YOLOv8 inference synced ({len(new_detections)} potholes in recent pass)"
-            metric.data_source = "local_yolo"
-            metric.date = now_str
-        else:
-            metric = WeeklyRoadMetric(
-                segment_id=segment_id,
-                week=target_week,
-                date=now_str,
-                pothole_count=count,
-                severe_count=high_count,
-                density=round(density, 2),
-                severity_avg=round(avg_sev, 2),
-                depth_avg_cm=avg_depth,
-                rain_mm=0.0,
-                trend=5.0,
-                context_score=10.0,
-                risk_score=risk,
-                grade=grade,
-                status="live_updated",
-                note=f"YOLOv8 inference synced ({len(new_detections)} potholes in recent pass)",
-                surveyed=True,
-                coverage_confidence=0.98,
-                data_source="local_yolo"
-            )
-            db.add(metric)
+    # Upsert strictly week 0 (live ingestion bucket)
+    metric = db.query(WeeklyRoadMetric).filter(
+        WeeklyRoadMetric.segment_id == segment_id,
+        WeeklyRoadMetric.week == 0
+    ).first()
+
+    if metric:
+        metric.pothole_count = count
+        metric.severe_count = high_count
+        metric.density = round(density, 2)
+        metric.severity_avg = round(avg_sev, 2)
+        metric.depth_avg_cm = avg_depth
+        metric.risk_score = risk
+        metric.grade = grade
+        metric.status = "live_updated"
+        metric.note = f"YOLOv8 inference synced ({len(new_detections)} potholes in recent pass)"
+        metric.data_source = "local_yolo"
+        metric.date = now_str
+    else:
+        metric = WeeklyRoadMetric(
+            segment_id=segment_id,
+            week=0,
+            date=now_str,
+            pothole_count=count,
+            severe_count=high_count,
+            density=round(density, 2),
+            severity_avg=round(avg_sev, 2),
+            depth_avg_cm=avg_depth,
+            rain_mm=None,
+            trend=0.0,
+            context_score=10.0,
+            risk_score=risk,
+            grade=grade,
+            status="live_updated",
+            note=f"YOLOv8 inference synced ({len(new_detections)} potholes in recent pass)",
+            surveyed=True,
+            coverage_confidence=0.98,
+            data_source="local_yolo"
+        )
+        db.add(metric)
 
     db.commit()
 
@@ -118,15 +119,15 @@ def _update_live_metric(segment_id: str, new_detections: list, db: Session):
 
 def run_yolo_inference(job_id: str, video_path: str, road_segment_id: str, bus_id: str):
     """
-    Runs in a background thread (via FastAPI BackgroundTasks).
-    1. Loads YOLO model (auto: real if available, mock if not)
-    2. Runs inference on the uploaded video with live progress updates
-    3. Geocodes detections sequentially along the selected road's polyline
-    4. Saves detections to DB (week=4 active cycle & week=0 live bucket)
-    5. Re-computes risk score and grade in real-time
+    Runs in a background thread via FastAPI BackgroundTasks.
+    1. Loads detection provider (auto: real YOLO if available, mock if not)
+    2. Runs inference on the video with live progress updates
+    3. Interpolates coordinates along the corridor polyline (no random fabricated jitter)
+    4. Saves detections to DB with week=0 (live real-time bucket)
+    5. Updates live road metrics (week=0) without modifying historical audit weeks
     """
-    import random
     from models.database import SessionLocal
+    start_time = datetime.now(timezone.utc).replace(tzinfo=None)
 
     db = SessionLocal()
     try:
@@ -141,14 +142,13 @@ def run_yolo_inference(job_id: str, video_path: str, road_segment_id: str, bus_i
         # ── Load provider ──
         try:
             provider = get_detection_provider("auto")
-            provider_name = type(provider).__name__
+            job.provider = getattr(provider, "provider_name", "yolov8_local")
         except Exception as e:
             job.status = "failed"
-            job.error = str(e)
+            job.error = f"Failed to initialize detection provider: {e}"
             db.commit()
             return
 
-        job.provider = "yolov8_local" if "YOLO" in provider_name else "mock_yolo_v8"
         job.progress = 12.0
         db.commit()
 
@@ -165,7 +165,7 @@ def run_yolo_inference(job_id: str, video_path: str, road_segment_id: str, bus_i
             raw_detections, video_info = provider.detect(video_path, progress_callback=on_progress)
         except Exception as e:
             job.status = "failed"
-            job.error = f"Inference error: {e}"
+            job.error = f"Inference execution error: {e}"
             db.commit()
             return
 
@@ -182,7 +182,7 @@ def run_yolo_inference(job_id: str, video_path: str, road_segment_id: str, bus_i
             video_asset.status = "processed"
             db.commit()
 
-        # ── Geocode detections along actual road polyline ──
+        # ── Geocode detections along actual road polyline (interpolated, no fabricated jitter) ──
         seg = db.query(RoadSegment).filter(RoadSegment.segment_id == road_segment_id).first()
         coords = []
         if seg and seg.polyline_coords:
@@ -195,6 +195,7 @@ def run_yolo_inference(job_id: str, video_path: str, road_segment_id: str, bus_i
 
         total_dets = max(len(raw_detections), 1)
         stored = 0
+        is_synthetic = getattr(provider, "is_synthetic", False)
 
         for idx, det in enumerate(raw_detections):
             frame_num = det.get("frame_number", idx)
@@ -210,11 +211,13 @@ def run_yolo_inference(job_id: str, video_path: str, road_segment_id: str, bus_i
             else:
                 base_lat, base_lon = 26.8665, 75.7972
 
-            # Realistic lateral lane displacement (+/- 2 to 4 meters)
-            lat = round(base_lat + random.uniform(-0.00003, 0.00003), 6)
-            lon = round(base_lon + random.uniform(-0.00003, 0.00003), 6)
+            # Validated coordinates without random fabricated jitter for real inference
+            lat = round(base_lat, 6)
+            lon = round(base_lon, 6)
 
             did = det.get("detection_id") or f"D-{uuid.uuid4().hex[:10]}"
+            data_src = "mock_synthetic_demo" if is_synthetic else "yolo_interpolated_corridor"
+
             detection = Detection(
                 detection_id=did,
                 video_id=job.video_id,
@@ -229,8 +232,8 @@ def run_yolo_inference(job_id: str, video_path: str, road_segment_id: str, bus_i
                 depth_cm=det.get("depth_cm"),
                 bbox=json.dumps(det.get("bbox", [])) if det.get("bbox") else None,
                 road_segment_id=road_segment_id,
-                data_source="local_yolo",
-                week=4      # active survey cycle so it displays across all dashboard tabs
+                data_source=data_src,
+                week=0  # week 0 = live ingestion bucket, keeping historical weeks 1-4 intact
             )
             db.add(detection)
             stored += 1
@@ -240,51 +243,20 @@ def run_yolo_inference(job_id: str, video_path: str, road_segment_id: str, bus_i
         job.progress = 95.0
         db.commit()
 
-        # ── Update road metrics in DB ──
+        # ── Update live road metric in DB (week=0) ──
         _update_live_metric(road_segment_id, raw_detections, db)
 
         # ── Mark Job Completed ──
+        end_time = datetime.now(timezone.utc).replace(tzinfo=None)
+        duration_sec = round((end_time - start_time).total_seconds(), 2)
+
         job.status = "completed"
         job.progress = 100.0
-        job.completed_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        job.processing_duration_seconds = duration_sec
+        job.completed_at = end_time
         db.commit()
 
-        print(f"[JOB {job_id}] Finished! {stored} potholes geocoded & logged along {road_segment_id}")
-
-        # ── Non-blocking Cloud Sync ──
-        # If running locally, push telemetry to the hosted cloud backend so both stay in sync!
-        if not settings.is_production:
-            try:
-                import urllib.request
-                cloud_url = "https://roadpulse-ai-wjsk.onrender.com/api/ingest/detections"
-                cloud_payload = {
-                    "road_segment_id": road_segment_id,
-                    "session_id": f"LOCAL-DASHBOARD-{job_id}",
-                    "captured_at": datetime.now(timezone.utc).replace(tzinfo=None).isoformat(),
-                    "frame_count": total_frames,
-                    "source": "local_yolo_gpu",
-                    "detections": [
-                        {
-                            "class_name": d.get("class_name", "Potholes"),
-                            "confidence": d.get("confidence", 0.85),
-                            "severity": d.get("severity", 2.5),
-                            "depth_cm": d.get("depth_cm"),
-                            "bbox": d.get("bbox"),
-                            "frame_number": d.get("frame_number")
-                        }
-                        for d in raw_detections
-                    ]
-                }
-                req = urllib.request.Request(
-                    cloud_url,
-                    data=json.dumps(cloud_payload).encode("utf-8"),
-                    headers={"Content-Type": "application/json", "User-Agent": "RoadPulse-LocalSync/1.0"},
-                    method="POST"
-                )
-                with urllib.request.urlopen(req, timeout=5) as resp:
-                    print(f"[CLOUD SYNC] Local detections synced to Render cloud: {resp.status} OK")
-            except Exception as sync_err:
-                print(f"[CLOUD SYNC] Cloud sync notice: {sync_err}")
+        print(f"[JOB {job_id}] Finished! {stored} potholes geocoded & logged along {road_segment_id} (week=0)")
 
     except Exception as e:
         try:
@@ -312,27 +284,53 @@ async def upload_video(
     db: Session = Depends(get_db)
 ):
     """
-    Accept a video file from the dashboard drag-and-drop.
-    Saves to uploads/, creates a job record, kicks off YOLO inference in background.
-    Returns immediately — frontend polls /api/jobs for progress.
+    Accept a video file via streamed chunks.
+    Validates file extension, bounds file size to max 500 MB without high memory footprint.
+    Cleans up temporary file upon any upload failure.
+    Creates job record and initiates asynchronous background processing.
     """
-    max_upload_bytes = 500 * 1024 * 1024
+    max_upload_bytes = 500 * 1024 * 1024  # 500 MB
     allowed_extensions = {".mp4", ".mov", ".avi", ".mkv", ".webm"}
     filename = file.filename or ""
-    if Path(filename).suffix.lower() not in allowed_extensions:
-        raise HTTPException(status_code=415, detail="Unsupported video format")
+    ext = Path(filename).suffix.lower()
 
-    content = await file.read(max_upload_bytes + 1)
-    if len(content) > max_upload_bytes:
-        raise HTTPException(status_code=413, detail="Video exceeds the 500 MB upload limit")
+    if ext not in allowed_extensions:
+        raise HTTPException(
+            status_code=415,
+            detail=f"Unsupported video format '{ext}'. Allowed: {', '.join(sorted(allowed_extensions))}"
+        )
 
-    # Save file
+    # Validate target road segment exists
+    seg = db.query(RoadSegment).filter(RoadSegment.segment_id == road_segment_id).first()
+    if not seg:
+        raise HTTPException(status_code=404, detail=f"Road segment '{road_segment_id}' not found")
+
     settings.uploads_dir.mkdir(parents=True, exist_ok=True)
     safe_filename = f"{uuid.uuid4().hex[:8]}_{Path(filename).name}"
     file_location = settings.uploads_dir / safe_filename
 
-    with open(str(file_location), "wb+") as f:
-        f.write(content)
+    # Stream upload in bounded 1MB chunks to prevent memory spikes
+    total_bytes = 0
+    chunk_size = 1024 * 1024
+    try:
+        with open(str(file_location), "wb") as f:
+            while True:
+                chunk = await file.read(chunk_size)
+                if not chunk:
+                    break
+                total_bytes += len(chunk)
+                if total_bytes > max_upload_bytes:
+                    f.close()
+                    if file_location.exists():
+                        file_location.unlink()
+                    raise HTTPException(status_code=413, detail="Video exceeds the 500 MB upload limit")
+                f.write(chunk)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        if file_location.exists():
+            file_location.unlink()
+        raise HTTPException(status_code=500, detail=f"Filesystem error during upload: {exc}")
 
     # Create VideoAsset record
     vid_id = f"VID-{uuid.uuid4().hex[:8]}"
@@ -341,7 +339,7 @@ async def upload_video(
         bus_id=bus_id,
         route_id=road_segment_id,
         upload_time=datetime.now(timezone.utc).replace(tzinfo=None),
-        duration_seconds=0.0,         # will be known after inference
+        duration_seconds=0.0,
         metadata_source="upload",
         status="uploaded",
         file_path=str(file_location)
@@ -359,13 +357,13 @@ async def upload_video(
         frames_total=0,
         frames_processed=0,
         detections_count=0,
-        provider="yolov8_local",      # will be confirmed after model loads
+        provider="yolov8_local",
         created_at=datetime.now(timezone.utc).replace(tzinfo=None),
     )
     db.add(job)
     db.commit()
 
-    # Fire background inference (uses local GPU if available)
+    # Fire background inference
     background_tasks.add_task(
         run_yolo_inference,
         job_id,
@@ -415,6 +413,9 @@ def get_job_detections(job_id: str, db: Session = Depends(get_db)):
         "depth_cm": d.depth_cm,
         "bbox": d.bbox,
         "road_segment_id": d.road_segment_id,
+        "latitude": d.latitude,
+        "longitude": d.longitude,
+        "data_source": d.data_source,
     } for d in dets]
 
 
@@ -485,9 +486,13 @@ async def ingest_sample_video(
     db: Session = Depends(get_db)
 ):
     """
-    Ingest a pre-loaded sample video from sample_data/ directly without needing to upload manually.
-    Kicks off real YOLOv8 local GPU inference in background.
+    Ingest a pre-loaded sample video from sample_data/ directly.
+    Validates route segment, stages copy in uploads, and triggers background inference.
     """
+    seg = db.query(RoadSegment).filter(RoadSegment.segment_id == payload.road_segment_id).first()
+    if not seg:
+        raise HTTPException(status_code=404, detail=f"Road segment '{payload.road_segment_id}' not found")
+
     project_root = Path(__file__).resolve().parent.parent.parent
     sample_dir = project_root / "sample_data"
     allowed_clips = {clip["filename"] for clip in get_sample_clips()}
@@ -495,7 +500,6 @@ async def ingest_sample_video(
         raise HTTPException(status_code=400, detail="Unknown sample clip")
 
     sample_file = sample_dir / payload.clip_name
-    
     if not sample_file.exists():
         fallback_dir = Path(__file__).resolve().parent.parent / "sample_data"
         if (fallback_dir / payload.clip_name).exists():

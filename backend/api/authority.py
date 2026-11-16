@@ -53,6 +53,25 @@ def authority_summary(db: Session = Depends(get_db)):
     by_auth = []
     for a in authorities:
         issues = db.query(IssueReport).filter(IssueReport.authority_id == a.authority_id).all()
+        # Calculate genuine response time using sent_at and acknowledged_at timestamps
+        eligible_days = []
+        for i in issues:
+            if i.sent_at and i.acknowledged_at and i.acknowledged_at >= i.sent_at:
+                diff_days = (i.acknowledged_at - i.sent_at).total_seconds() / 86400.0
+                eligible_days.append(diff_days)
+
+        if eligible_days:
+            avg_response = round(sum(eligible_days) / len(eligible_days), 1)
+            sorted_days = sorted(eligible_days)
+            n = len(sorted_days)
+            median_response = round(
+                sorted_days[n // 2] if n % 2 != 0 else (sorted_days[n // 2 - 1] + sorted_days[n // 2]) / 2.0,
+                1
+            )
+        else:
+            avg_response = None
+            median_response = None
+
         by_auth.append({
             "authority_id": a.authority_id,
             "name": a.name,
@@ -61,7 +80,9 @@ def authority_summary(db: Session = Depends(get_db)):
             "open_issues": sum(1 for i in issues if i.status in ['reported', 'acknowledged', 'in_progress', 'overdue']),
             "verified_repairs": sum(1 for i in issues if i.status == 'verified'),
             "overdue_issues": sum(1 for i in issues if i.status == 'overdue'),
-            "avg_response_days": 3.2
+            "avg_response_days": avg_response,
+            "median_response_days": median_response,
+            "eligible_responses": len(eligible_days),
         })
         
     return {

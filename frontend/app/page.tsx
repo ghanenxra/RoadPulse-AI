@@ -276,13 +276,14 @@ function KpiCard({
 }: {
   title: string
   value: string | number
-  change: number
+  change?: number | null
   icon: React.ReactNode
   invertColor?: boolean
 }) {
   // If invertColor is true: decrease is GOOD (green), increase is BAD (red)
-  const isPositive = change > 0
-  const isNegative = change < 0
+  const hasChange = change !== null && change !== undefined
+  const isPositive = hasChange && change > 0
+  const isNegative = hasChange && change < 0
 
   let badgeColor = 'text-slate-500'
   if (isNegative) {
@@ -300,11 +301,17 @@ function KpiCard({
         </div>
         <div className="flex items-baseline justify-between mt-1">
           <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">{value}</h2>
-          {change !== 0 && (
-            <span className={`flex items-center text-xs font-semibold ${badgeColor}`}>
-              {isNegative ? <ArrowDown className="mr-0.5 h-3.5 w-3.5" /> : <ArrowUp className="mr-0.5 h-3.5 w-3.5" />}
-              {Math.abs(change).toFixed(1)}%
-            </span>
+          {hasChange ? (
+            change !== 0 ? (
+              <span className={`flex items-center text-xs font-semibold ${badgeColor}`}>
+                {isNegative ? <ArrowDown className="mr-0.5 h-3.5 w-3.5" /> : <ArrowUp className="mr-0.5 h-3.5 w-3.5" />}
+                {Math.abs(change).toFixed(1)}%
+              </span>
+            ) : (
+              <span className="text-xs font-medium text-slate-400">0.0%</span>
+            )
+          ) : (
+            <span className="text-xs font-normal text-slate-400" title="Baseline cycle (no previous comparison)">—</span>
           )}
         </div>
       </CardContent>

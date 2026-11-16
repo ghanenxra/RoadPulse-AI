@@ -241,13 +241,15 @@ def generate_weekly_pdf(week: int, db: Session, zone: str = None, authority: str
         auth_name = auth.name.replace('Jaipur Municipal Corporation', 'JMC') if auth else seg.authority_id
         status_display = m.status.upper().replace('_', ' ') if m.status else "NONE"
         
+        depth_str = f'{m.depth_avg_cm:.1f} cm' if m.depth_avg_cm is not None else 'N/A'
+        risk_str = f'{m.risk_score:.1f}' if m.risk_score is not None else 'N/A'
         road_rows.append([
             Paragraph(seg.segment_id, cell_bold),
             Paragraph(f'<b>{seg.road_name}</b><br/>{seg.sub_name}', cell_style),
             Paragraph(f'{seg.ward}<br/>{auth_name}', cell_style),
             Paragraph(str(m.pothole_count), cell_style),
-            Paragraph(f'{m.depth_avg_cm:.1f} cm', cell_style),
-            Paragraph(f'{m.risk_score:.1f}', cell_bold),
+            Paragraph(depth_str, cell_style),
+            Paragraph(risk_str, cell_bold),
             Paragraph(f'<b>Grade {m.grade}</b>', cell_bold),
             Paragraph(status_display, cell_style)
         ])

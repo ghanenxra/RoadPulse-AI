@@ -182,15 +182,16 @@ class Settings:
 
     # ── Debug helper ──────────────────────────────────────────────────────────
     def summary(self) -> dict:
-        """Returns all active config values (safe to log on startup)."""
+        """Returns safe operational config values (safe to log on startup or expose via /api/config)."""
+        db_type = "sqlite" if self.database_url.startswith("sqlite") else "postgresql"
         return {
-            "app_env":      self.app_env,
-            "database_url": self.database_url,
-            "backend_host": self.backend_host,
-            "backend_port": self.backend_port,
-            "uploads_dir":  str(self.uploads_dir),
-            "reports_dir":  str(self.reports_dir),
-            "cors_origins": self.cors_origins_list,
+            "app_env":       self.app_env,
+            "database_type": db_type,
+            "backend_host":  self.backend_host,
+            "backend_port":  self.backend_port,
+            "uploads_dir":   str(self.uploads_dir),
+            "reports_dir":   str(self.reports_dir),
+            "cors_origins":  self.cors_origins_list,
             "scoring_weights": {
                 "severity": self.scoring_weight_severity,
                 "density":  self.scoring_weight_density,

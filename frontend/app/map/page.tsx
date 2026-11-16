@@ -192,7 +192,7 @@ export default function MapPage() {
         const matchId = p.segment_id.toLowerCase().includes(term)
         if (!matchName && !matchSub && !matchId) return false
       }
-      if (worseningOnly && p.weekly_change <= 0) return false
+      if (worseningOnly && (p.weekly_change === null || p.weekly_change <= 0)) return false
       return true
     })
   }, [allFeatures, selectedGrades, selectedAuthority, searchTerm, worseningOnly])

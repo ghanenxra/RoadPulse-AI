@@ -23,14 +23,14 @@ export interface WeeklyMetric {
   severe_count: number;
   density: number;
   severity_avg: number;
-  depth_avg_cm: number;
-  rain_mm: number;
+  depth_avg_cm: number | null;
+  rain_mm: number | null;
   risk_score: number;
   grade: string;
   status: string;
   note: string;
-  trend: number;
-  weekly_change: number;
+  trend: number | null;
+  weekly_change: number | null;
 }
 
 export interface OverviewMetrics {
@@ -49,9 +49,10 @@ export interface OverviewMetrics {
 
 export interface KPIValue {
   current: number;
-  previous: number;
-  change: number;
-  change_pct: number;
+  value?: number;
+  previous: number | null;
+  change: number | null;
+  change_pct: number | null;
 }
 
 export interface GradeDistribution {
@@ -84,9 +85,17 @@ export interface IssueReport {
 }
 
 export interface Detection {
-  detection_id: string; latitude: number; longitude: number;
-  confidence: number; severity: number; severity_label: string;
-  timestamp: string; week: number;
+  detection_id: string;
+  latitude: number;
+  longitude: number;
+  confidence: number;
+  severity: number;
+  severity_label: string;
+  depth_cm?: number | null;
+  data_source?: string;
+  is_synthetic?: boolean;
+  timestamp: string;
+  week: number;
 }
 
 export interface MapFeature {
@@ -94,7 +103,7 @@ export interface MapFeature {
   properties: {
     segment_id: string; road_name: string; sub_name: string;
     risk_score: number; grade: string; pothole_count: number;
-    authority: string; status: string; weekly_change: number;
+    authority: string; status: string; weekly_change: number | null;
   };
   geometry: { type: 'LineString'; coordinates: [number, number][] };
 }

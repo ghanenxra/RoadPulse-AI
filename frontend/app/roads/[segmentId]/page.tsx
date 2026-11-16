@@ -139,7 +139,12 @@ export default function RoadDetailPage() {
               <MetricBox label="Potholes" value={road.current_week.pothole_count} />
               <MetricBox label="Severe" value={road.current_week.severe_count} />
               <MetricBox label="Density (/km)" value={road.current_week.density.toFixed(1)} />
-              <MetricBox label="Change" value={`${road.current_week.weekly_change > 0 ? '+' : ''}${road.current_week.weekly_change.toFixed(1)}`} />
+              <MetricBox 
+                label="Change" 
+                value={road.current_week.weekly_change !== null && road.current_week.weekly_change !== undefined 
+                  ? `${road.current_week.weekly_change > 0 ? '+' : ''}${road.current_week.weekly_change.toFixed(1)}` 
+                  : '—'} 
+              />
             </div>
 
             <Card>
