@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 
 from core.config import settings
 from models.database import init_db
-from api import health, roads, metrics, processing, reports, authority, demo, ingest
+from api import health, roads, metrics, processing, reports, authority, demo, ingest, telemetry
 
 
 @asynccontextmanager
@@ -73,6 +73,7 @@ app.include_router(reports.router)
 app.include_router(authority.router)
 app.include_router(demo.router)
 app.include_router(ingest.router)   # <- Local YOLO / mock_tools ingestion
+app.include_router(telemetry.router) # <- Live KatchApp GPS fleet telemetry
 
 # Mount static files — directories from settings
 app.mount("/reports", StaticFiles(directory=str(settings.reports_dir)), name="reports")

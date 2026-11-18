@@ -179,6 +179,9 @@ export const api = {
   getPDFReportUrl: (week: number = 4, authority?: string) => 
     `${API_BASE}/api/reports/weekly?week=${week}${authority && authority !== 'all' ? `&authority=${encodeURIComponent(authority)}` : ''}`,
     
+  getLiveFleet: () =>
+    fetchAPI<types.LiveFleetResponse>('/api/telemetry/live-fleet'),
+
   getCSVExportUrl: (type: string, week?: number) => 
     `${API_BASE}/api/exports/csv?type=${type}${week ? `&week=${week}` : ''}`,
 };
