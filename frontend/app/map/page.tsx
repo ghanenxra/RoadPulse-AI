@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { 
-  Search, RotateCcw, Loader2, Filter, X, Play, Pause, Compass, Radio 
+  Search, RotateCcw, Loader2, Filter, X, Play, Pause, Compass, Radio, Bus, ChevronDown, ChevronUp 
 } from 'lucide-react'
 import { useWeek } from '@/context/WeekContext'
 
@@ -54,6 +54,7 @@ export default function MapPage() {
   const [travelledPath, setTravelledPath] = useState<[number, number][]>([])
   const [isSimulating, setIsSimulating] = useState<boolean>(true)
   const [activeRouteId, setActiveRouteId] = useState<string>('TR-01')
+  const [isTelemetryCollapsed, setIsTelemetryCollapsed] = useState<boolean>(false)
   const coordIndexRef = useRef<number>(0)
   const directionRef = useRef<number>(1) // 1 = forward (outbound), -1 = return (inbound)
 
@@ -352,9 +353,9 @@ export default function MapPage() {
             />
           )}
 
-          {/* Live Vehicle Telemetry HUD */}
-          {vehicle && (
-            <div className="absolute top-3 right-3 bg-slate-900/95 backdrop-blur-md text-white p-3.5 rounded-xl shadow-2xl border border-slate-700 z-[1000] text-xs w-72 sm:w-80 pointer-events-auto">
+          {/* Live Vehicle Telemetry HUD - Expanded */}
+          {vehicle && !isTelemetryCollapsed && (
+            <div className="absolute top-3 right-3 bg-slate-900/95 backdrop-blur-md text-white p-3.5 rounded-xl shadow-2xl border border-slate-700 z-[1000] text-xs w-72 sm:w-80 pointer-events-auto transition-all duration-200">
               <div className="flex items-center justify-between pb-2.5 border-b border-slate-700/80 mb-2.5">
                 <div className="flex items-center space-x-2">
                   <span className="relative flex h-2.5 w-2.5">
@@ -383,6 +384,14 @@ export default function MapPage() {
                     className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onClick={() => setIsTelemetryCollapsed(true)}
+                    title="Collapse and move to bottom"
+                    className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                    aria-label="Collapse Telemetry HUD"
+                  >
+                    <ChevronDown className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
@@ -436,6 +445,33 @@ export default function MapPage() {
                 </div>
               </div>
             </div>
+          )}
+
+          {/* Live Vehicle Telemetry - Collapsed Bottom Button */}
+          {vehicle && isTelemetryCollapsed && (
+            <button
+              onClick={() => setIsTelemetryCollapsed(false)}
+              title="Expand Live Vehicle Telemetry (BUS-001)"
+              className="absolute bottom-4 left-4 z-[1000] bg-slate-900/95 hover:bg-slate-800 text-white px-3 py-2 rounded-xl shadow-2xl border border-slate-700/80 flex items-center space-x-2.5 transition-all duration-200 hover:scale-105 group pointer-events-auto"
+            >
+              <span className="relative flex h-2 w-2">
+                {isSimulating && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                )}
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${isSimulating ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+              </span>
+              <div className="p-1.5 rounded-lg bg-blue-600/20 text-sky-400 group-hover:bg-blue-600/30 group-hover:text-sky-300 transition-colors">
+                <Bus className="h-4 w-4" />
+              </div>
+              <div className="flex flex-col text-left">
+                <div className="flex items-center space-x-1.5">
+                  <span className="font-bold text-xs text-slate-100">{vehicle.vehicle_id}</span>
+                  <span className="text-[10px] font-mono text-emerald-400 font-semibold">{vehicle.speed.toFixed(1)} km/h</span>
+                </div>
+                <span className="text-[10px] text-slate-400 max-w-[130px] truncate hidden sm:inline">{vehicle.road_name || activeRouteId}</span>
+              </div>
+              <ChevronUp className="h-4 w-4 text-slate-400 group-hover:text-white ml-0.5 transition-transform group-hover:-translate-y-0.5" />
+            </button>
           )}
           
           {/* Map Legend */}
