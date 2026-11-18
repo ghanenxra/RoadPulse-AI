@@ -22,6 +22,15 @@ uploads/*
 sample_data/clip_*.mp4
 model/*.pt
 
+# Reports, Documents & Academic Artifacts
+docs/
+report_figures/
+*.docx
+build_project_report.py
+generate_report_figures.py
+generate_uml_dfd.py
+codebase_overview.md
+
 # IDE
 .vscode/
 .idea/
