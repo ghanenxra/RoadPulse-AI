@@ -3,14 +3,13 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react'
 import { Topbar } from '@/components/layout/Topbar'
 import { api } from '@/lib/api'
+import { MapFeature, VehicleTelemetry } from '@/types'
 import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { 
-  Search, RotateCcw, Loader2, Filter, X, Play, Pause, Compass, Radio, Bus, ChevronDown, ChevronUp,
-  Zap, BatteryCharging, RefreshCw, Layers
+  Search, RotateCcw, Loader2, Filter, X, Play, Pause, Compass, Radio, Bus, ChevronDown, ChevronUp 
 } from 'lucide-react'
-import { MapFeature, VehicleTelemetry, LiveFleetResponse } from '@/types'
 import { useWeek } from '@/context/WeekContext'
 
 function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -50,12 +49,6 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
 
-  // Telemetry Mode: 'live_fleet' | 'simulated'
-  const [telemetryMode, setTelemetryMode] = useState<'live_fleet' | 'simulated'>('live_fleet')
-  const [liveFleet, setLiveFleet] = useState<LiveFleetResponse | null>(null)
-  const [liveFleetLoading, setLiveFleetLoading] = useState<boolean>(false)
-  const [selectedBusId, setSelectedBusId] = useState<string | null>(null)
-
   // 5-Second GPS Vehicle Trajectory Simulation State
   const [vehicle, setVehicle] = useState<VehicleTelemetry | null>(null)
   const [travelledPath, setTravelledPath] = useState<[number, number][]>([])
@@ -83,40 +76,7 @@ export default function MapPage() {
     loadMap(week)
   }, [week])
 
-  // Live Fleet Telemetry Polling (Every 10 seconds)
-  const fetchLiveFleet = useCallback(async () => {
-    try {
-      setLiveFleetLoading(true)
-      const data = await api.getLiveFleet()
-      setLiveFleet(data)
-      if (data && data.vehicles && data.vehicles.length > 0) {
-        setSelectedBusId(prevId => {
-          const found = data.vehicles.find(v => v.vehicle_id === prevId)
-          const chosen = found || data.vehicles.find(v => v.status === 'moving') || data.vehicles[0]
-          setVehicle(chosen)
-          return chosen.vehicle_id
-        })
-      }
-    } catch (err) {
-      console.error('Failed to fetch live fleet:', err)
-    } finally {
-      setLiveFleetLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (telemetryMode !== 'live_fleet') return
-    fetchLiveFleet()
-    const interval = setInterval(fetchLiveFleet, 10000)
-    return () => clearInterval(interval)
-  }, [telemetryMode, fetchLiveFleet])
-
-  const handleSelectVehicle = useCallback((v: VehicleTelemetry) => {
-    setSelectedBusId(v.vehicle_id)
-    setVehicle(v)
-  }, [])
-
-  // Initialize or switch vehicle trajectory when active corridor or features change (simulated mode)
+  // Initialize or switch vehicle trajectory when active corridor or features change
   const setupVehicleOnRoute = useCallback((routeId: string, features: MapFeature[]) => {
     if (features.length === 0) return
     const route = features.find(f => f.properties.segment_id === routeId) || features[0]
@@ -144,14 +104,14 @@ export default function MapPage() {
   }, [])
 
   useEffect(() => {
-    if (telemetryMode === 'simulated' && allFeatures.length > 0) {
+    if (allFeatures.length > 0) {
       setupVehicleOnRoute(activeRouteId, allFeatures)
     }
-  }, [telemetryMode, allFeatures, activeRouteId, setupVehicleOnRoute])
+  }, [allFeatures, activeRouteId, setupVehicleOnRoute])
 
-  // Strictly 5-Second GPS Vehicle Movement Interval (Simulated Mode Only)
+  // Strictly 5-Second GPS Vehicle Movement Interval
   useEffect(() => {
-    if (telemetryMode !== 'simulated' || !isSimulating || allFeatures.length === 0) return
+    if (!isSimulating || allFeatures.length === 0) return
 
     const intervalId = setInterval(() => {
       const activeRoute = allFeatures.find(f => f.properties.segment_id === activeRouteId) || allFeatures[0]
@@ -202,7 +162,7 @@ export default function MapPage() {
     }, 5000)
 
     return () => clearInterval(intervalId)
-  }, [telemetryMode, isSimulating, allFeatures, activeRouteId])
+  }, [isSimulating, allFeatures, activeRouteId])
 
   const resetSimulation = useCallback(() => {
     setupVehicleOnRoute(activeRouteId, allFeatures)
@@ -389,72 +349,45 @@ export default function MapPage() {
             <MapComponent 
               features={filteredFeatures} 
               vehicle={vehicle}
-              vehicles={telemetryMode === 'live_fleet' ? (liveFleet?.vehicles || []) : []}
-              selectedVehicleId={selectedBusId}
-              onSelectVehicle={handleSelectVehicle}
-              travelledPath={telemetryMode === 'simulated' ? travelledPath : []}
+              travelledPath={travelledPath}
             />
           )}
 
           {/* Live Vehicle Telemetry HUD - Expanded */}
           {vehicle && !isTelemetryCollapsed && (
-            <div className="absolute top-3 right-3 bg-slate-900/95 backdrop-blur-md text-white p-3.5 rounded-xl shadow-2xl border border-slate-700 z-[1000] text-xs w-72 sm:w-84 pointer-events-auto transition-all duration-200">
-              {/* Mode Toggle Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-slate-700/80 mb-2.5">
-                <div className="flex items-center space-x-1.5 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
-                  <button
-                    onClick={() => setTelemetryMode('live_fleet')}
-                    className={`px-2 py-1 rounded text-[10px] font-semibold transition-all ${
-                      telemetryMode === 'live_fleet'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    Live Kota Fleet
-                  </button>
-                  <button
-                    onClick={() => setTelemetryMode('simulated')}
-                    className={`px-2 py-1 rounded text-[10px] font-semibold transition-all ${
-                      telemetryMode === 'simulated'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                  >
-                    Simulated Route
-                  </button>
+            <div className="absolute top-3 right-3 bg-slate-900/95 backdrop-blur-md text-white p-3.5 rounded-xl shadow-2xl border border-slate-700 z-[1000] text-xs w-72 sm:w-80 pointer-events-auto transition-all duration-200">
+              <div className="flex items-center justify-between pb-2.5 border-b border-slate-700/80 mb-2.5">
+                <div className="flex items-center space-x-2">
+                  <span className="relative flex h-2.5 w-2.5">
+                    {isSimulating && (
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    )}
+                    <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isSimulating ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                  </span>
+                  <span className="font-bold text-slate-100 text-xs tracking-wider">{vehicle.vehicle_id}</span>
+                  <span className="text-[10px] bg-emerald-950/80 text-emerald-400 font-semibold px-2 py-0.5 rounded border border-emerald-700/50 flex items-center space-x-1">
+                    <Radio className="h-2.5 w-2.5 animate-pulse" />
+                    <span>5s GPS</span>
+                  </span>
                 </div>
-                
                 <div className="flex items-center space-x-1">
-                  {telemetryMode === 'live_fleet' ? (
-                    <button
-                      onClick={fetchLiveFleet}
-                      title="Refresh live fleet GPS"
-                      className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                      disabled={liveFleetLoading}
-                    >
-                      <RefreshCw className={`h-3.5 w-3.5 ${liveFleetLoading ? 'animate-spin text-sky-400' : ''}`} />
-                    </button>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => setIsSimulating(!isSimulating)}
-                        title={isSimulating ? "Pause Simulation" : "Resume Simulation"}
-                        className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                      >
-                        {isSimulating ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-                      </button>
-                      <button
-                        onClick={resetSimulation}
-                        title="Reset to Corridor Start"
-                        className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" />
-                      </button>
-                    </>
-                  )}
+                  <button
+                    onClick={() => setIsSimulating(!isSimulating)}
+                    title={isSimulating ? "Pause Simulation" : "Resume Simulation"}
+                    className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                  >
+                    {isSimulating ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                  </button>
+                  <button
+                    onClick={resetSimulation}
+                    title="Reset to Corridor Start"
+                    className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
                   <button
                     onClick={() => setIsTelemetryCollapsed(true)}
-                    title="Collapse HUD"
+                    title="Collapse and move to bottom"
                     className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
                     aria-label="Collapse Telemetry HUD"
                   >
@@ -463,74 +396,27 @@ export default function MapPage() {
                 </div>
               </div>
 
-              {/* Title & Status Bar */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              {/* Corridor Selector */}
+              <div className="mb-2.5">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Transit Corridor</span>
+                  <span className="text-[10px] text-sky-400 font-medium">
+                    {directionRef.current === 1 ? 'Forward / Outbound' : 'Return / Turnaround'}
                   </span>
-                  <span className="font-bold text-slate-100 text-xs tracking-wider font-mono">{vehicle.vehicle_id}</span>
                 </div>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded border capitalize flex items-center space-x-1 ${
-                  vehicle.status === 'moving' 
-                    ? 'bg-emerald-950/80 text-emerald-400 border-emerald-700/50' 
-                    : vehicle.status === 'charging'
-                    ? 'bg-sky-950/80 text-sky-400 border-sky-700/50'
-                    : 'bg-amber-950/80 text-amber-400 border-amber-700/50'
-                }`}>
-                  <Radio className="h-2.5 w-2.5 animate-pulse mr-1" />
-                  <span>{telemetryMode === 'live_fleet' ? (vehicle.status || 'Active') : '5s GPS'}</span>
-                </span>
+                <select
+                  value={activeRouteId}
+                  onChange={(e) => setActiveRouteId(e.target.value)}
+                  className="w-full bg-slate-800/90 text-slate-100 text-xs rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer font-medium"
+                >
+                  {allFeatures.map(f => (
+                    <option key={f.properties.segment_id} value={f.properties.segment_id} className="bg-slate-900 text-slate-100">
+                      {f.properties.segment_id} • {f.properties.road_name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {/* Selector: Live Bus Selector OR Corridor Selector */}
-              {telemetryMode === 'live_fleet' ? (
-                <div className="mb-2.5">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Select Tracked Bus</span>
-                    <span className="text-[10px] text-sky-400 font-medium">
-                      {liveFleet?.count || 0} Online ({liveFleet?.moving || 0} moving)
-                    </span>
-                  </div>
-                  <select
-                    value={selectedBusId || ''}
-                    onChange={(e) => {
-                      const found = liveFleet?.vehicles.find(v => v.vehicle_id === e.target.value)
-                      if (found) handleSelectVehicle(found)
-                    }}
-                    className="w-full bg-slate-800/90 text-slate-100 text-xs rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer font-medium font-mono"
-                  >
-                    {liveFleet?.vehicles.map(v => (
-                      <option key={v.vehicle_id} value={v.vehicle_id} className="bg-slate-900 text-slate-100">
-                        {v.vehicle_id} • {v.status ? v.status.toUpperCase() : 'BUS'} ({v.speed.toFixed(0)} km/h • {v.soc ?? 0}% SOC)
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div className="mb-2.5">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Transit Corridor</span>
-                    <span className="text-[10px] text-sky-400 font-medium">
-                      {directionRef.current === 1 ? 'Forward / Outbound' : 'Return / Turnaround'}
-                    </span>
-                  </div>
-                  <select
-                    value={activeRouteId}
-                    onChange={(e) => setActiveRouteId(e.target.value)}
-                    className="w-full bg-slate-800/90 text-slate-100 text-xs rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer font-medium"
-                  >
-                    {allFeatures.map(f => (
-                      <option key={f.properties.segment_id} value={f.properties.segment_id} className="bg-slate-900 text-slate-100">
-                        {f.properties.segment_id} • {f.properties.road_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {/* Telemetry Metrics Readout */}
               <div className="space-y-1.5 text-[11px] bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80">
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400">Live GPS:</span>
@@ -549,49 +435,13 @@ export default function MapPage() {
                     {Math.round(vehicle.heading)}° {getCompassDirection(vehicle.heading)}
                   </span>
                 </div>
-
-                {telemetryMode === 'live_fleet' && (
-                  <>
-                    <div className="flex justify-between items-center pt-1 border-t border-slate-800/80">
-                      <span className="text-slate-400 flex items-center">
-                        <BatteryCharging className="h-3 w-3 mr-1 text-emerald-400" />
-                        Battery Charge:
-                      </span>
-                      <div className="flex items-center space-x-1.5">
-                        <div className="w-16 bg-slate-800 rounded-full h-2 overflow-hidden">
-                          <div 
-                            className="bg-emerald-400 h-2 rounded-full transition-all duration-300" 
-                            style={{ width: `${Math.min(100, Math.max(5, vehicle.soc ?? 0))}%` }}
-                          />
-                        </div>
-                        <span className="font-mono font-bold text-emerald-400">{vehicle.soc ?? 0}%</span>
-                      </div>
-                    </div>
-                    {vehicle.power !== undefined && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-400 flex items-center">
-                          <Zap className="h-3 w-3 mr-1 text-amber-400" />
-                          Power Flow:
-                        </span>
-                        <span className="font-mono text-slate-200 font-medium">
-                          {vehicle.power > 0 ? `+${vehicle.power} kW (Draw)` : vehicle.power < 0 ? `${vehicle.power} kW (Regen)` : '0 kW'}
-                        </span>
-                      </div>
-                    )}
-                    {vehicle.odometer && (
-                      <div className="flex justify-between items-center text-[10px]">
-                        <span className="text-slate-400">Odometer:</span>
-                        <span className="font-mono text-slate-300">{vehicle.odometer.toLocaleString()} km</span>
-                      </div>
-                    )}
-                  </>
-                )}
-
                 <div className="flex justify-between items-center pt-1 border-t border-slate-800/80 text-[10px]">
-                  <span className="text-slate-400">Data Source:</span>
-                  <span className="text-sky-400 font-medium">
-                    {telemetryMode === 'live_fleet' ? 'KatchApp GPS · Kota E-Bus' : 'Corridor Synthetic Loop'}
-                  </span>
+                  <span className="text-slate-400">GPS Interval:</span>
+                  <span className="text-slate-300 font-medium">Every 5.0 seconds</span>
+                </div>
+                <div className="flex justify-between items-center text-[10px]">
+                  <span className="text-slate-400">Trajectory Path:</span>
+                  <span className="text-sky-400 font-semibold">{travelledPath.length} waypoints logged</span>
                 </div>
               </div>
             </div>
@@ -601,24 +451,24 @@ export default function MapPage() {
           {vehicle && isTelemetryCollapsed && (
             <button
               onClick={() => setIsTelemetryCollapsed(false)}
-              title={`Expand Live Vehicle Telemetry (${vehicle.vehicle_id})`}
+              title="Expand Live Vehicle Telemetry (BUS-001)"
               className="absolute bottom-4 left-4 z-[1000] bg-slate-900/95 hover:bg-slate-800 text-white px-3 py-2 rounded-xl shadow-2xl border border-slate-700/80 flex items-center space-x-2.5 transition-all duration-200 hover:scale-105 group pointer-events-auto"
             >
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                {isSimulating && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                )}
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${isSimulating ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
               </span>
               <div className="p-1.5 rounded-lg bg-blue-600/20 text-sky-400 group-hover:bg-blue-600/30 group-hover:text-sky-300 transition-colors">
                 <Bus className="h-4 w-4" />
               </div>
               <div className="flex flex-col text-left">
                 <div className="flex items-center space-x-1.5">
-                  <span className="font-bold text-xs text-slate-100 font-mono">{vehicle.vehicle_id}</span>
+                  <span className="font-bold text-xs text-slate-100">{vehicle.vehicle_id}</span>
                   <span className="text-[10px] font-mono text-emerald-400 font-semibold">{vehicle.speed.toFixed(1)} km/h</span>
                 </div>
-                <span className="text-[10px] text-slate-400 max-w-[130px] truncate hidden sm:inline">
-                  {telemetryMode === 'live_fleet' ? `${vehicle.soc ?? 0}% SOC • ${vehicle.status}` : (vehicle.road_name || activeRouteId)}
-                </span>
+                <span className="text-[10px] text-slate-400 max-w-[130px] truncate hidden sm:inline">{vehicle.road_name || activeRouteId}</span>
               </div>
               <ChevronUp className="h-4 w-4 text-slate-400 group-hover:text-white ml-0.5 transition-transform group-hover:-translate-y-0.5" />
             </button>

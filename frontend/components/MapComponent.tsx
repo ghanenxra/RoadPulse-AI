@@ -10,9 +10,6 @@ import { useRouter } from 'next/navigation'
 interface MapComponentProps {
   features: MapFeature[]
   vehicle?: VehicleTelemetry | null
-  vehicles?: VehicleTelemetry[]
-  selectedVehicleId?: string | null
-  onSelectVehicle?: (vehicle: VehicleTelemetry) => void
   travelledPath?: [number, number][]
   height?: string
   interactive?: boolean
@@ -22,9 +19,6 @@ interface MapComponentProps {
 export default function MapComponent({
   features,
   vehicle = null,
-  vehicles = [],
-  selectedVehicleId = null,
-  onSelectVehicle,
   travelledPath = [],
   height = "100%",
   interactive = true,
@@ -177,105 +171,8 @@ export default function MapComponent({
       simLayerGroup.addLayer(innerTrail)
     }
 
-    // 2. Vehicle markers (Fleet or Single Bus)
-    const activeVehicleId = vehicle?.vehicle_id || selectedVehicleId
-
-    // Render multi-vehicle fleet if present
-    if (vehicles && vehicles.length > 0) {
-      vehicles.forEach(v => {
-        if (!v.latitude || !v.longitude) return
-        const isSelected = v.vehicle_id === activeVehicleId
-        const statusColor = v.status === 'moving' 
-          ? '#10b981' 
-          : v.status === 'charging' 
-          ? '#38bdf8' 
-          : v.status === 'idle' 
-          ? '#f59e0b' 
-          : '#64748b'
-
-        if (isSelected) {
-          // Highlighted active bus marker
-          const selectedHtml = `
-            <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; pointer-events: auto; cursor: pointer;">
-              <div class="pulse-ring-effect" style="position: absolute; width: 36px; height: 36px; border-radius: 9999px; background: rgba(37, 99, 235, 0.4); border: 1.5px solid #60a5fa;"></div>
-              <div style="position: relative; width: 32px; height: 32px; background: #0f172a; border: 2.5px solid ${statusColor}; border-radius: 9999px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.6); transform: rotate(${v.heading || 0}deg); transition: transform 0.4s ease-out;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${statusColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="12 2 19 21 12 17 5 21 12 2" fill="${statusColor}" />
-                </svg>
-              </div>
-              <div style="position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); background: #0f172a; color: ${statusColor}; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px; border: 1px solid ${statusColor}; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.4); font-family: monospace; letter-spacing: 0.5px;">
-                ${v.vehicle_id}
-              </div>
-            </div>
-          `
-          const marker = L.marker([v.latitude, v.longitude], {
-            icon: L.divIcon({
-              html: selectedHtml,
-              className: 'vehicle-marker-selected',
-              iconSize: [44, 44],
-              iconAnchor: [22, 22],
-            }),
-            zIndexOffset: 2000,
-          })
-          marker.bindTooltip(
-            `<div style="font-family: system-ui, sans-serif; padding: 4px; min-width: 160px;">
-              <div style="font-weight: 800; font-size: 12px; color: #0f172a; display: flex; justify-content: space-between;">
-                <span>${v.vehicle_id}</span>
-                <span style="color: ${statusColor}; font-size: 10px; font-weight: 700; text-transform: uppercase;">${v.status || 'ACTIVE'}</span>
-              </div>
-              <div style="font-size: 11px; color: #64748b; margin-top: 2px;">${v.route_id || 'PM E-Bus Sewa (KBSL)'}</div>
-              <div style="font-size: 11px; font-weight: 700; color: #1e293b; margin-top: 4px; border-top: 1px solid #e2e8f0; padding-top: 3px;">
-                Speed: ${v.speed.toFixed(1)} km/h • ${Math.round(v.heading)}°
-              </div>
-              <div style="font-size: 10px; color: #059669; font-weight: 600;">
-                Battery SOC: ${v.soc !== undefined ? v.soc + '%' : 'N/A'}
-              </div>
-              <div style="font-size: 10px; font-family: monospace; color: #94a3b8;">
-                ${v.latitude.toFixed(5)}, ${v.longitude.toFixed(5)}
-              </div>
-            </div>`,
-            { direction: 'top', offset: [0, -22] }
-          )
-          if (onSelectVehicle) {
-            marker.on('click', () => onSelectVehicle(v))
-          }
-          simLayerGroup.addLayer(marker)
-        } else {
-          // Standard fleet bus marker
-          const fleetHtml = `
-            <div style="position: relative; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-              <div style="width: 22px; height: 22px; background: #0f172a; border: 2px solid ${statusColor}; border-radius: 9999px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.4); transform: rotate(${v.heading || 0}deg);">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${statusColor}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon points="12 2 19 21 12 17 5 21 12 2" fill="${statusColor}" />
-                </svg>
-              </div>
-            </div>
-          `
-          const marker = L.marker([v.latitude, v.longitude], {
-            icon: L.divIcon({
-              html: fleetHtml,
-              className: 'vehicle-marker-fleet',
-              iconSize: [28, 28],
-              iconAnchor: [14, 14],
-            }),
-            zIndexOffset: 1200,
-          })
-          marker.bindTooltip(
-            `<div style="font-family: system-ui, sans-serif; padding: 2px 4px;">
-              <span style="font-weight: 700; font-size: 11px;">${v.vehicle_id}</span>
-              <span style="font-size: 10px; color: ${statusColor}; margin-left: 6px; text-transform: capitalize;">${v.status}</span>
-              <div style="font-size: 10px; color: #64748b;">${v.speed.toFixed(1)} km/h • SOC: ${v.soc !== undefined ? v.soc + '%' : '—'}</div>
-            </div>`,
-            { direction: 'top', offset: [0, -14] }
-          )
-          if (onSelectVehicle) {
-            marker.on('click', () => onSelectVehicle(v))
-          }
-          simLayerGroup.addLayer(marker)
-        }
-      })
-    } else if (vehicle && vehicle.latitude && vehicle.longitude) {
-      // Single simulated vehicle
+    // 2. Simulated vehicle marker
+    if (vehicle && vehicle.latitude && vehicle.longitude) {
       const busIconHtml = `
         <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; pointer-events: auto;">
           <div class="pulse-ring-effect" style="position: absolute; width: 34px; height: 34px; border-radius: 9999px; background: rgba(37, 99, 235, 0.4); border: 1.5px solid #60a5fa;"></div>
@@ -319,7 +216,7 @@ export default function MapComponent({
 
       simLayerGroup.addLayer(marker)
     }
-  }, [travelledPath, vehicle, vehicles, selectedVehicleId, onSelectVehicle])
+  }, [travelledPath, vehicle])
 
   return (
     <div

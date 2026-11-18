@@ -121,22 +121,4 @@ export interface VehicleTelemetry {
   heading: number;
   route_id?: string;
   road_name?: string;
-  vin?: string;
-  status?: string;
-  soc?: number;
-  soh?: number;
-  power?: number;
-  odometer?: number;
-  agency?: string;
-}
-
-export interface LiveFleetResponse {
-  source: string;
-  source_url: string;
-  count: number;
-  moving: number;
-  idle: number;
-  charging: number;
-  vehicles: VehicleTelemetry[];
-  last_updated: string;
 }

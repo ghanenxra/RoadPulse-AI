@@ -107,22 +107,3 @@ def test_upload_missing_segment_rejected(client):
     data = {"road_segment_id": "NON-EXISTENT-SEGMENT"}
     response = client.post("/api/upload", files=files, data=data)
     assert response.status_code == 404
-
-
-def test_live_fleet_telemetry(client):
-    """Proves that /api/telemetry/live-fleet returns normalized fleet telemetry schema."""
-    response = client.get("/api/telemetry/live-fleet")
-    assert response.status_code == 200
-    data = response.json()
-    assert "vehicles" in data
-    assert "count" in data
-    assert "moving" in data
-    assert "idle" in data
-    assert isinstance(data["vehicles"], list)
-    if data["count"] > 0:
-        first = data["vehicles"][0]
-        assert "vehicle_id" in first
-        assert "latitude" in first
-        assert "longitude" in first
-        assert "speed" in first
-        assert "heading" in first
