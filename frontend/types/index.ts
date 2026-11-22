@@ -106,7 +106,9 @@ export interface MapFeature {
   properties: {
     segment_id: string; road_name: string; sub_name: string;
     risk_score: number; grade: string; pothole_count: number;
-    authority: string; status: string; weekly_change: number | null;
+    authority?: string; status?: string; weekly_change?: number | null;
+    authority_id?: string; authority_name?: string;
+    length_km?: number; road_type?: string; severity_avg?: number;
   };
   geometry: { type: 'LineString'; coordinates: [number, number][] };
 }
@@ -125,3 +127,6 @@ export interface VehicleTelemetry {
   route_id?: string;
   road_name?: string;
 }
+
+export type SimulatedVehicle = VehicleTelemetry & { speed_kmh?: number };
+

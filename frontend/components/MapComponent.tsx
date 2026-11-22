@@ -1,15 +1,14 @@
 "use client"
 
-import React, { useEffect, useRef } from 'react'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
-import { MapFeature, VehicleTelemetry } from '@/types'
-import { getGradeColor } from '@/lib/utils'
-import { useRouter } from 'next/navigation'
+import React, { useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
+import L from "leaflet"
+import "leaflet/dist/leaflet.css"
+import { MapFeature, SimulatedVehicle } from "@/types"
 
 interface MapComponentProps {
   features: MapFeature[]
-  vehicle?: VehicleTelemetry | null
+  vehicle?: SimulatedVehicle | null
   travelledPath?: [number, number][]
   height?: string
   interactive?: boolean
@@ -50,8 +49,8 @@ export default function MapComponent({
         touchZoom: interactive,
       })
 
-      // CartoDB Dark Matter tile layer for tactical dark console aesthetic
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      // CartoDB Voyager tile layer for organic forest & warm beige cartography
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
         maxZoom: 19,
         subdomains: 'abcd',
@@ -111,15 +110,15 @@ export default function MapComponent({
 
       // Tooltip
       polyline.bindTooltip(
-        `<div style="font-family: system-ui, -apple-system, sans-serif; padding: 3px 6px; background: #0f172a; color: #f8fafc; border: 1px solid #334155; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
-          <div style="font-weight: 700; font-size: 12px; color: #f1f5f9; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+        `<div style="font-family: system-ui, -apple-system, sans-serif; padding: 4px 8px; background: #faf8f4; color: #12271c; border: 1px solid #ded7cb; border-radius: 6px; box-shadow: 0 4px 12px rgba(18,39,28,0.12);">
+          <div style="font-weight: 700; font-size: 12px; color: #12271c; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
             <span>${feature.properties.road_name}</span>
-            <span style="background: ${color}25; color: ${color}; border: 1px solid ${color}60; padding: 1px 5px; border-radius: 3px; font-size: 10px; font-family: monospace;">Grade ${feature.properties.grade}</span>
+            <span style="background: ${color}20; color: ${color}; border: 1px solid ${color}50; padding: 1px 5px; border-radius: 3px; font-size: 10px; font-family: monospace; font-weight: bold;">Grade ${feature.properties.grade}</span>
           </div>
-          <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">${feature.properties.sub_name}</div>
-          <div style="font-size: 11px; margin-top: 4px; border-top: 1px solid #1e293b; padding-top: 3px; display: flex; justify-content: space-between; gap: 12px; font-family: monospace;">
-            <span style="color: #cbd5e1;">Risk: ${feature.properties.risk_score.toFixed(1)}</span>
-            <span style="color: #94a3b8;">Defects: ${feature.properties.pothole_count}</span>
+          <div style="font-size: 11px; color: #506457; margin-top: 2px;">${feature.properties.sub_name}</div>
+          <div style="font-size: 11px; margin-top: 4px; border-top: 1px solid #ded7cb; padding-top: 3px; display: flex; justify-content: space-between; gap: 12px; font-family: monospace;">
+            <span style="color: #12271c;">Risk: ${feature.properties.risk_score.toFixed(1)}</span>
+            <span style="color: #506457;">Defects: ${feature.properties.pothole_count}</span>
           </div>
         </div>`,
         { sticky: true, opacity: 1 }
@@ -160,14 +159,14 @@ export default function MapComponent({
     // 1. Travelled path breadcrumb polyline
     if (travelledPath && travelledPath.length > 1) {
       const baseTrail = L.polyline(travelledPath, {
-        color: '#0284c7',
+        color: '#1d4231',
         weight: 5,
-        opacity: 0.8,
+        opacity: 0.7,
         lineCap: 'round',
         lineJoin: 'round',
       })
       const innerTrail = L.polyline(travelledPath, {
-        color: '#38bdf8',
+        color: '#a8d5bc',
         weight: 2,
         opacity: 1,
         lineCap: 'round',
@@ -182,13 +181,13 @@ export default function MapComponent({
     if (vehicle && vehicle.latitude && vehicle.longitude) {
       const busIconHtml = `
         <div style="position: relative; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; pointer-events: auto;">
-          <div class="pulse-ring-effect" style="position: absolute; width: 34px; height: 34px; border-radius: 9999px; background: rgba(56, 189, 248, 0.25); border: 1.5px solid #38bdf8;"></div>
-          <div style="position: relative; width: 30px; height: 30px; background: #0b101b; border: 2px solid #38bdf8; border-radius: 9999px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.8); transform: rotate(${vehicle.heading || 0}deg); transition: transform 0.4s ease-out;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 19 21 12 17 5 21 12 2" fill="#38bdf8" />
+          <div class="pulse-ring-effect" style="position: absolute; width: 34px; height: 34px; border-radius: 9999px; background: rgba(32, 114, 70, 0.25); border: 1.5px solid #207246;"></div>
+          <div style="position: relative; width: 30px; height: 30px; background: #132a1e; border: 2px solid #dfd7cb; border-radius: 9999px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(18,39,28,0.3); transform: rotate(${vehicle.heading || 0}deg); transition: transform 0.4s ease-out;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f4efe6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 19 21 12 17 5 21 12 2" fill="#f4efe6" />
             </svg>
           </div>
-          <div style="position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); background: #0b101b; color: #38bdf8; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px; border: 1px solid #1e293b; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.6); font-family: monospace; letter-spacing: 0.5px;">
+          <div style="position: absolute; bottom: -12px; left: 50%; transform: translateX(-50%); background: #132a1e; color: #f4efe6; font-size: 9px; font-weight: 800; padding: 1px 5px; border-radius: 4px; border: 1px solid #2e5942; white-space: nowrap; box-shadow: 0 2px 4px rgba(18,39,28,0.25); font-family: monospace; letter-spacing: 0.5px;">
             ${vehicle.vehicle_id}
           </div>
         </div>
@@ -201,24 +200,18 @@ export default function MapComponent({
           iconSize: [44, 44],
           iconAnchor: [22, 22],
         }),
-        zIndexOffset: 1500,
       })
 
-      marker.bindTooltip(
-        `<div style="font-family: system-ui, -apple-system, sans-serif; padding: 4px 6px; background: #0b101b; color: #f8fafc; border: 1px solid #1e293b; border-radius: 6px; min-width: 150px;">
-          <div style="font-weight: 800; font-size: 11px; color: #f8fafc; display: flex; justify-content: space-between; font-family: monospace;">
-            <span>${vehicle.vehicle_id}</span>
-            <span style="color: #38bdf8; font-size: 10px; font-weight: 700;">LIVE TELEMETRY</span>
+      marker.bindPopup(
+        `<div style="font-family: system-ui, -apple-system, sans-serif; padding: 6px; background: #faf8f4; color: #12271c; border-radius: 6px;">
+          <div style="font-weight: 800; font-size: 13px; color: #1d4231;">${vehicle.vehicle_id}</div>
+          <div style="font-size: 11px; color: #506457; margin-top: 1px;">Route 11 · Tonk Road Express</div>
+          <div style="font-size: 11px; font-family: monospace; margin-top: 6px; border-top: 1px solid #ded7cb; padding-top: 4px;">
+            <div>Speed: ${Math.round(vehicle.speed_kmh || 32)} km/h</div>
+            <div>Coords: ${vehicle.latitude.toFixed(4)}, ${vehicle.longitude.toFixed(4)}</div>
+            <div>Feed: Optical Dashcam Active</div>
           </div>
-          <div style="font-size: 10px; color: #94a3b8; margin-top: 1px;">${vehicle.road_name || 'Active Transit Corridor'}</div>
-          <div style="font-size: 10px; font-weight: 700; color: #e2e8f0; margin-top: 4px; border-top: 1px solid #1e293b; padding-top: 3px; font-family: monospace;">
-            Speed: ${vehicle.speed.toFixed(1)} km/h • ${Math.round(vehicle.heading)}°
-          </div>
-          <div style="font-size: 9px; font-family: monospace; color: #64748b;">
-            ${vehicle.latitude.toFixed(5)}, ${vehicle.longitude.toFixed(5)}
-          </div>
-        </div>`,
-        { direction: 'top', offset: [0, -22] }
+        </div>`
       )
 
       simLayerGroup.addLayer(marker)
@@ -228,8 +221,25 @@ export default function MapComponent({
   return (
     <div
       ref={mapContainerRef}
-      style={{ height, width: '100%', zIndex: 0 }}
-      className="relative bg-[#090d16]"
+      style={{ height: height, width: "100%", zIndex: 1 }}
+      className="relative outline-none"
     />
   )
+}
+
+function getGradeColor(grade: string): string {
+  switch (grade) {
+    case "A":
+      return "#207246" // Forest Leaf Green
+    case "B":
+      return "#3d8e57" // Pine Sage
+    case "C":
+      return "#c2822a" // Amber Ochre
+    case "D":
+      return "#c05621" // Warm Clay
+    case "E":
+      return "#9e3427" // Terracotta
+    default:
+      return "#6e8477"
+  }
 }

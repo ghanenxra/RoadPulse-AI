@@ -49,7 +49,7 @@ export default function DemoPage() {
       title: 'Scenario 1: Chronic Road Deterioration (Tonk Road TR-01)',
       desc: 'Rapid wear from Grade C (Score 45) to Grade E (Score 88). 21-day repair window breached.',
       badge: 'Overdue SLA',
-      badgeColor: 'bg-rose-500/10 text-rose-400 border border-rose-500/30',
+      badgeColor: 'bg-[#faecea] text-[#912d1e] border-[#f0c0b8]',
       roadId: 'TR-01',
       pattern: 'W1: C (45) -> W2: D (62) -> W3: E (85) -> W4: E (88)'
     },
@@ -58,7 +58,7 @@ export default function DemoPage() {
       title: 'Scenario 2: Successful Repair & AI Verification (Ajmer Road AJ-01)',
       desc: 'Severe road repaired by PWD. Post-repair bus survey proves risk drop from 80 down to 22.',
       badge: 'Verified Fix',
-      badgeColor: 'bg-teal-500/10 text-teal-400 border border-teal-500/30',
+      badgeColor: 'bg-[#e6f4ea] text-[#1e5d3a] border-[#bde0ca]',
       roadId: 'AJ-01',
       pattern: 'W1: D (58) -> W2: E (80) -> W3: C (40) -> W4: B (22)'
     },
@@ -67,7 +67,7 @@ export default function DemoPage() {
       title: 'Scenario 3: Rain-Triggered Pothole Surge (Sikar Road SR-01)',
       desc: 'Monsoon rainfall spike (42mm) causes pothole density to triple. Crew patching in progress.',
       badge: 'In Progress',
-      badgeColor: 'bg-amber-500/10 text-amber-400 border border-amber-500/30',
+      badgeColor: 'bg-[#fef4e5] text-[#8c5610] border-[#f6d7ab]',
       roadId: 'SR-01',
       pattern: 'W1: B (25) -> W2: C (38) -> W3: D (75) -> W4: D (60)'
     },
@@ -76,7 +76,7 @@ export default function DemoPage() {
       title: 'Scenario 4: Pristine Route / Baseline Control (Civil Lines CL-01)',
       desc: 'Consistently maintained VIP zone holding Grade A across all 4 weekly survey cycles.',
       badge: 'Grade A Good',
-      badgeColor: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30',
+      badgeColor: 'bg-[#e6f4ea] text-[#1e5d3a] border-[#bde0ca]',
       roadId: 'CL-01',
       pattern: 'W1: A (10) -> W2: A (13) -> W3: A (9) -> W4: A (12)'
     }
@@ -89,20 +89,20 @@ export default function DemoPage() {
       <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
         
         {actionMsg && (
-          <div className={`p-4 rounded-lg flex items-center justify-between border ${
+          <div className={`p-4 rounded-xl flex items-center justify-between border ${
             actionMsg.type === 'success' 
-              ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300' 
-              : 'bg-rose-950/40 border-rose-800 text-rose-300'
+              ? 'bg-[#e8f2ec] border-[#bde2cb] text-[#18432d]' 
+              : 'bg-[#faecea] border-[#f0c0b8] text-[#912d1e]'
           }`}>
             <div className="flex items-center space-x-2">
-              <Sparkles className="h-5 w-5 text-emerald-400 shrink-0" />
+              <Sparkles className="h-5 w-5 text-[#207246] shrink-0" />
               <span className="text-sm font-medium">{actionMsg.text}</span>
             </div>
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => setActionMsg(null)}
-              className="text-slate-400 hover:text-slate-200 text-xs"
+              className="text-[#506457] hover:text-[#12271c] text-xs"
             >
               Dismiss
             </Button>
@@ -112,23 +112,22 @@ export default function DemoPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* 4-Week Historical Playback */}
-          <Card className="lg:col-span-2 bg-[#090d16] border border-slate-800 shadow-sm overflow-hidden">
-            <CardHeader className="bg-[#0f172a] border-b border-slate-800 pb-3">
+          <Card className="lg:col-span-2 bg-[#faf8f4] border border-[#ded7cb] shadow-sm overflow-hidden">
+            <CardHeader className="bg-[#f4efe6] border-b border-[#ded7cb] pb-3">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <CardTitle className="text-base font-bold text-slate-100">4-Week Historical Playback</CardTitle>
-                  <CardDescription className="text-slate-400 text-xs">
+                  <CardTitle className="text-base font-bold text-[#12271c]">4-Week Historical Playback</CardTitle>
+                  <CardDescription className="text-[#506457] text-xs">
                     Observe whole-city road health degradation and maintenance outcomes cycle-by-cycle
                   </CardDescription>
                 </div>
                 <Button
                   size="sm"
-                  variant={isPlaying ? 'destructive' : 'secondary'}
                   onClick={() => setIsPlaying(!isPlaying)}
                   className={`space-x-1.5 text-xs font-mono h-8 ${
                     isPlaying 
-                      ? 'bg-rose-600 hover:bg-rose-500 text-white' 
-                      : 'bg-cyan-600 hover:bg-cyan-500 text-white'
+                      ? 'bg-[#912d1e] hover:bg-[#7b2417] text-[#faf8f4]' 
+                      : 'bg-[#1d4231] hover:bg-[#153325] text-[#faf8f4]'
                   }`}
                 >
                   {isPlaying ? (
@@ -139,7 +138,7 @@ export default function DemoPage() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className="p-5 space-y-4 bg-[#090d16]">
+            <CardContent className="p-5 space-y-4 bg-[#faf8f4]">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[1, 2, 3, 4].map((w) => (
                   <div
@@ -147,13 +146,13 @@ export default function DemoPage() {
                     onClick={() => { setActiveWeek(w); setIsPlaying(false); }}
                     className={`cursor-pointer border rounded-lg p-3 text-center transition-all ${
                       activeWeek === w 
-                        ? 'border-cyan-500 bg-cyan-950/30 shadow-sm' 
-                        : 'border-slate-800 hover:border-slate-700 bg-[#0f172a]'
+                        ? 'border-[#1d4231] bg-[#e8f2ec] shadow-sm' 
+                        : 'border-[#ded7cb] hover:border-[#1d4231] bg-[#f4efe6]'
                     }`}
                   >
-                    <div className="text-[10px] font-mono text-slate-400 font-semibold uppercase">Cycle</div>
-                    <div className="text-xl font-mono font-bold text-slate-100">Week {w}</div>
-                    <div className="text-[11px] text-slate-400 mt-1 font-mono">
+                    <div className="text-[10px] font-mono text-[#506457] font-semibold uppercase">Cycle</div>
+                    <div className="text-xl font-mono font-bold text-[#12271c]">Week {w}</div>
+                    <div className="text-[11px] text-[#506457] mt-1 font-mono">
                       {w === 1 && 'Baseline Scan'}
                       {w === 2 && 'Wear Observed'}
                       {w === 3 && 'Reports Sent'}
@@ -163,9 +162,9 @@ export default function DemoPage() {
                 ))}
               </div>
 
-              <div className="flex justify-between items-center text-xs text-slate-400 pt-2 border-t border-slate-800 font-mono">
-                <span>Selected: <strong className="text-cyan-400">Week {activeWeek}</strong></span>
-                <Link href={`/map?week=${activeWeek}`} className="text-cyan-400 hover:underline font-medium inline-flex items-center">
+              <div className="flex justify-between items-center text-xs text-[#506457] pt-2 border-t border-[#ded7cb] font-mono">
+                <span>Selected: <strong className="text-[#1d4231]">Week {activeWeek}</strong></span>
+                <Link href={`/map?week=${activeWeek}`} className="text-[#1d4231] hover:underline font-medium inline-flex items-center">
                   View full map for Week {activeWeek} <ArrowRight className="h-3.5 w-3.5 ml-1" />
                 </Link>
               </div>
@@ -173,18 +172,18 @@ export default function DemoPage() {
           </Card>
 
           {/* Data Management & Reset Controls */}
-          <Card className="bg-[#090d16] border border-slate-800 shadow-sm overflow-hidden">
-            <CardHeader className="bg-[#0f172a] border-b border-slate-800 pb-3">
+          <Card className="bg-[#faf8f4] border border-[#ded7cb] shadow-sm overflow-hidden">
+            <CardHeader className="bg-[#f4efe6] border-b border-[#ded7cb] pb-3">
               <div className="flex items-center space-x-2">
-                <Database className="h-5 w-5 text-cyan-400" />
-                <CardTitle className="text-base font-bold text-slate-100">Data Management & Reset Controls</CardTitle>
+                <Database className="h-5 w-5 text-[#1d4231]" />
+                <CardTitle className="text-base font-bold text-[#12271c]">Data Management & Reset Controls</CardTitle>
               </div>
-              <CardDescription className="text-xs text-slate-400">
+              <CardDescription className="text-xs text-[#506457]">
                 Manage presentation state, wipe test runs, or restore baseline corridors at any time.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-5 space-y-4 bg-[#090d16]">
-              <div className="text-xs space-y-1 bg-[#0f172a] p-3 rounded-lg border border-slate-800 text-slate-300 font-mono">
+            <CardContent className="p-5 space-y-4 bg-[#faf8f4]">
+              <div className="text-xs space-y-1 bg-[#f4efe6] p-3 rounded-lg border border-[#ded7cb] text-[#12271c] font-mono">
                 <div>* <strong>City:</strong> Jaipur, India</div>
                 <div>* <strong>Transit Network:</strong> 20 Urban Bus Corridors</div>
                 <div>* <strong>Historical Cycles:</strong> 4 Monitored Weeks</div>
@@ -194,7 +193,7 @@ export default function DemoPage() {
               <div className="space-y-2 pt-1">
                 {/* Button 1: Add 20 Demo Roads Data */}
                 <Button
-                  className="w-full bg-cyan-600 hover:bg-cyan-500 text-white flex items-center justify-center space-x-2 h-9 text-xs font-semibold shadow-xs"
+                  className="w-full bg-[#1d4231] hover:bg-[#153325] text-[#faf8f4] flex items-center justify-center space-x-2 h-9 text-xs font-semibold shadow-xs"
                   disabled={loading}
                   onClick={() => handleAction(api.seedRoadsData, 'Successfully loaded all 20 Jaipur corridors into the dashboard.')}
                 >
@@ -205,22 +204,22 @@ export default function DemoPage() {
                 {/* Button 2: Reset Only Video Ingested Data */}
                 <Button
                   variant="outline"
-                  className="w-full border-amber-800/80 bg-amber-950/20 text-amber-400 hover:bg-amber-900/40 flex items-center justify-center space-x-2 h-9 text-xs font-semibold"
+                  className="w-full border-[#f6d7ab] bg-[#fef4e5] text-[#8c5610] hover:bg-[#fae7c8] flex items-center justify-center space-x-2 h-9 text-xs font-semibold"
                   disabled={loading}
                   onClick={() => handleAction(api.clearIngestedData, 'Video ingested data cleared. Preserved all 20 baseline roads & metrics.')}
                 >
-                  <VideoOff className="h-4 w-4 text-amber-400" />
+                  <VideoOff className="h-4 w-4 text-[#8c5610]" />
                   <span>Reset Only Video Ingested Data</span>
                 </Button>
 
                 {/* Button 3: Complete Data Reset (Wipe All) */}
                 <Button
                   variant="outline"
-                  className="w-full border-rose-800/80 bg-rose-950/20 text-rose-400 hover:bg-rose-900/40 flex items-center justify-center space-x-2 h-9 text-xs font-semibold"
+                  className="w-full border-[#f0c0b8] bg-[#faecea] text-[#912d1e] hover:bg-[#f6d4d0] flex items-center justify-center space-x-2 h-9 text-xs font-semibold"
                   disabled={loading}
                   onClick={() => handleAction(api.clearAllData, 'Complete database wipe successful. All 20 roads and video runs cleared.')}
                 >
-                  <Trash2 className="h-4 w-4 text-rose-400" />
+                  <Trash2 className="h-4 w-4 text-[#912d1e]" />
                   <span>Complete Data Reset (Wipe All)</span>
                 </Button>
               </div>
@@ -231,27 +230,27 @@ export default function DemoPage() {
 
         {/* Presentation Scenarios */}
         <div>
-          <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-400 mb-3">
+          <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-[#506457] mb-3">
             Ideathon Presentation Scenarios
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {scenarios.map((sc) => (
-              <Card key={sc.id} className="bg-[#090d16] border border-slate-800 hover:border-slate-700 transition-colors">
+              <Card key={sc.id} className="bg-[#faf8f4] border border-[#ded7cb] hover:border-[#1d4231] transition-colors shadow-sm">
                 <CardContent className="p-5 flex flex-col justify-between h-full space-y-3">
                   <div>
                     <div className="flex justify-between items-start gap-2">
-                      <h4 className="font-semibold text-slate-100 text-sm">{sc.title}</h4>
-                      <Badge className={`${sc.badgeColor} shrink-0 text-[10px] font-mono`}>{sc.badge}</Badge>
+                      <h4 className="font-semibold text-[#12271c] text-sm">{sc.title}</h4>
+                      <Badge className={`${sc.badgeColor} shrink-0 text-[10px] font-mono border`}>{sc.badge}</Badge>
                     </div>
-                    <p className="text-xs text-slate-400 mt-1">{sc.desc}</p>
-                    <div className="font-mono text-xs text-cyan-300 bg-[#0f172a] border border-slate-800 p-2.5 rounded-lg mt-2">
+                    <p className="text-xs text-[#506457] mt-1">{sc.desc}</p>
+                    <div className="font-mono text-xs text-[#1d4231] bg-[#f4efe6] border border-[#ded7cb] p-2.5 rounded-lg mt-2">
                       {sc.pattern}
                     </div>
                   </div>
-                  <div className="flex justify-end pt-2 border-t border-slate-800 font-mono">
+                  <div className="flex justify-end pt-2 border-t border-[#ded7cb] font-mono">
                     <Link 
                       href={`/roads/${sc.roadId}`} 
-                      className="text-xs font-semibold text-cyan-400 hover:underline inline-flex items-center"
+                      className="text-xs font-semibold text-[#1d4231] hover:underline inline-flex items-center"
                     >
                       Open Road Inspection Panel <ArrowRight className="h-3.5 w-3.5 ml-1" />
                     </Link>
@@ -263,75 +262,75 @@ export default function DemoPage() {
         </div>
 
         {/* Interactive Simulation Triggers */}
-        <Card className="bg-[#090d16] border border-slate-800 shadow-sm overflow-hidden">
-          <CardHeader className="bg-[#0f172a] border-b border-slate-800 pb-3">
+        <Card className="bg-[#faf8f4] border border-[#ded7cb] shadow-sm overflow-hidden">
+          <CardHeader className="bg-[#f4efe6] border-b border-[#ded7cb] pb-3">
             <div className="flex items-center space-x-2">
-              <Sparkles className="h-5 w-5 text-amber-400" />
-              <CardTitle className="text-base font-bold text-slate-100">Interactive Simulation Triggers</CardTitle>
+              <Sparkles className="h-5 w-5 text-[#a86c18]" />
+              <CardTitle className="text-base font-bold text-[#12271c]">Interactive Simulation Triggers</CardTitle>
             </div>
-            <CardDescription className="text-xs text-slate-400">
+            <CardDescription className="text-xs text-[#506457]">
               Demonstrate near-real-time ingestion and the closed-loop municipal lifecycle on-demand.
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-5 bg-[#090d16]">
+          <CardContent className="p-5 bg-[#faf8f4]">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               
               <Button
                 variant="outline"
-                className="h-auto py-3 px-3 flex flex-col items-start text-left bg-[#0f172a] border-slate-800 hover:border-cyan-500/50"
+                className="h-auto py-3 px-3 flex flex-col items-start text-left bg-[#f4efe6] border-[#ded7cb] hover:border-[#1d4231]"
                 disabled={loading}
                 onClick={() => handleAction(api.simulateUpload, 'Simulated NVDR footage ingested and processed through YOLO pipeline.')}
               >
-                <div className="flex items-center space-x-2 font-semibold text-xs text-slate-200 mb-1">
-                  <Upload className="h-4 w-4 text-cyan-400" />
+                <div className="flex items-center space-x-2 font-semibold text-xs text-[#12271c] mb-1">
+                  <Upload className="h-4 w-4 text-[#1d4231]" />
                   <span>1. Ingest Bus Footage</span>
                 </div>
-                <div className="text-[11px] text-slate-400 font-normal">
+                <div className="text-[11px] text-[#506457] font-normal">
                   Simulate front camera sync at depot hub
                 </div>
               </Button>
 
               <Button
                 variant="outline"
-                className="h-auto py-3 px-3 flex flex-col items-start text-left bg-[#0f172a] border-slate-800 hover:border-purple-500/50"
+                className="h-auto py-3 px-3 flex flex-col items-start text-left bg-[#f4efe6] border-[#ded7cb] hover:border-[#1d4231]"
                 disabled={loading}
                 onClick={() => handleAction(() => api.simulateReport('TR-01'), 'Notice auto-sent to municipal department for Tonk Road.')}
               >
-                <div className="flex items-center space-x-2 font-semibold text-xs text-slate-200 mb-1">
-                  <FileText className="h-4 w-4 text-purple-400" />
+                <div className="flex items-center space-x-2 font-semibold text-xs text-[#12271c] mb-1">
+                  <FileText className="h-4 w-4 text-[#506457]" />
                   <span>2. Dispatch Auto-Notice</span>
                 </div>
-                <div className="text-[11px] text-slate-400 font-normal">
+                <div className="text-[11px] text-[#506457] font-normal">
                   Trigger threshold breach notification
                 </div>
               </Button>
 
               <Button
                 variant="outline"
-                className="h-auto py-3 px-3 flex flex-col items-start text-left bg-[#0f172a] border-slate-800 hover:border-emerald-500/50"
+                className="h-auto py-3 px-3 flex flex-col items-start text-left bg-[#f4efe6] border-[#ded7cb] hover:border-[#1d4231]"
                 disabled={loading}
                 onClick={() => handleAction(() => api.simulateRepair('TR-01', 4), 'Repair work logged for Tonk Road. Score upgraded.')}
               >
-                <div className="flex items-center space-x-2 font-semibold text-xs text-slate-200 mb-1">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+                <div className="flex items-center space-x-2 font-semibold text-xs text-[#12271c] mb-1">
+                  <CheckCircle2 className="h-4 w-4 text-[#207246]" />
                   <span>3. Claim Road Repair</span>
                 </div>
-                <div className="text-[11px] text-slate-400 font-normal">
+                <div className="text-[11px] text-[#506457] font-normal">
                   Simulate municipal crew patch work
                 </div>
               </Button>
 
               <Button
                 variant="outline"
-                className="h-auto py-3 px-3 flex flex-col items-start text-left bg-[#0f172a] border-slate-800 hover:border-teal-500/50"
+                className="h-auto py-3 px-3 flex flex-col items-start text-left bg-[#f4efe6] border-[#ded7cb] hover:border-[#1d4231]"
                 disabled={loading}
                 onClick={() => handleAction(() => api.triggerVerification('ISS-TR-01'), 'AI verification confirms road roughness reduced.')}
               >
-                <div className="flex items-center space-x-2 font-semibold text-xs text-slate-200 mb-1">
-                  <ShieldCheck className="h-4 w-4 text-teal-400" />
+                <div className="flex items-center space-x-2 font-semibold text-xs text-[#12271c] mb-1">
+                  <ShieldCheck className="h-4 w-4 text-[#1e5d3a]" />
                   <span>4. Verify Repair via AI</span>
                 </div>
-                <div className="text-[11px] text-slate-400 font-normal">
+                <div className="text-[11px] text-[#506457] font-normal">
                   Follow-up bus survey validation
                 </div>
               </Button>

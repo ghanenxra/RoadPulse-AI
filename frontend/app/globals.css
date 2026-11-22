@@ -4,33 +4,33 @@
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    --background: 42 22% 94%; /* #f5f2eb */
+    --foreground: 147 38% 11%; /* #12271c */
 
-    --card: 222 47% 9%;
-    --card-foreground: 210 40% 98%;
+    --card: 40 33% 98%; /* #faf8f4 */
+    --card-foreground: 147 38% 11%; /* #12271c */
 
-    --popover: 222 47% 9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 40 33% 98%;
+    --popover-foreground: 147 38% 11%;
 
-    --primary: 199 89% 48%;
-    --primary-foreground: 222 47% 6%;
+    --primary: 151 40% 19%; /* #1d4231 Forest Green */
+    --primary-foreground: 42 25% 96%; /* #f7f5ef */
 
-    --secondary: 217 33% 17%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 40 20% 90%; /* #ede7dc */
+    --secondary-foreground: 147 38% 11%;
 
-    --muted: 217 33% 14%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 40 18% 88%; /* #e5dfd4 */
+    --muted-foreground: 147 14% 36%; /* #506457 */
 
-    --accent: 217 33% 18%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 40 22% 88%;
+    --accent-foreground: 147 38% 11%;
 
-    --destructive: 347 87% 55%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 6 62% 38%; /* #9e3427 */
+    --destructive-foreground: 40 33% 98%;
 
-    --border: 217 33% 18%;
-    --input: 217 33% 18%;
-    --ring: 199 89% 48%;
+    --border: 40 18% 83%; /* #ded7cb */
+    --input: 40 18% 83%;
+    --ring: 151 40% 19%;
 
     --radius: 0.5rem;
   }
@@ -41,27 +41,27 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground antialiased selection:bg-sky-500 selection:text-slate-950;
+    @apply bg-background text-foreground antialiased selection:bg-[#1d4231] selection:text-[#f5f2eb];
   }
 }
 
-/* Custom Tactical Scrollbar */
+/* Custom Forest and Beige Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090d16;
+  background: #ede7dc;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #c5bcae;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #9d9282;
 }
 
 @keyframes pulse-ring {
@@ -79,21 +79,21 @@
   animation: pulse-ring 2.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
 }
 
-/* Leaflet dark tactical theme overrides */
+/* Leaflet Forest & Beige theme overrides */
 .leaflet-container {
-  background: #090d16 !important;
+  background: #ede7dc !important;
   font-family: inherit;
 }
 
 .leaflet-popup-content-wrapper {
-  background: #0f172a !important;
-  color: #f8fafc !important;
-  border: 1px solid #1e293b !important;
+  background: #faf8f4 !important;
+  color: #12271c !important;
+  border: 1px solid #ded7cb !important;
   border-radius: 8px !important;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5) !important;
+  box-shadow: 0 8px 20px rgba(18, 39, 28, 0.12) !important;
 }
 
 .leaflet-popup-tip {
-  background: #0f172a !important;
-  border: 1px solid #1e293b !important;
+  background: #faf8f4 !important;
+  border: 1px solid #ded7cb !important;
 }

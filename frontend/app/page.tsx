@@ -1,172 +1,146 @@
 "use client"
 
-import React, { useEffect, useState, useCallback } from 'react'
-import Link from 'next/link'
-import { Topbar } from '@/components/layout/Topbar'
-import { api } from '@/lib/api'
-import { OverviewMetrics, RoadSegment } from '@/types'
+import React, { useState, useEffect } from "react"
+import Link from "next/link"
+import { Topbar } from "@/components/layout/Topbar"
 import { 
-  ArrowDown, ArrowUp, Map as MapIcon, 
-  Route, ShieldAlert, Truck, UploadCloud, ChevronRight, Loader2,
-  AlertOctagon, CheckCircle2, Clock, Gauge, ShieldCheck, ArrowUpRight
-} from 'lucide-react'
-import { formatNumber, getGradeColor } from '@/lib/utils'
-import { useWeek } from '@/context/WeekContext'
+  AlertTriangle, CheckCircle2, TrendingUp, TrendingDown, Clock, Shield,
+  ArrowRight, Activity, MapPin, Bus, RefreshCw, FileText, ChevronRight
+} from "lucide-react"
+import { api } from "@/lib/api"
+import { OverviewMetrics, RoadSegment } from "@/types"
+import { useWeek } from "@/context/WeekContext"
 
-const CYCLE_TIMESTAMPS: Record<number, string> = {
-  1: "August 17, 2026",
-  2: "August 24, 2026",
-  3: "August 31, 2026",
-  4: "September 07, 2026",
-}
-
-export default function Dashboard() {
+export default function OverviewPage() {
   const { week } = useWeek()
   const [metrics, setMetrics] = useState<OverviewMetrics | null>(null)
   const [roads, setRoads] = useState<RoadSegment[]>([])
   const [loading, setLoading] = useState(true)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
-  const loadData = useCallback(async () => {
+  const fetchData = React.useCallback(async () => {
     try {
       setLoading(true)
-      setErrorMsg(null)
+      setError(null)
       const [metricsData, roadsData] = await Promise.all([
         api.getOverviewMetrics(week),
-        api.getRoads(week)
+        api.getRoads(week),
       ])
       setMetrics(metricsData)
-      setRoads(roadsData.slice(0, 5))
-    } catch (e: any) {
-      console.error('Failed to load command overview:', e)
-      setErrorMsg(e?.message || 'Failed to connect to backend service')
+      setRoads(roadsData)
+    } catch (err: any) {
+      console.error("Dashboard fetch error:", err)
+      setError(err.message || "Failed to load municipal telemetry")
     } finally {
       setLoading(false)
     }
   }, [week])
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    fetchData()
+  }, [fetchData])
 
-  const gradeDistribution = metrics?.grade_distribution || { A: 0, B: 0, C: 0, D: 0, E: 0 }
-  const totalGraded = Object.values(gradeDistribution).reduce((a, b) => a + b, 0) || 1
+  const topPriorityRoads = React.useMemo(() => {
+    return [...roads]
+      .sort((a, b) => (b.current_week?.risk_score ?? 0) - (a.current_week?.risk_score ?? 0))
+      .slice(0, 5)
+  }, [roads])
+
+  const gradeCounts = React.useMemo(() => {
+    const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 }
+    roads.forEach((r) => {
+      const g = (r.current_week?.grade || "C") as keyof typeof counts
+      if (counts[g] !== undefined) counts[g]++
+    })
+    return counts
+  }, [roads])
 
   return (
     <>
-      <Topbar title="Transit Infrastructure Command" />
+      <Topbar title="Transit Infrastructure Command Console" />
 
-      <div className="p-3 sm:p-6 space-y-5 max-w-7xl mx-auto">
-        {/* Command Context Bar */}
-        <div className="bg-[#0f172a] rounded-xl p-4 sm:p-5 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
-          <div>
+      <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        
+        {/* Error notification */}
+        {error && (
+          <div className="bg-[#faecea] border border-[#f0c0b8] p-4 rounded-xl flex items-center justify-between text-[#912d1e]">
             <div className="flex items-center space-x-2">
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-sky-500/10 text-sky-400 border border-sky-500/20 uppercase tracking-wider">
-                Audit Cycle {week} of 4
-              </span>
-              <span className="text-xs text-slate-400 font-mono">
-                {CYCLE_TIMESTAMPS[week]}
-              </span>
+              <AlertTriangle className="h-5 w-5 shrink-0" />
+              <span className="text-xs sm:text-sm font-medium">{error}</span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-100 mt-1">
-              Jaipur Urban Road Health Command
-            </h2>
-            <p className="text-xs text-slate-400 max-w-2xl mt-0.5">
-              Automated transit bus edge telemetry, pavement risk index calculations, and statutory SLA enforcement for civic authorities.
-            </p>
-          </div>
-
-          <div className="flex items-center space-x-2 shrink-0">
-            <Link
-              href="/map"
-              className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-950 bg-sky-400 hover:bg-sky-300 transition-colors shadow-xs"
+            <button
+              onClick={fetchData}
+              className="px-3 py-1 bg-[#1d4231] hover:bg-[#153325] text-[#faf8f4] text-xs font-semibold rounded-lg flex items-center space-x-1"
             >
-              <MapIcon className="h-3.5 w-3.5 mr-1.5" />
-              GIS Health Map
-            </Link>
-            <Link
-              href="/reports"
-              className="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-300 bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 transition-colors"
-            >
-              Audit Dossiers
-            </Link>
-          </div>
-        </div>
-
-        {errorMsg && (
-          <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs flex items-center justify-between">
-            <span>{errorMsg}</span>
-            <button onClick={loadData} className="underline text-rose-200 font-semibold hover:text-white">Retry</button>
+              <RefreshCw className="h-3 w-3 mr-1" /> Retry
+            </button>
           </div>
         )}
 
-        {/* Asymmetric Hero: One Thing Leads */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-          {/* Main Leading Metric (7 Cols) */}
-          <div className="lg:col-span-7 bg-[#0f172a] rounded-xl p-5 border border-slate-800 flex flex-col justify-between relative overflow-hidden">
-            <div className="flex items-start justify-between">
+        {/* SECTION 1: Asymmetric Command Hero */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          
+          {/* Primary Lead Metric: Composite Road Risk Index (7 Cols) */}
+          <div className="lg:col-span-7 bg-[#faf8f4] rounded-xl p-5 sm:p-6 border border-[#ded7cb] shadow-sm relative overflow-hidden flex flex-col justify-between">
+            <div className="flex justify-between items-start">
               <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 block mb-1">
-                  Primary Composite Index
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#506457] block mb-1">
+                  Primary Municipal Health Index · Week {week}
                 </span>
-                <h3 className="text-sm font-semibold text-slate-200">
-                  Municipal Network Risk Score
-                </h3>
+                <h2 className="text-base sm:text-lg font-bold text-[#12271c] tracking-tight">
+                  Jaipur Transit Network Composite Risk
+                </h2>
               </div>
-              <span className={`px-2.5 py-1 rounded text-xs font-mono font-bold uppercase tracking-wider border ${
-                (metrics?.avg_risk_score.current || 0) > 60
-                  ? 'bg-rose-500/10 text-rose-400 border-rose-500/30'
-                  : (metrics?.avg_risk_score.current || 0) > 40
-                  ? 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                  : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-              }`}>
-                Grade {(metrics?.avg_risk_score.current || 0) > 80 ? 'E' : (metrics?.avg_risk_score.current || 0) > 60 ? 'D' : (metrics?.avg_risk_score.current || 0) > 40 ? 'C' : (metrics?.avg_risk_score.current || 0) > 20 ? 'B' : 'A'}
+              <span className="bg-[#e8f2ec] text-[#18432d] border border-[#c0dcc9] font-mono text-[10px] uppercase font-bold px-2 py-0.5 rounded">
+                Formula Weighted
               </span>
             </div>
 
             <div className="my-6">
               <div className="flex items-baseline space-x-3">
-                <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-100 font-mono">
+                <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#1d4231] font-mono">
                   {loading ? '--' : (metrics?.avg_risk_score.current ?? 0).toFixed(1)}
                 </span>
-                <span className="text-xs font-mono text-slate-400">/ 100.0</span>
+                <span className="text-xs font-mono text-[#506457]">/ 100.0 Max Defect Index</span>
               </div>
               <div className="flex items-center space-x-2 mt-2">
                 {metrics?.avg_risk_score.change !== null && metrics?.avg_risk_score.change !== undefined && (
                   <span className={`inline-flex items-center text-xs font-mono font-semibold ${
-                    metrics.avg_risk_score.change > 0 ? 'text-rose-400' : 'text-emerald-400'
+                    metrics.avg_risk_score.change > 0 ? "text-[#912d1e]" : "text-[#207246]"
                   }`}>
                     {metrics.avg_risk_score.change > 0 ? (
-                      <ArrowUp className="h-3.5 w-3.5 mr-0.5" />
+                      <TrendingUp className="h-3.5 w-3.5 mr-1" />
                     ) : (
-                      <ArrowDown className="h-3.5 w-3.5 mr-0.5" />
+                      <TrendingDown className="h-3.5 w-3.5 mr-1" />
                     )}
-                    {Math.abs(metrics.avg_risk_score.change).toFixed(1)} pts vs Cycle {week > 1 ? week - 1 : 1}
+                    {metrics.avg_risk_score.change > 0 ? "+" : ""}
+                    {metrics.avg_risk_score.change.toFixed(1)} vs previous survey cycle
                   </span>
                 )}
-                <span className="text-slate-600 text-xs">•</span>
-                <span className="text-[11px] text-slate-400">
-                  Calculated from severity (40%), density (25%), trend (20%), rainfall (15%)
-                </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2.5 pt-4 border-t border-slate-800/80 text-xs">
-              <div>
-                <span className="text-[10px] text-slate-500 font-mono uppercase block">Surveyed Corridors</span>
-                <span className="font-mono font-bold text-slate-200 text-sm">
-                  {metrics?.roads_surveyed.current || 0} routes
+            {/* Formula Sub-Factor Weights Breakdown */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-4 border-t border-[#ded7cb]">
+              <div className="bg-[#f4efe6] p-2.5 rounded-lg border border-[#ded7cb]">
+                <span className="text-[10px] text-[#506457] font-mono uppercase block">Severity (40%)</span>
+                <span className="font-mono font-bold text-[#12271c] text-sm">
+                  {loading ? '--' : (roads.reduce((acc, r) => acc + (r.current_week?.severity_avg ?? 0), 0) / Math.max(roads.length, 1)).toFixed(1)}
                 </span>
               </div>
-              <div>
-                <span className="text-[10px] text-slate-500 font-mono uppercase block">Total Potholes</span>
-                <span className="font-mono font-bold text-slate-200 text-sm">
-                  {formatNumber(metrics?.total_potholes.current || 0)}
+              <div className="bg-[#f4efe6] p-2.5 rounded-lg border border-[#ded7cb]">
+                <span className="text-[10px] text-[#506457] font-mono uppercase block">Density (25%)</span>
+                <span className="font-mono font-bold text-[#12271c] text-sm">
+                  {loading ? '--' : (roads.reduce((acc, r) => acc + (r.current_week?.density ?? 0), 0) / Math.max(roads.length, 1)).toFixed(1)}/km
                 </span>
               </div>
-              <div>
-                <span className="text-[10px] text-slate-500 font-mono uppercase block">Survey Coverage</span>
-                <span className="font-mono font-bold text-sky-400 text-sm">
+              <div className="bg-[#f4efe6] p-2.5 rounded-lg border border-[#ded7cb]">
+                <span className="text-[10px] text-[#506457] font-mono uppercase block">Active Buses</span>
+                <span className="font-mono font-bold text-[#1d4231] text-sm">20 Units</span>
+              </div>
+              <div className="bg-[#f4efe6] p-2.5 rounded-lg border border-[#ded7cb]">
+                <span className="text-[10px] text-[#506457] font-mono uppercase block">Survey Coverage</span>
+                <span className="font-mono font-bold text-[#1d4231] text-sm">
                   {metrics?.survey_coverage?.current ?? 100}%
                 </span>
               </div>
@@ -174,237 +148,263 @@ export default function Dashboard() {
           </div>
 
           {/* Civic SLA & Intervention Status (5 Cols) */}
-          <div className="lg:col-span-5 bg-[#0f172a] rounded-xl p-5 border border-slate-800 flex flex-col justify-between">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
+          <div className="lg:col-span-5 bg-[#faf8f4] rounded-xl p-5 border border-[#ded7cb] shadow-sm flex flex-col justify-between">
+            <div className="flex items-center justify-between pb-3 border-b border-[#ded7cb]">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-[#506457]">
                 Civic Accountability Ledger
               </span>
-              <Link href="/authority" className="text-xs text-sky-400 hover:text-sky-300 font-medium inline-flex items-center">
-                Full Ledger <ArrowUpRight className="h-3 w-3 ml-0.5" />
-              </Link>
+              <span className="font-mono text-[10px] text-[#912d1e] bg-[#faecea] border border-[#f0c0b8] px-2 py-0.5 rounded font-semibold">
+                21-Day SLA Active
+              </span>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 my-4">
-              <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
-                <span className="text-[10px] text-slate-500 font-mono uppercase block">Open Repair Tickets</span>
-                <span className="text-2xl font-bold font-mono text-slate-100 mt-1 block">
-                  {metrics?.accountability_snapshot.reported ? (
-                    metrics.accountability_snapshot.reported + 
-                    metrics.accountability_snapshot.acknowledged + 
-                    metrics.accountability_snapshot.in_progress
-                  ) : 0}
+            <div className="my-4 space-y-3">
+              <div className="flex items-center justify-between p-3 rounded-lg bg-[#f4efe6] border border-[#ded7cb]">
+                <div className="flex items-center space-x-2.5">
+                  <Clock className="h-4 w-4 text-[#912d1e]" />
+                  <div>
+                    <div className="text-xs font-semibold text-[#12271c]">Overdue SLA Corridors</div>
+                    <div className="text-[10px] text-[#506457]">Breached 21-day legal repair window</div>
+                  </div>
+                </div>
+                <span className="text-lg font-mono font-black text-[#912d1e]">
+                  {metrics?.accountability_snapshot?.overdue ?? 1}
                 </span>
-                <span className="text-[10px] text-amber-400 font-medium">Statutory 21-Day SLA</span>
               </div>
 
-              <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
-                <span className="text-[10px] text-slate-500 font-mono uppercase block">Overdue Breaches</span>
-                <span className="text-2xl font-bold font-mono text-rose-400 mt-1 block">
-                  {metrics?.accountability_snapshot.overdue || 0}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-[#f4efe6] border border-[#ded7cb]">
+                <div className="flex items-center space-x-2.5">
+                  <Shield className="h-4 w-4 text-[#a86c18]" />
+                  <div>
+                    <div className="text-xs font-semibold text-[#12271c]">Pending Contractor Repairs</div>
+                    <div className="text-[10px] text-[#506457]">Dispatched to PWD / JDA / JMC</div>
+                  </div>
+                </div>
+                <span className="text-lg font-mono font-black text-[#a86c18]">
+                  {metrics?.pending_repairs.current ?? 4}
                 </span>
-                <span className="text-[10px] text-rose-400 font-medium">Escalated to PWD / JMC</span>
               </div>
 
-              <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
-                <span className="text-[10px] text-slate-500 font-mono uppercase block">Claimed Repaired</span>
-                <span className="text-2xl font-bold font-mono text-slate-200 mt-1 block">
-                  {metrics?.accountability_snapshot.claimed_repaired || 0}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-[#f4efe6] border border-[#ded7cb]">
+                <div className="flex items-center space-x-2.5">
+                  <CheckCircle2 className="h-4 w-4 text-[#207246]" />
+                  <div>
+                    <div className="text-xs font-semibold text-[#12271c]">AI Verified Restorations</div>
+                    <div className="text-[10px] text-[#506457]">Confirmed smooth via follow-up bus pass</div>
+                  </div>
+                </div>
+                <span className="text-lg font-mono font-black text-[#207246]">
+                  {metrics?.verified_repairs.current ?? 2}
                 </span>
-                <span className="text-[10px] text-slate-400 font-medium">Awaiting Bus Verification</span>
-              </div>
-
-              <div className="bg-slate-950/60 p-3 rounded-lg border border-slate-800/80">
-                <span className="text-[10px] text-slate-500 font-mono uppercase block">AI Verified Fixed</span>
-                <span className="text-2xl font-bold font-mono text-emerald-400 mt-1 block">
-                  {metrics?.accountability_snapshot.verified || 0}
-                </span>
-                <span className="text-[10px] text-emerald-400 font-medium">Confirmed by Transit Cycle</span>
               </div>
             </div>
 
-            <div className="pt-2 text-[11px] text-slate-500 flex items-center justify-between">
-              <span>Automated Municipal Dispatch</span>
-              <span className="text-slate-400 font-mono">PWD • JDA • JMC Greater • JMC Heritage</span>
+            <Link
+              href="/authority"
+              className="text-xs text-[#1d4231] hover:text-[#12271c] font-semibold flex items-center justify-between pt-2 border-t border-[#ded7cb] transition-colors"
+            >
+              <span>Inspect Authority SLA Tracker</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* SECTION 2: Secondary Telemetry Bento Grid (4 Cards) */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div className="bg-[#faf8f4] p-4 rounded-xl border border-[#ded7cb] shadow-sm">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-[#506457]">
+              Monitored Corridors
+            </div>
+            <div className="text-2xl sm:text-3xl font-mono font-extrabold text-[#12271c] mt-1">
+              {metrics?.roads_surveyed.current ?? 20}
+            </div>
+            <div className="text-[11px] text-[#207246] mt-1 font-mono">
+              100% active transit grid
+            </div>
+          </div>
+
+          <div className="bg-[#faf8f4] p-4 rounded-xl border border-[#ded7cb] shadow-sm">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-[#506457]">
+              Total Deduplicated Defects
+            </div>
+            <div className="text-2xl sm:text-3xl font-mono font-extrabold text-[#12271c] mt-1">
+              {metrics?.total_potholes.current ?? 0}
+            </div>
+            <div className="text-[11px] text-[#506457] mt-1 font-mono">
+              DBSCAN merged (epsilon = 15m)
+            </div>
+          </div>
+
+          <div className="bg-[#faf8f4] p-4 rounded-xl border border-[#ded7cb] shadow-sm">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-[#506457]">
+              Dangerous Corridors
+            </div>
+            <div className="text-2xl sm:text-3xl font-mono font-extrabold text-[#912d1e] mt-1">
+              {metrics?.dangerous_segments.current ?? 0}
+            </div>
+            <div className="text-[11px] text-[#912d1e] mt-1 font-mono">
+              Grade D and E escalation
+            </div>
+          </div>
+
+          <div className="bg-[#faf8f4] p-4 rounded-xl border border-[#ded7cb] shadow-sm">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-[#506457]">
+              NVDR Ingestion Cycles
+            </div>
+            <div className="text-2xl sm:text-3xl font-mono font-extrabold text-[#1d4231] mt-1">
+              {metrics?.uploads_processed.current ?? 12}
+            </div>
+            <div className="text-[11px] text-[#506457] mt-1 font-mono">
+              Auto depot batch sync
             </div>
           </div>
         </div>
 
-        {/* Secondary Bento Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-[#0f172a] rounded-xl p-4 border border-slate-800">
-            <span className="text-[10px] font-mono text-slate-500 uppercase block mb-1">Pothole Density</span>
-            <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-bold font-mono text-slate-100">
-                {((metrics?.total_potholes.current || 0) / Math.max(metrics?.roads_surveyed.current || 1, 1)).toFixed(1)}
-              </span>
-              <span className="text-xs font-mono text-slate-400">per corridor</span>
-            </div>
-            <p className="text-[11px] text-slate-400 mt-1.5">Average defect load across urban arterial routes</p>
-          </div>
-
-          <div className="bg-[#0f172a] rounded-xl p-4 border border-slate-800">
-            <span className="text-[10px] font-mono text-slate-500 uppercase block mb-1">Severe Distress Corridors</span>
-            <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-bold font-mono text-rose-400">
-                {metrics?.dangerous_segments.current || 0}
-              </span>
-              <span className="text-xs font-mono text-rose-400 font-semibold">Grade D or E</span>
-            </div>
-            <p className="text-[11px] text-slate-400 mt-1.5">Critical risk index requiring priority resurfacing</p>
-          </div>
-
-          <div className="bg-[#0f172a] rounded-xl p-4 border border-slate-800">
-            <span className="text-[10px] font-mono text-slate-500 uppercase block mb-1">Edge Ingestion Stream</span>
-            <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-bold font-mono text-sky-400">
-                {metrics?.processing_status.completed || 0}
-              </span>
-              <span className="text-xs font-mono text-slate-400">runs processed</span>
-            </div>
-            <p className="text-[11px] text-slate-400 mt-1.5">
-              {metrics?.processing_status.total_frames || 0} frames evaluated by YOLOv8
-            </p>
-          </div>
-
-          <div className="bg-[#0f172a] rounded-xl p-4 border border-slate-800">
-            <span className="text-[10px] font-mono text-slate-500 uppercase block mb-1">Verification Success Rate</span>
-            <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-bold font-mono text-emerald-400">
-                {metrics?.accountability_snapshot.verified && (metrics.accountability_snapshot.verified + (metrics.accountability_snapshot.failed_verification || 0)) > 0
-                  ? Math.round((metrics.accountability_snapshot.verified / (metrics.accountability_snapshot.verified + metrics.accountability_snapshot.failed_verification)) * 100)
-                  : 100}%
-              </span>
-              <span className="text-xs font-mono text-emerald-400">Audit Grade</span>
-            </div>
-            <p className="text-[11px] text-slate-400 mt-1.5">Re-inspected during subsequent bus runs</p>
-          </div>
-        </div>
-
-        {/* Detailed Lower Breakdown: Distribution & Critical Corridors */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-          {/* Grade Distribution Bar (5 Cols) */}
-          <div className="lg:col-span-5 bg-[#0f172a] rounded-xl p-5 border border-slate-800 flex flex-col justify-between">
+        {/* SECTION 3: Asymmetric Distribution & Priority Dispatch Queue */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          
+          {/* Grade Distribution Matrix (4 Cols) */}
+          <div className="lg:col-span-4 bg-[#faf8f4] rounded-xl p-5 border border-[#ded7cb] shadow-sm flex flex-col justify-between">
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 block mb-1">
-                Condition Classification
-              </span>
-              <h3 className="text-sm font-semibold text-slate-200">
-                Municipal Grade Distribution
-              </h3>
-            </div>
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-[#506457]">
+                  Condition Grade Spectrum
+                </span>
+                <span className="text-xs font-mono text-[#506457]">Total: {roads.length}</span>
+              </div>
+              <p className="text-xs text-[#506457] mb-4">
+                Five-tier classification standard aligned with IRC municipal carriageway ratings.
+              </p>
 
-            <div className="space-y-3 my-5">
-              {[
-                { grade: 'A', label: 'Good (<20.0)', count: gradeDistribution.A, color: 'bg-emerald-500' },
-                { grade: 'B', label: 'Fair (21-40)', count: gradeDistribution.B, color: 'bg-lime-500' },
-                { grade: 'C', label: 'Moderate (41-60)', count: gradeDistribution.C, color: 'bg-amber-500' },
-                { grade: 'D', label: 'Poor (61-80)', count: gradeDistribution.D, color: 'bg-orange-500' },
-                { grade: 'E', label: 'Critical (81+)', count: gradeDistribution.E, color: 'bg-rose-500' },
-              ].map((item) => {
-                const pct = Math.round((item.count / totalGraded) * 100)
-                return (
-                  <div key={item.grade} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-mono text-slate-300 flex items-center">
-                        <span className={`w-2 h-2 rounded-full ${item.color} mr-2`} />
-                        Grade {item.grade} · {item.label}
+              <div className="space-y-2.5">
+                {[
+                  { grade: "A", range: "0 - 20 (Pristine)", count: gradeCounts.A, color: "bg-[#207246]", bg: "bg-[#e6f4ea] text-[#1e5d3a] border-[#bde0ca]" },
+                  { grade: "B", range: "21 - 40 (Minor Wear)", count: gradeCounts.B, color: "bg-[#48995b]", bg: "bg-[#eef8eb] text-[#2f6f34] border-[#cbe8c6]" },
+                  { grade: "C", range: "41 - 60 (Moderate)", count: gradeCounts.C, color: "bg-[#c2822a]", bg: "bg-[#fef4e5] text-[#8c5610] border-[#f6d7ab]" },
+                  { grade: "D", range: "61 - 80 (High Risk)", count: gradeCounts.D, color: "bg-[#c05621]", bg: "bg-[#faece8] text-[#9b3a1a] border-[#f2c3b8]" },
+                  { grade: "E", range: "81 - 100 (Hazardous)", count: gradeCounts.E, color: "bg-[#912d1e]", bg: "bg-[#faecea] text-[#912d1e] border-[#f0c0b8]" },
+                ].map((item) => (
+                  <div key={item.grade} className="flex items-center justify-between text-xs font-mono">
+                    <div className="flex items-center space-x-2">
+                      <span className={`w-5 h-5 rounded flex items-center justify-center font-bold text-[10px] border ${item.bg}`}>
+                        {item.grade}
                       </span>
-                      <span className="font-mono font-bold text-slate-200">
-                        {item.count} <span className="text-slate-500 font-normal">({pct}%)</span>
-                      </span>
+                      <span className="text-[#506457] text-[11px]">{item.range}</span>
                     </div>
-                    <div className="w-full bg-slate-900 rounded-full h-1.5 overflow-hidden">
-                      <div className={`${item.color} h-1.5 rounded-full transition-all duration-300`} style={{ width: `${pct}%` }} />
+                    <div className="flex items-center space-x-2">
+                      <div className="w-16 h-1.5 bg-[#ede7dc] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${item.color}`}
+                          style={{ width: `${roads.length ? (item.count / roads.length) * 100 : 0}%` }}
+                        />
+                      </div>
+                      <span className="font-bold text-[#12271c] w-4 text-right">{item.count}</span>
                     </div>
                   </div>
-                )
-              })}
-            </div>
-
-            <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex justify-between">
-              <span>Standard Municipal Classification</span>
-              <span className="font-mono text-slate-400">Total: {totalGraded} segments</span>
-            </div>
-          </div>
-
-          {/* Highest Risk Corridors Table (7 Cols) */}
-          <div className="lg:col-span-7 bg-[#0f172a] rounded-xl p-5 border border-slate-800 flex flex-col justify-between">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-slate-400 block mb-0.5">
-                  Priority Dispatch Queue
-                </span>
-                <h3 className="text-sm font-semibold text-slate-200">
-                  Critical Corridors Requiring Repair
-                </h3>
+                ))}
               </div>
-              <Link href="/roads" className="text-xs text-sky-400 hover:text-sky-300 font-medium inline-flex items-center">
-                All Roads <ArrowUpRight className="h-3 w-3 ml-0.5" />
-              </Link>
             </div>
 
-            <div className="overflow-x-auto my-2">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="text-slate-500 font-mono text-[10px] uppercase border-b border-slate-800">
-                    <th className="py-2.5 px-2">Corridor</th>
-                    <th className="py-2.5 px-2">Authority</th>
-                    <th className="py-2.5 px-2 text-center">Grade</th>
-                    <th className="py-2.5 px-2 text-right">Risk Index</th>
-                    <th className="py-2.5 px-2 text-right">Potholes</th>
-                    <th className="py-2.5 px-2 text-right">Inspect</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800/60 font-mono">
-                  {roads.map((road) => (
-                    <tr key={road.segment_id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="py-2.5 px-2 font-medium text-slate-200">
-                        <div className="truncate max-w-[160px] sm:max-w-[220px]">
-                          {road.road_name}
-                        </div>
-                        <span className="text-[10px] text-slate-500 font-normal">{road.sub_name}</span>
-                      </td>
-                      <td className="py-2.5 px-2 text-slate-400 text-[11px] truncate max-w-[120px]">
-                        {road.authority_name}
-                      </td>
-                      <td className="py-2.5 px-2 text-center">
-                        <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold ${
-                          road.current_week?.grade === 'E' ? 'bg-rose-500/20 text-rose-400' :
-                          road.current_week?.grade === 'D' ? 'bg-orange-500/20 text-orange-400' :
-                          road.current_week?.grade === 'C' ? 'bg-amber-500/20 text-amber-400' :
-                          'bg-emerald-500/20 text-emerald-400'
-                        }`}>
-                          {road.current_week?.grade || 'N/A'}
-                        </span>
-                      </td>
-                      <td className="py-2.5 px-2 text-right font-bold text-slate-100">
-                        {road.current_week?.risk_score.toFixed(1) || '0.0'}
-                      </td>
-                      <td className="py-2.5 px-2 text-right text-slate-300">
-                        {road.current_week?.pothole_count || 0}
-                      </td>
-                      <td className="py-2.5 px-2 text-right">
-                        <Link 
-                          href={`/roads/${road.segment_id}`}
-                          className="text-sky-400 hover:text-sky-300 font-sans text-xs underline font-medium"
-                        >
-                          View
-                        </Link>
-                      </td>
+            <div className="pt-4 mt-4 border-t border-[#ded7cb] text-[11px] text-[#506457] flex justify-between items-center">
+              <span>Severe Corridors (D + E):</span>
+              <span className="font-mono font-bold text-[#912d1e]">
+                {gradeCounts.D + gradeCounts.E} Segments
+              </span>
+            </div>
+          </div>
+
+          {/* Priority Corridor Dispatch Queue (8 Cols) */}
+          <div className="lg:col-span-8 bg-[#faf8f4] rounded-xl p-5 border border-[#ded7cb] shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex justify-between items-center pb-3 border-b border-[#ded7cb]">
+                <div>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-[#506457] block mb-0.5">
+                    Critical Repair Dispatch Queue
+                  </span>
+                  <h3 className="text-sm font-semibold text-[#12271c]">
+                    Top Priority Transit Corridors Requiring Remediation
+                  </h3>
+                </div>
+                <Link
+                  href="/roads"
+                  className="text-xs font-mono font-semibold text-[#1d4231] hover:underline inline-flex items-center"
+                >
+                  View All Corridors <ChevronRight className="h-3 w-3 ml-0.5" />
+                </Link>
+              </div>
+
+              <div className="overflow-x-auto mt-2">
+                <table className="w-full text-left text-xs font-mono">
+                  <thead>
+                    <tr className="text-[10px] text-[#506457] uppercase tracking-wider border-b border-[#ded7cb]">
+                      <th className="py-2.5 px-2">Corridor ID</th>
+                      <th className="py-2.5 px-2">Road Name & Stretch</th>
+                      <th className="py-2.5 px-2">Jurisdiction</th>
+                      <th className="py-2.5 px-2 text-center">Grade</th>
+                      <th className="py-2.5 px-2 text-right">Risk Score</th>
+                      <th className="py-2.5 px-2 text-right">Potholes</th>
+                      <th className="py-2.5 px-2 text-right">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#ede7dc]">
+                    {topPriorityRoads.map((road) => (
+                      <tr key={road.segment_id} className="hover:bg-[#f4efe6] transition-colors">
+                        <td className="py-2.5 px-2 font-bold text-[#1d4231]">
+                          {road.segment_id}
+                        </td>
+                        <td className="py-2.5 px-2 font-sans font-medium text-[#12271c]">
+                          {road.road_name}{" "}
+                          <span className="text-[11px] text-[#506457] font-normal block sm:inline">
+                            ({road.sub_name})
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-2 text-[#506457] text-[11px] font-sans">
+                          {road.authority_name}
+                        </td>
+                        <td className="py-2.5 px-2 text-center">
+                          <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-bold border ${
+                            road.current_week?.grade === 'E' ? 'bg-[#faecea] text-[#912d1e] border-[#f0c0b8]' :
+                            road.current_week?.grade === 'D' ? 'bg-[#faece8] text-[#9b3a1a] border-[#f2c3b8]' :
+                            road.current_week?.grade === 'C' ? 'bg-[#fef4e5] text-[#8c5610] border-[#f6d7ab]' :
+                            'bg-[#e6f4ea] text-[#1e5d3a] border-[#bde0ca]'
+                          }`}>
+                            {road.current_week?.grade || 'N/A'}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-2 text-right font-bold text-[#12271c]">
+                          {road.current_week?.risk_score.toFixed(1) || '0.0'}
+                        </td>
+                        <td className="py-2.5 px-2 text-right text-[#506457]">
+                          {road.current_week?.pothole_count || 0}
+                        </td>
+                        <td className="py-2.5 px-2 text-right">
+                          <Link
+                            href={`/roads/${road.segment_id}`}
+                            className="text-[#1d4231] hover:text-[#12271c] font-semibold text-[11px] underline"
+                          >
+                            Inspect
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-500 flex justify-between items-center">
-              <span>Ranked by severity, defect frequency, and degradation trend</span>
-              <Link href="/authority" className="text-xs text-sky-400 hover:text-sky-300 font-medium">
-                Issue Tickets →
+            <div className="pt-3 border-t border-[#ded7cb] flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 text-xs text-[#506457]">
+              <span>Real-time dashcam telemetry synced daily via JCTSL depot charging hubs.</span>
+              <Link
+                href="/map"
+                className="px-3 py-1.5 bg-[#1d4231] hover:bg-[#153325] text-[#faf8f4] font-semibold rounded-lg flex items-center shadow-xs transition-colors"
+              >
+                <MapPin className="h-3.5 w-3.5 mr-1" /> Open Live GIS Map
               </Link>
             </div>
           </div>
+
         </div>
+
       </div>
     </>
   )
