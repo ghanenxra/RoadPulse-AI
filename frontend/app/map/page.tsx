@@ -19,7 +19,7 @@ const MapComponent = dynamic(
     loading: () => (
       <div className="w-full h-full flex flex-col items-center justify-center bg-[#ede7dc] text-[#506457] font-mono text-xs">
         <div className="w-8 h-8 rounded-full border-2 border-[#1d4231] border-t-transparent animate-spin mb-3" />
-        <span>Initializing CartoDB Voyager GIS Canvas...</span>
+        <span>Initializing OpenStreetMap GIS Canvas...</span>
       </div>
     ) 
   }

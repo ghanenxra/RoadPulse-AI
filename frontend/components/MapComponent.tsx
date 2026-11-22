@@ -49,11 +49,10 @@ export default function MapComponent({
         touchZoom: interactive,
       })
 
-      // CartoDB Voyager tile layer for organic forest & warm beige cartography
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      // OpenStreetMap standard tile layer - 100% free, no API key or watermark
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
-        subdomains: 'abcd',
       }).addTo(map)
 
       const roadLayerGroup = L.featureGroup().addTo(map)

@@ -221,8 +221,8 @@ export default function SettingsPage() {
                       <SelectValue placeholder="Select Tile Provider" />
                     </SelectTrigger>
                     <SelectContent className="bg-[#faf8f4] border-[#ded7cb] text-[#12271c] text-xs">
-                      <SelectItem value="voyager">CartoDB Voyager (Forest Green & Warm Beige Organic)</SelectItem>
-                      <SelectItem value="osm">OpenStreetMap Standard Cartography</SelectItem>
+                      <SelectItem value="osm">OpenStreetMap Standard Cartography (No API Key Required)</SelectItem>
+                      <SelectItem value="esri">ESRI World Topographic (Clean Vector Cartography)</SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-[11px] text-[#506457] mt-1 font-mono">
