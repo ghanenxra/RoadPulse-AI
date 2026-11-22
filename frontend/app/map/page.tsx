@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { 
   Search, RotateCcw, Loader2, Filter, X, Play, Pause, Compass, Radio, Bus, ChevronDown, ChevronUp 
 } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useWeek } from '@/context/WeekContext'
 
 function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -30,9 +31,9 @@ function getCompassDirection(heading: number): string {
 const MapComponent = dynamic(() => import('@/components/MapComponent'), { 
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center h-full text-slate-500 bg-slate-100">
-      <Loader2 className="h-6 w-6 animate-spin mr-2 text-blue-600" />
-      Loading geospatial road network...
+    <div className="flex items-center justify-center h-full text-slate-400 bg-[#090d16]">
+      <Loader2 className="h-6 w-6 animate-spin mr-2 text-sky-400" />
+      <span className="font-mono text-xs">Loading GIS road network...</span>
     </div>
   )
 })
@@ -137,7 +138,7 @@ export default function MapPage() {
       const currentPos = coords[nextIdx]
       const heading = calculateBearing(prevPos[0], prevPos[1], currentPos[0], currentPos[1])
 
-      // Realistic urban bus speed: 25-34 km/h with slight slowdown near terminal turns
+      // Urban transit speed: 25-34 km/h with slowdown near turns
       const isNearTurn = nextIdx === 0 || nextIdx === coords.length - 1
       const baseSpeed = isNearTurn ? 20.0 : 28.5
       const speedJitter = (Math.sin(nextIdx * 0.6) * 3.5) + ((Math.random() - 0.5) * 1.5)
@@ -199,25 +200,25 @@ export default function MapPage() {
   }, [allFeatures, selectedGrades, selectedAuthority, searchTerm, worseningOnly])
 
   const filterContent = (
-    <div className="flex flex-col h-full overflow-y-auto p-4 space-y-5">
-      <div className="flex items-center justify-between pb-3 border-b">
+    <div className="flex flex-col h-full overflow-y-auto p-4 space-y-5 bg-[#0b101b] text-slate-200">
+      <div className="flex items-center justify-between pb-3 border-b border-slate-800">
         <div>
-          <h2 className="font-bold text-slate-900 text-sm">Geospatial Filters</h2>
-          <p className="text-xs text-slate-500">Survey Cycle: Week {week}</p>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-slate-500 block">GIS Controls</span>
+          <h2 className="font-bold text-slate-100 text-sm">Geospatial Filters</h2>
         </div>
-        <Button variant="ghost" size="sm" onClick={resetFilters} className="text-xs h-7 text-blue-600 px-2">
+        <Button variant="ghost" size="sm" onClick={resetFilters} className="text-xs h-7 text-sky-400 hover:text-sky-300 hover:bg-slate-800 px-2 font-mono">
           <RotateCcw className="h-3 w-3 mr-1" /> Reset
         </Button>
       </div>
 
       {/* Search Input */}
       <div>
-        <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Search Corridor</label>
+        <label className="text-[11px] font-semibold text-slate-300 mb-1.5 block">Search Corridor</label>
         <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-gray-400" />
+          <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-500" />
           <Input 
-            placeholder="e.g. Tonk Road, TR-01..." 
-            className="pl-8 text-xs h-8"
+            placeholder="Tonk Road, TR-01..." 
+            className="pl-8 text-xs h-8 bg-slate-900 border-slate-800 text-slate-100 font-mono"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -226,91 +227,92 @@ export default function MapPage() {
 
       {/* Grade Filters */}
       <div>
-        <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Condition Grade (A–E)</label>
-        <div className="grid grid-cols-2 gap-1.5 text-xs">
+        <label className="text-[11px] font-semibold text-slate-300 mb-1.5 block">Condition Grade (A to E)</label>
+        <div className="grid grid-cols-1 gap-1.5 text-xs font-mono">
           {[
-            { grade: 'A', label: 'Grade A (<20)', color: 'bg-emerald-500' },
-            { grade: 'B', label: 'Grade B (21-40)', color: 'bg-lime-500' },
-            { grade: 'C', label: 'Grade C (41-60)', color: 'bg-amber-500' },
-            { grade: 'D', label: 'Grade D (61-80)', color: 'bg-orange-500' },
-            { grade: 'E', label: 'Grade E (81+)', color: 'bg-rose-500' },
+            { grade: 'A', label: 'Grade A (<20.0) Good', color: 'bg-emerald-500' },
+            { grade: 'B', label: 'Grade B (21-40) Fair', color: 'bg-lime-500' },
+            { grade: 'C', label: 'Grade C (41-60) Moderate', color: 'bg-amber-500' },
+            { grade: 'D', label: 'Grade D (61-80) Poor', color: 'bg-orange-500' },
+            { grade: 'E', label: 'Grade E (81+) Critical', color: 'bg-rose-500' },
           ].map(item => (
-            <label key={item.grade} className="flex items-center space-x-2 p-1.5 rounded hover:bg-slate-50 cursor-pointer">
+            <label key={item.grade} className="flex items-center space-x-2.5 p-1.5 rounded-lg hover:bg-slate-900/60 cursor-pointer border border-transparent hover:border-slate-800">
               <input 
                 type="checkbox" 
                 checked={selectedGrades[item.grade]} 
                 onChange={() => toggleGrade(item.grade)}
-                className="rounded border-gray-300 text-blue-600"
+                className="rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-0 focus:ring-offset-0"
               />
-              <span className={`w-2.5 h-2.5 rounded-full ${item.color}`}></span>
-              <span className="text-[11px] font-medium text-slate-700">{item.label}</span>
+              <span className={`w-2 h-2 rounded-full ${item.color}`}></span>
+              <span className="text-[11px] text-slate-300 font-medium">{item.label}</span>
             </label>
           ))}
         </div>
       </div>
 
-      {/* Authority Filter */}
+      {/* Authority Filter via Radix Select */}
       <div>
-        <label className="text-xs font-semibold text-slate-700 mb-1.5 block">Responsible Authority</label>
-        <select 
-          className="w-full text-xs h-8 rounded-md border border-input bg-background px-2 py-1"
-          value={selectedAuthority}
-          onChange={(e) => setSelectedAuthority(e.target.value)}
-        >
-          <option value="all">All Authorities</option>
-          <option value="JMC Greater">JMC Greater</option>
-          <option value="JMC Heritage">JMC Heritage</option>
-          <option value="PWD">PWD Rajasthan</option>
-          <option value="JDA">Jaipur Development Authority</option>
-        </select>
+        <label className="text-[11px] font-semibold text-slate-300 mb-1.5 block">Responsible Authority</label>
+        <Select value={selectedAuthority} onValueChange={(val) => setSelectedAuthority(val)}>
+          <SelectTrigger className="w-full text-xs h-8 bg-slate-900 border-slate-800 text-slate-200 font-mono">
+            <SelectValue placeholder="All Authorities" />
+          </SelectTrigger>
+          <SelectContent className="bg-slate-900 border-slate-800 text-slate-200 font-mono text-xs">
+            <SelectItem value="all">All Authorities</SelectItem>
+            <SelectItem value="JMC Greater">JMC Greater</SelectItem>
+            <SelectItem value="JMC Heritage">JMC Heritage</SelectItem>
+            <SelectItem value="PWD">PWD Rajasthan</SelectItem>
+            <SelectItem value="JDA">Jaipur Development Authority</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Worsening Toggle */}
       <div>
-        <label className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer">
+        <label className="flex items-center space-x-2.5 text-xs text-slate-300 cursor-pointer p-1.5 rounded hover:bg-slate-900/60">
           <input 
             type="checkbox" 
             checked={worseningOnly}
             onChange={(e) => setWorseningOnly(e.target.checked)}
-            className="rounded border-gray-300 text-blue-600"
+            className="rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-0 focus:ring-offset-0"
           />
-          <span className="font-medium">Show only deteriorating roads</span>
+          <span className="font-medium text-[11px]">Deteriorating corridors only</span>
         </label>
       </div>
 
       {/* Result Count Summary */}
-      <div className="pt-2 border-t text-xs text-slate-500 flex justify-between items-center">
-        <span>Showing:</span>
-        <span className="font-semibold text-slate-900">{filteredFeatures.length} of {allFeatures.length} segments</span>
+      <div className="pt-3 border-t border-slate-800 text-xs text-slate-400 font-mono flex justify-between items-center">
+        <span>Active Display:</span>
+        <span className="font-semibold text-slate-100">{filteredFeatures.length} of {allFeatures.length}</span>
       </div>
 
       {showMobileFilters && (
         <Button 
-          className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-xs h-9 text-white"
+          className="w-full mt-4 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs h-8"
           onClick={() => setShowMobileFilters(false)}
         >
-          Apply &amp; View Map
+          Apply Filters
         </Button>
       )}
     </div>
   )
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      <Topbar title="Road Health Map" />
+    <div className="flex flex-col h-full overflow-hidden bg-[#090d16]">
+      <Topbar title="GIS Road Health Map" />
       
       <div className="flex-1 flex overflow-hidden relative">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:flex w-72 lg:w-80 shrink-0 border-r bg-white flex-col z-10">
+        <aside className="hidden md:flex w-72 lg:w-80 shrink-0 border-r border-slate-800 bg-[#0b101b] flex-col z-10">
           {filterContent}
         </aside>
 
         {/* Mobile Filter Toggle Button */}
         <button
           onClick={() => setShowMobileFilters(true)}
-          className="md:hidden absolute top-3 left-3 z-[1000] bg-white text-slate-800 shadow-md border border-slate-200 rounded-lg px-3 py-1.5 text-xs font-semibold flex items-center space-x-1.5 hover:bg-slate-50"
+          className="md:hidden absolute top-3 left-3 z-[1000] bg-slate-900 text-slate-200 shadow-xl border border-slate-800 rounded-lg px-3 py-1.5 text-xs font-semibold flex items-center space-x-1.5 hover:bg-slate-800"
         >
-          <Filter className="h-3.5 w-3.5 text-blue-600" />
+          <Filter className="h-3.5 w-3.5 text-sky-400" />
           <span>Filters ({filteredFeatures.length})</span>
         </button>
 
@@ -318,15 +320,15 @@ export default function MapPage() {
         {showMobileFilters && (
           <div className="md:hidden fixed inset-0 z-[2000] flex">
             <div 
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs"
+              className="fixed inset-0 bg-slate-950/80 backdrop-blur-xs"
               onClick={() => setShowMobileFilters(false)}
             />
-            <div className="relative w-full max-w-xs bg-white h-full shadow-2xl z-10 flex flex-col animate-in slide-in-from-left duration-200">
-              <div className="flex items-center justify-between p-3 border-b bg-slate-50">
-                <span className="font-bold text-sm text-slate-800">Map Filters</span>
+            <div className="relative w-full max-w-xs bg-[#0b101b] border-r border-slate-800 h-full shadow-2xl z-10 flex flex-col">
+              <div className="flex items-center justify-between p-3 border-b border-slate-800 bg-slate-950">
+                <span className="font-bold text-xs text-slate-100 uppercase tracking-wider">Map Filters</span>
                 <button 
                   onClick={() => setShowMobileFilters(false)}
-                  className="p-1 rounded-md text-slate-500 hover:text-slate-800"
+                  className="p-1 rounded-md text-slate-400 hover:text-white"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -339,11 +341,11 @@ export default function MapPage() {
         )}
 
         {/* Map Container */}
-        <div className="flex-1 bg-slate-100 relative h-full">
+        <div className="flex-1 bg-[#090d16] relative h-full">
           {loading ? (
-            <div className="flex items-center justify-center h-full text-slate-500 bg-slate-100">
-              <Loader2 className="h-6 w-6 animate-spin mr-2 text-blue-600" />
-              Loading map data for Week {week}...
+            <div className="flex items-center justify-center h-full text-slate-400 bg-[#090d16]">
+              <Loader2 className="h-6 w-6 animate-spin mr-2 text-sky-400" />
+              <span className="font-mono text-xs">Loading GIS network for Cycle {week}...</span>
             </div>
           ) : (
             <MapComponent 
@@ -355,17 +357,17 @@ export default function MapPage() {
 
           {/* Live Vehicle Telemetry HUD - Expanded */}
           {vehicle && !isTelemetryCollapsed && (
-            <div className="absolute top-3 right-3 bg-slate-900/95 backdrop-blur-md text-white p-3.5 rounded-xl shadow-2xl border border-slate-700 z-[1000] text-xs w-72 sm:w-80 pointer-events-auto transition-all duration-200">
-              <div className="flex items-center justify-between pb-2.5 border-b border-slate-700/80 mb-2.5">
+            <div className="absolute top-3 right-3 bg-slate-900/95 backdrop-blur-md text-white p-3.5 rounded-xl shadow-2xl border border-slate-800 z-[1000] text-xs w-72 sm:w-80 pointer-events-auto transition-all duration-200 font-mono">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-800 mb-2.5">
                 <div className="flex items-center space-x-2">
-                  <span className="relative flex h-2.5 w-2.5">
+                  <span className="relative flex h-2 w-2">
                     {isSimulating && (
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                     )}
-                    <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isSimulating ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                    <span className={`relative inline-flex rounded-full h-2 w-2 ${isSimulating ? 'bg-sky-400' : 'bg-amber-400'}`}></span>
                   </span>
                   <span className="font-bold text-slate-100 text-xs tracking-wider">{vehicle.vehicle_id}</span>
-                  <span className="text-[10px] bg-emerald-950/80 text-emerald-400 font-semibold px-2 py-0.5 rounded border border-emerald-700/50 flex items-center space-x-1">
+                  <span className="text-[9px] bg-sky-950/80 text-sky-400 font-semibold px-1.5 py-0.5 rounded border border-sky-800/60 flex items-center space-x-1">
                     <Radio className="h-2.5 w-2.5 animate-pulse" />
                     <span>5s GPS</span>
                   </span>
@@ -374,21 +376,21 @@ export default function MapPage() {
                   <button
                     onClick={() => setIsSimulating(!isSimulating)}
                     title={isSimulating ? "Pause Simulation" : "Resume Simulation"}
-                    className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                    className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
                   >
-                    {isSimulating ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                    {isSimulating ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
                   </button>
                   <button
                     onClick={resetSimulation}
                     title="Reset to Corridor Start"
-                    className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                    className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
                   >
-                    <RotateCcw className="h-3.5 w-3.5" />
+                    <RotateCcw className="h-3 w-3" />
                   </button>
                   <button
                     onClick={() => setIsTelemetryCollapsed(true)}
-                    title="Collapse and move to bottom"
-                    className="p-1.5 rounded-md hover:bg-slate-800 text-slate-300 hover:text-white transition-colors"
+                    title="Collapse Telemetry HUD"
+                    className="p-1.5 rounded-md hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
                     aria-label="Collapse Telemetry HUD"
                   >
                     <ChevronDown className="h-3.5 w-3.5" />
@@ -398,50 +400,51 @@ export default function MapPage() {
 
               {/* Corridor Selector */}
               <div className="mb-2.5">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Transit Corridor</span>
-                  <span className="text-[10px] text-sky-400 font-medium">
-                    {directionRef.current === 1 ? 'Forward / Outbound' : 'Return / Turnaround'}
+                <div className="flex justify-between items-center mb-1 text-[10px]">
+                  <span className="uppercase tracking-wider text-slate-400">Transit Corridor</span>
+                  <span className="text-sky-400">
+                    {directionRef.current === 1 ? 'Outbound' : 'Return'}
                   </span>
                 </div>
-                <select
-                  value={activeRouteId}
-                  onChange={(e) => setActiveRouteId(e.target.value)}
-                  className="w-full bg-slate-800/90 text-slate-100 text-xs rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-blue-500 cursor-pointer font-medium"
-                >
-                  {allFeatures.map(f => (
-                    <option key={f.properties.segment_id} value={f.properties.segment_id} className="bg-slate-900 text-slate-100">
-                      {f.properties.segment_id} • {f.properties.road_name}
-                    </option>
-                  ))}
-                </select>
+                <Select value={activeRouteId} onValueChange={(val) => setActiveRouteId(val)}>
+                  <SelectTrigger className="w-full bg-slate-950 border-slate-800 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 font-mono h-8">
+                    <SelectValue placeholder="Select route" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-950 border-slate-800 text-slate-200 font-mono text-xs max-h-56">
+                    {allFeatures.map(f => (
+                      <SelectItem key={f.properties.segment_id} value={f.properties.segment_id}>
+                        {f.properties.segment_id} · {f.properties.road_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="space-y-1.5 text-[11px] bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/80">
+              <div className="space-y-1.5 text-[11px] bg-slate-950/80 p-2.5 rounded-lg border border-slate-800/80">
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400">Live GPS:</span>
-                  <span className="font-mono text-sky-300 font-semibold tracking-tight">
+                  <span className="text-sky-300 font-semibold tracking-tight">
                     {vehicle.latitude.toFixed(6)}° N, {vehicle.longitude.toFixed(6)}° E
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400">Velocity:</span>
-                  <span className="font-mono font-bold text-emerald-400">{vehicle.speed.toFixed(1)} km/h</span>
+                  <span className="font-bold text-emerald-400">{vehicle.speed.toFixed(1)} km/h</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400">Heading:</span>
-                  <span className="font-mono text-slate-200 flex items-center">
+                  <span className="text-slate-200 flex items-center">
                     <Compass className="h-3 w-3 mr-1 text-sky-400" />
                     {Math.round(vehicle.heading)}° {getCompassDirection(vehicle.heading)}
                   </span>
                 </div>
-                <div className="flex justify-between items-center pt-1 border-t border-slate-800/80 text-[10px]">
-                  <span className="text-slate-400">GPS Interval:</span>
-                  <span className="text-slate-300 font-medium">Every 5.0 seconds</span>
+                <div className="flex justify-between items-center pt-1 border-t border-slate-800 text-[10px]">
+                  <span className="text-slate-500">Sampling Rate:</span>
+                  <span className="text-slate-300">Every 5.0s</span>
                 </div>
                 <div className="flex justify-between items-center text-[10px]">
-                  <span className="text-slate-400">Trajectory Path:</span>
-                  <span className="text-sky-400 font-semibold">{travelledPath.length} waypoints logged</span>
+                  <span className="text-slate-500">Waypoints Logged:</span>
+                  <span className="text-sky-400 font-semibold">{travelledPath.length}</span>
                 </div>
               </div>
             </div>
@@ -452,58 +455,55 @@ export default function MapPage() {
             <button
               onClick={() => setIsTelemetryCollapsed(false)}
               title="Expand Live Vehicle Telemetry (BUS-001)"
-              className="absolute bottom-4 left-4 z-[1000] bg-slate-900/95 hover:bg-slate-800 text-white px-3 py-2 rounded-xl shadow-2xl border border-slate-700/80 flex items-center space-x-2.5 transition-all duration-200 hover:scale-105 group pointer-events-auto"
+              className="absolute bottom-4 left-4 z-[1000] bg-slate-900/95 hover:bg-slate-800 text-white px-3 py-2 rounded-xl shadow-2xl border border-slate-800 flex items-center space-x-2.5 transition-all duration-150 font-mono"
             >
               <span className="relative flex h-2 w-2">
                 {isSimulating && (
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
                 )}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${isSimulating ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${isSimulating ? 'bg-sky-400' : 'bg-amber-400'}`}></span>
               </span>
-              <div className="p-1.5 rounded-lg bg-blue-600/20 text-sky-400 group-hover:bg-blue-600/30 group-hover:text-sky-300 transition-colors">
-                <Bus className="h-4 w-4" />
+              <div className="p-1 rounded bg-sky-500/10 text-sky-400">
+                <Bus className="h-3.5 w-3.5" />
               </div>
               <div className="flex flex-col text-left">
                 <div className="flex items-center space-x-1.5">
                   <span className="font-bold text-xs text-slate-100">{vehicle.vehicle_id}</span>
-                  <span className="text-[10px] font-mono text-emerald-400 font-semibold">{vehicle.speed.toFixed(1)} km/h</span>
+                  <span className="text-[10px] text-emerald-400 font-semibold">{vehicle.speed.toFixed(1)} km/h</span>
                 </div>
                 <span className="text-[10px] text-slate-400 max-w-[130px] truncate hidden sm:inline">{vehicle.road_name || activeRouteId}</span>
               </div>
-              <ChevronUp className="h-4 w-4 text-slate-400 group-hover:text-white ml-0.5 transition-transform group-hover:-translate-y-0.5" />
+              <ChevronUp className="h-3.5 w-3.5 text-slate-400 ml-0.5" />
             </button>
           )}
           
-          {/* Map Legend */}
-          <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-xs p-2.5 sm:p-3.5 rounded-lg shadow-lg border border-slate-200 z-[1000] text-xs max-w-[210px] sm:max-w-xs pointer-events-auto">
-            <div className="font-bold text-slate-900 mb-1.5 flex items-center justify-between">
-              <span className="text-xs">Condition Grade</span>
-              <span className="text-[10px] text-blue-600 font-semibold">Week {week}</span>
+          {/* Tactical Map Legend */}
+          <div className="absolute bottom-4 right-4 bg-slate-900/95 backdrop-blur-md p-2.5 sm:p-3 rounded-lg shadow-xl border border-slate-800 z-[1000] text-xs max-w-[210px] sm:max-w-xs pointer-events-auto font-mono">
+            <div className="font-bold text-slate-200 mb-1.5 flex items-center justify-between text-[11px] uppercase tracking-wider">
+              <span>Condition Legend</span>
+              <span className="text-[10px] text-slate-500">Risk Scale</span>
             </div>
             <div className="space-y-1 text-[11px]">
               <div className="flex items-center justify-between">
-                <span className="flex items-center"><span className="w-3 h-3 bg-emerald-500 rounded mr-1.5"></span>A (Good)</span>
-                <span className="text-gray-400 font-mono text-[10px]">0–20</span>
+                <span className="flex items-center"><span className="w-2.5 h-1.5 rounded-full bg-emerald-500 mr-2" />Grade A</span>
+                <span className="text-slate-400 text-[10px]">&lt; 20.0</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="flex items-center"><span className="w-3 h-3 bg-lime-500 rounded mr-1.5"></span>B (Fair)</span>
-                <span className="text-gray-400 font-mono text-[10px]">21–40</span>
+                <span className="flex items-center"><span className="w-2.5 h-1.5 rounded-full bg-lime-500 mr-2" />Grade B</span>
+                <span className="text-slate-400 text-[10px]">21 - 40</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="flex items-center"><span className="w-3 h-3 bg-amber-500 rounded mr-1.5"></span>C (Moderate)</span>
-                <span className="text-gray-400 font-mono text-[10px]">41–60</span>
+                <span className="flex items-center"><span className="w-2.5 h-1.5 rounded-full bg-amber-500 mr-2" />Grade C</span>
+                <span className="text-slate-400 text-[10px]">41 - 60</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="flex items-center"><span className="w-3 h-3 bg-orange-500 rounded mr-1.5"></span>D (Poor)</span>
-                <span className="text-gray-400 font-mono text-[10px]">61–80</span>
+                <span className="flex items-center"><span className="w-2.5 h-1.5 rounded-full bg-orange-500 mr-2" />Grade D</span>
+                <span className="text-slate-400 text-[10px]">61 - 80</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="flex items-center"><span className="w-3 h-3 bg-rose-500 rounded mr-1.5"></span>E (Dangerous)</span>
-                <span className="text-gray-400 font-mono text-[10px]">81–100</span>
+                <span className="flex items-center"><span className="w-2.5 h-1.5 rounded-full bg-rose-500 mr-2" />Grade E</span>
+                <span className="text-slate-400 text-[10px]">81 - 100</span>
               </div>
-            </div>
-            <div className="text-[10px] text-gray-400 mt-1.5 pt-1 border-t hidden sm:block">
-              Click segment for detail &amp; 4-week timeline
             </div>
           </div>
         </div>

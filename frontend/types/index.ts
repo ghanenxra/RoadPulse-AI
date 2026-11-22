@@ -14,6 +14,9 @@ export interface RoadSegment {
   coords?: [number, number][];
   current_week: WeeklyMetric;
   weeks: WeeklyMetric[];
+  detections?: any[];
+  issues?: any[];
+  verifications?: any[];
 }
 
 export interface WeeklyMetric {

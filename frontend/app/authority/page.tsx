@@ -5,6 +5,7 @@ import { Topbar } from '@/components/layout/Topbar'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { api } from '@/lib/api'
 import { IssueReport } from '@/types'
 import { 
@@ -95,22 +96,22 @@ export default function AuthorityPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'reported':
-        return <Badge className="bg-blue-500 hover:bg-blue-600 text-white">Reported</Badge>
+        return <Badge className="bg-blue-500/10 text-blue-400 border border-blue-500/30 font-mono text-[11px]">Reported</Badge>
       case 'acknowledged':
-        return <Badge className="bg-purple-500 hover:bg-purple-600 text-white">Acknowledged</Badge>
+        return <Badge className="bg-purple-500/10 text-purple-400 border border-purple-500/30 font-mono text-[11px]">Acknowledged</Badge>
       case 'in_progress':
-        return <Badge className="bg-amber-500 hover:bg-amber-600 text-white">In Progress</Badge>
+        return <Badge className="bg-amber-500/10 text-amber-400 border border-amber-500/30 font-mono text-[11px]">In Progress</Badge>
       case 'repaired':
       case 'claimed_repaired':
-        return <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white">Claimed Repaired</Badge>
+        return <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 font-mono text-[11px]">Claimed Repaired</Badge>
       case 'verified':
-        return <Badge className="bg-teal-600 hover:bg-teal-700 text-white">Verified</Badge>
+        return <Badge className="bg-teal-500/10 text-teal-400 border border-teal-500/30 font-mono text-[11px]">Verified Fix</Badge>
       case 'overdue':
-        return <Badge className="bg-rose-600 hover:bg-rose-700 text-white">SLA Overdue</Badge>
+        return <Badge className="bg-rose-500/10 text-rose-400 border border-rose-500/30 font-mono text-[11px]">SLA Overdue</Badge>
       case 'failed_verification':
-        return <Badge className="bg-red-700 hover:bg-red-800 text-white">Failed Verification</Badge>
+        return <Badge className="bg-red-500/10 text-red-400 border border-red-500/30 font-mono text-[11px]">Failed Verification</Badge>
       default:
-        return <Badge variant="outline">{status}</Badge>
+        return <Badge variant="outline" className="font-mono text-[11px] text-slate-400 border-slate-700">{status}</Badge>
     }
   }
 
@@ -121,128 +122,149 @@ export default function AuthorityPage() {
       <div className="p-3 sm:p-6 max-w-7xl mx-auto space-y-4 sm:space-y-6">
         
         {notification && (
-          <div className={`p-4 rounded-lg flex items-center justify-between ${
-            notification.type === 'success' ? 'bg-emerald-50 border border-emerald-200 text-emerald-800' : 'bg-rose-50 border border-rose-200 text-rose-800'
+          <div className={`p-4 rounded-lg flex items-center justify-between border ${
+            notification.type === 'success' 
+              ? 'bg-emerald-950/40 border-emerald-800 text-emerald-300' 
+              : 'bg-rose-950/40 border-rose-800 text-rose-300'
           }`}>
             <div className="flex items-center space-x-2">
-              <Sparkles className="h-5 w-5 text-emerald-600" />
+              <Sparkles className="h-5 w-5 text-emerald-400 shrink-0" />
               <span className="text-sm font-medium">{notification.text}</span>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setNotification(null)}>Dismiss</Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => setNotification(null)}
+              className="text-slate-400 hover:text-slate-200 text-xs"
+            >
+              Dismiss
+            </Button>
           </div>
         )}
 
+        {/* Top Metric Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
-          <Card className="bg-slate-900 text-white p-3 shadow-sm">
-            <div className="text-[11px] text-slate-400 uppercase tracking-wider">Total Reports</div>
-            <div className="text-2xl font-bold mt-1">{total}</div>
+          <Card className="bg-[#0f172a] border border-slate-800 p-3 shadow-sm">
+            <div className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Total Reports</div>
+            <div className="text-2xl font-mono font-bold text-slate-100 mt-1">{total}</div>
           </Card>
-          <Card className="p-3 border-l-4 border-l-blue-500 shadow-sm">
-            <div className="text-[11px] text-gray-500 uppercase tracking-wider">Reported</div>
-            <div className="text-2xl font-bold text-blue-600 mt-1">{reported}</div>
+          <Card className="bg-[#090d16] border border-slate-800 p-3 shadow-sm">
+            <div className="text-[10px] font-mono text-blue-400 uppercase tracking-wider">Reported</div>
+            <div className="text-2xl font-mono font-bold text-blue-400 mt-1">{reported}</div>
           </Card>
-          <Card className="p-3 border-l-4 border-l-purple-500 shadow-sm">
-            <div className="text-[11px] text-gray-500 uppercase tracking-wider">Acknowledged</div>
-            <div className="text-2xl font-bold text-purple-600 mt-1">{acknowledged}</div>
+          <Card className="bg-[#090d16] border border-slate-800 p-3 shadow-sm">
+            <div className="text-[10px] font-mono text-purple-400 uppercase tracking-wider">Acknowledged</div>
+            <div className="text-2xl font-mono font-bold text-purple-400 mt-1">{acknowledged}</div>
           </Card>
-          <Card className="p-3 border-l-4 border-l-amber-500 shadow-sm">
-            <div className="text-[11px] text-gray-500 uppercase tracking-wider">In Progress</div>
-            <div className="text-2xl font-bold text-amber-600 mt-1">{inProgress}</div>
+          <Card className="bg-[#090d16] border border-slate-800 p-3 shadow-sm">
+            <div className="text-[10px] font-mono text-amber-400 uppercase tracking-wider">In Progress</div>
+            <div className="text-2xl font-mono font-bold text-amber-400 mt-1">{inProgress}</div>
           </Card>
-          <Card className="p-3 border-l-4 border-l-emerald-500 shadow-sm">
-            <div className="text-[11px] text-gray-500 uppercase tracking-wider">Claimed Fix</div>
-            <div className="text-2xl font-bold text-emerald-600 mt-1">{claimed}</div>
+          <Card className="bg-[#090d16] border border-slate-800 p-3 shadow-sm">
+            <div className="text-[10px] font-mono text-emerald-400 uppercase tracking-wider">Claimed Fix</div>
+            <div className="text-2xl font-mono font-bold text-emerald-400 mt-1">{claimed}</div>
           </Card>
-          <Card className="p-3 border-l-4 border-l-teal-600 shadow-sm">
-            <div className="text-[11px] text-gray-500 uppercase tracking-wider">Verified Fix</div>
-            <div className="text-2xl font-bold text-teal-600 mt-1">{verified}</div>
+          <Card className="bg-[#090d16] border border-slate-800 p-3 shadow-sm">
+            <div className="text-[10px] font-mono text-teal-400 uppercase tracking-wider">Verified Fix</div>
+            <div className="text-2xl font-mono font-bold text-teal-400 mt-1">{verified}</div>
           </Card>
-          <Card className="p-3 border-l-4 border-l-rose-600 shadow-sm">
-            <div className="text-[11px] text-gray-500 uppercase tracking-wider">Overdue SLA</div>
-            <div className="text-2xl font-bold text-rose-600 mt-1">{overdue}</div>
+          <Card className="bg-[#090d16] border border-slate-800 p-3 shadow-sm">
+            <div className="text-[10px] font-mono text-rose-400 uppercase tracking-wider">Overdue SLA</div>
+            <div className="text-2xl font-mono font-bold text-rose-400 mt-1">{overdue}</div>
           </Card>
         </div>
 
-        <Card className="shadow-sm">
-          <CardHeader className="pb-3 border-b">
-            <CardTitle className="text-sm uppercase tracking-wider text-gray-500">
+        {/* Closed-Loop Municipal Accountability Lifecycle */}
+        <Card className="bg-[#090d16] border border-slate-800 shadow-sm overflow-hidden">
+          <CardHeader className="bg-[#0f172a] pb-3 border-b border-slate-800/80">
+            <CardTitle className="text-xs font-mono font-semibold uppercase tracking-wider text-slate-300">
               Closed-Loop Municipal Accountability Lifecycle
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-4">
-            <div className="flex flex-wrap items-center justify-between text-xs gap-2 py-2">
-              <div className="flex items-center space-x-1.5 font-medium text-slate-700 bg-slate-100 px-3 py-1.5 rounded-full">
-                <span className="w-5 h-5 rounded-full bg-slate-800 text-white flex items-center justify-center text-[10px]">1</span>
+          <CardContent className="p-4 bg-[#090d16]">
+            <div className="flex flex-wrap items-center justify-between text-xs gap-2 py-1">
+              <div className="flex items-center space-x-1.5 font-medium text-slate-300 bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-full">
+                <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-[10px] font-mono">1</span>
                 <span>AI Pothole Detected</span>
               </div>
-              <ArrowRight className="h-4 w-4 text-gray-400 hidden sm:inline" />
-              <div className="flex items-center space-x-1.5 font-medium text-blue-700 bg-blue-50 px-3 py-1.5 rounded-full">
-                <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">2</span>
+              <ArrowRight className="h-4 w-4 text-slate-600 hidden sm:inline" />
+              <div className="flex items-center space-x-1.5 font-medium text-blue-400 bg-blue-950/40 border border-blue-800/60 px-3 py-1.5 rounded-full">
+                <span className="w-4 h-4 rounded-full bg-blue-900 text-blue-300 flex items-center justify-center text-[10px] font-mono">2</span>
                 <span>Auto-Report Sent</span>
               </div>
-              <ArrowRight className="h-4 w-4 text-gray-400 hidden sm:inline" />
-              <div className="flex items-center space-x-1.5 font-medium text-purple-700 bg-purple-50 px-3 py-1.5 rounded-full">
-                <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px]">3</span>
+              <ArrowRight className="h-4 w-4 text-slate-600 hidden sm:inline" />
+              <div className="flex items-center space-x-1.5 font-medium text-purple-400 bg-purple-950/40 border border-purple-800/60 px-3 py-1.5 rounded-full">
+                <span className="w-4 h-4 rounded-full bg-purple-900 text-purple-300 flex items-center justify-center text-[10px] font-mono">3</span>
                 <span>Acknowledged</span>
               </div>
-              <ArrowRight className="h-4 w-4 text-gray-400 hidden sm:inline" />
-              <div className="flex items-center space-x-1.5 font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full">
-                <span className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px]">4</span>
+              <ArrowRight className="h-4 w-4 text-slate-600 hidden sm:inline" />
+              <div className="flex items-center space-x-1.5 font-medium text-amber-400 bg-amber-950/40 border border-amber-800/60 px-3 py-1.5 rounded-full">
+                <span className="w-4 h-4 rounded-full bg-amber-900 text-amber-300 flex items-center justify-center text-[10px] font-mono">4</span>
                 <span>Crews In Progress</span>
               </div>
-              <ArrowRight className="h-4 w-4 text-gray-400 hidden sm:inline" />
-              <div className="flex items-center space-x-1.5 font-medium text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full">
-                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">5</span>
+              <ArrowRight className="h-4 w-4 text-slate-600 hidden sm:inline" />
+              <div className="flex items-center space-x-1.5 font-medium text-emerald-400 bg-emerald-950/40 border border-emerald-800/60 px-3 py-1.5 rounded-full">
+                <span className="w-4 h-4 rounded-full bg-emerald-900 text-emerald-300 flex items-center justify-center text-[10px] font-mono">5</span>
                 <span>Repair Claimed</span>
               </div>
-              <ArrowRight className="h-4 w-4 text-gray-400 hidden sm:inline" />
-              <div className="flex items-center space-x-1.5 font-medium text-teal-800 bg-teal-50 px-3 py-1.5 rounded-full">
-                <span className="w-5 h-5 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px]">6</span>
+              <ArrowRight className="h-4 w-4 text-slate-600 hidden sm:inline" />
+              <div className="flex items-center space-x-1.5 font-medium text-teal-400 bg-teal-950/40 border border-teal-800/60 px-3 py-1.5 rounded-full">
+                <span className="w-4 h-4 rounded-full bg-teal-900 text-teal-300 flex items-center justify-center text-[10px] font-mono">6</span>
                 <span>AI Survey Verified</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-sm">
-          <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        {/* Maintenance Action Items & SLA Audits */}
+        <Card className="bg-[#090d16] border border-slate-800 shadow-sm overflow-hidden">
+          <CardHeader className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-800/80 pb-3">
             <div>
-              <CardTitle className="text-lg">Maintenance Action Items & SLA Audits</CardTitle>
-              <CardDescription>Direct municipal issue dispatch and proof verification table</CardDescription>
+              <CardTitle className="text-base font-bold text-slate-100">Maintenance Action Items & SLA Audits</CardTitle>
+              <CardDescription className="text-xs text-slate-400">Direct municipal issue dispatch and proof verification table</CardDescription>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <span className="text-xs text-gray-500 font-medium">Filter:</span>
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="text-xs border rounded-md px-2.5 py-1.5 bg-white text-gray-700 font-medium focus:ring-2 focus:ring-blue-500"
+            <div className="flex items-center space-x-2 w-full sm:w-auto">
+              <span className="text-xs text-slate-400 font-mono">Filter:</span>
+              <div className="w-44">
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="h-8 text-xs bg-[#0f172a] border-slate-700 text-slate-200">
+                    <SelectValue placeholder="Select Filter" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#0f172a] border-slate-700 text-slate-200 text-xs">
+                    <SelectItem value="all">All Issues ({total})</SelectItem>
+                    <SelectItem value="open">Active / Unresolved</SelectItem>
+                    <SelectItem value="reported">Reported</SelectItem>
+                    <SelectItem value="acknowledged">Acknowledged</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="repaired">Claimed Repaired</SelectItem>
+                    <SelectItem value="verified">Verified Fix</SelectItem>
+                    <SelectItem value="overdue">SLA Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={loadData}
+                className="h-8 w-8 p-0 bg-[#0f172a] border-slate-700 text-slate-300 hover:bg-slate-800"
               >
-                <option value="all">All Issues ({total})</option>
-                <option value="open">Active / Unresolved</option>
-                <option value="reported">Reported</option>
-                <option value="in_progress">In Progress</option>
-                <option value="repaired">Claimed Repaired</option>
-                <option value="verified">Verified</option>
-                <option value="overdue">SLA Overdue</option>
-              </select>
-              <Button variant="outline" size="sm" onClick={loadData}>
                 <RefreshCw className="h-3.5 w-3.5" />
               </Button>
             </div>
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="p-12 text-center text-gray-500 flex items-center justify-center">
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+              <div className="p-12 text-center text-slate-400 flex items-center justify-center font-mono text-xs">
+                <Loader2 className="h-4 w-4 animate-spin mr-2 text-cyan-400" />
                 Loading authority issue database...
               </div>
             ) : filteredIssues.length === 0 ? (
-              <div className="p-12 text-center text-gray-500">No issues found matching filter.</div>
+              <div className="p-12 text-center text-slate-500 font-mono text-xs">No issues found matching filter.</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-gray-500 uppercase bg-gray-50/80 border-y">
+                  <thead className="text-[11px] font-mono text-slate-400 uppercase bg-[#0f172a] border-b border-slate-800">
                     <tr>
                       <th className="px-5 py-3">Issue ID</th>
                       <th className="px-5 py-3">Road Segment</th>
@@ -253,23 +275,25 @@ export default function AuthorityPage() {
                       <th className="px-5 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y">
+                  <tbody className="divide-y divide-slate-800/60 font-mono">
                     {filteredIssues.map((issue) => (
-                      <tr key={issue.issue_id} className="hover:bg-slate-50/60">
-                        <td className="px-5 py-4 font-mono font-bold text-xs text-slate-900">
+                      <tr key={issue.issue_id} className="hover:bg-slate-800/30 transition-colors">
+                        <td className="px-5 py-4 font-bold text-xs text-slate-200">
                           {issue.issue_id}
                         </td>
-                        <td className="px-5 py-4">
-                          <div className="font-semibold text-slate-900">{issue.road_name}</div>
-                          <div className="text-xs text-gray-500">{issue.sub_name}</div>
+                        <td className="px-5 py-4 font-sans">
+                          <div className="font-semibold text-slate-100">{issue.road_name}</div>
+                          <div className="text-xs text-slate-400">{issue.sub_name}</div>
                         </td>
-                        <td className="px-5 py-4">
-                          <div className="text-xs font-medium text-slate-800">{issue.authority_name}</div>
-                          <div className="text-[11px] text-gray-500 font-mono">{issue.authority_id}</div>
+                        <td className="px-5 py-4 font-sans">
+                          <div className="text-xs font-medium text-slate-200">{issue.authority_name}</div>
+                          <div className="text-[11px] text-slate-500 font-mono">{issue.authority_id}</div>
                         </td>
                         <td className="px-5 py-4">
                           <Badge variant="outline" className={
-                            issue.priority === 'High' ? 'border-rose-300 text-rose-700 bg-rose-50' : 'border-amber-300 text-amber-700 bg-amber-50'
+                            issue.priority === 'High' 
+                              ? 'border-rose-500/40 text-rose-400 bg-rose-950/20 text-[10px]' 
+                              : 'border-amber-500/40 text-amber-400 bg-amber-950/20 text-[10px]'
                           }>
                             {issue.priority}
                           </Badge>
@@ -277,22 +301,22 @@ export default function AuthorityPage() {
                         <td className="px-5 py-4">
                           {getStatusBadge(issue.status)}
                           {issue.status === 'overdue' && (
-                            <div className="text-[11px] text-rose-600 font-semibold mt-1">
+                            <div className="text-[10px] text-rose-400 font-semibold mt-1">
                               21-day SLA Breached
                             </div>
                           )}
                         </td>
-                        <td className="px-5 py-4 text-xs text-gray-600 font-mono">
+                        <td className="px-5 py-4 text-xs text-slate-400">
                           {issue.sent_at ? issue.sent_at.split('T')[0] : 'Pending'}
                         </td>
-                        <td className="px-5 py-4 text-right space-x-2">
+                        <td className="px-5 py-4 text-right space-x-2 font-sans">
                           {issue.status === 'reported' && (
                             <Button 
                               size="sm" 
                               variant="outline"
                               disabled={actionInProgress === issue.issue_id}
                               onClick={() => handleUpdateStatus(issue.issue_id, 'acknowledged')}
-                              className="text-xs h-8"
+                              className="text-xs h-8 bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
                             >
                               Acknowledge
                             </Button>
@@ -303,7 +327,7 @@ export default function AuthorityPage() {
                               variant="outline"
                               disabled={actionInProgress === issue.issue_id}
                               onClick={() => handleUpdateStatus(issue.issue_id, 'in_progress')}
-                              className="text-xs h-8 text-amber-700 border-amber-300"
+                              className="text-xs h-8 bg-amber-950/20 border-amber-800/60 text-amber-400 hover:bg-amber-900/40"
                             >
                               Dispatch Crew
                             </Button>
@@ -314,7 +338,7 @@ export default function AuthorityPage() {
                               variant="outline"
                               disabled={actionInProgress === issue.issue_id}
                               onClick={() => handleUpdateStatus(issue.issue_id, 'repaired')}
-                              className="text-xs h-8 text-emerald-700 border-emerald-300"
+                              className="text-xs h-8 bg-emerald-950/20 border-emerald-800/60 text-emerald-400 hover:bg-emerald-900/40"
                             >
                               Claim Repaired
                             </Button>
@@ -324,14 +348,14 @@ export default function AuthorityPage() {
                               size="sm" 
                               disabled={actionInProgress === issue.issue_id}
                               onClick={() => handleTriggerVerification(issue.issue_id)}
-                              className="text-xs h-8 bg-teal-600 hover:bg-teal-700 text-white"
+                              className="text-xs h-8 bg-teal-600 hover:bg-teal-500 text-white font-medium"
                             >
                               Verify Repair
                             </Button>
                           )}
                           {issue.status === 'verified' && (
-                            <span className="text-xs text-teal-700 font-medium inline-flex items-center">
-                              <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-teal-600" />
+                            <span className="text-xs text-teal-400 font-medium inline-flex items-center font-mono">
+                              <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-teal-400" />
                               Audited
                             </span>
                           )}
@@ -345,29 +369,30 @@ export default function AuthorityPage() {
           </CardContent>
         </Card>
 
+        {/* Authority Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {summary?.by_authority?.map((auth: any) => (
-            <Card key={auth.authority_id} className="p-4 shadow-sm border hover:border-slate-300 transition-colors">
+            <Card key={auth.authority_id} className="bg-[#090d16] p-4 border border-slate-800 hover:border-slate-700 transition-colors">
               <div className="flex items-center space-x-2 mb-2">
-                <Building2 className="h-4 w-4 text-slate-700" />
-                <div className="font-semibold text-sm text-slate-900 truncate">{auth.name}</div>
+                <Building2 className="h-4 w-4 text-cyan-400" />
+                <div className="font-semibold text-sm text-slate-100 truncate">{auth.name}</div>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t mt-2">
+              <div className="grid grid-cols-2 gap-2 text-xs pt-2 border-t border-slate-800 mt-2 font-mono">
                 <div>
-                  <span className="text-gray-500">Open Issues:</span>
-                  <span className="font-bold ml-1 text-slate-900">{auth.open_issues}</span>
+                  <span className="text-slate-400">Open:</span>
+                  <span className="font-bold ml-1 text-slate-200">{auth.open_issues}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Overdue:</span>
-                  <span className="font-bold ml-1 text-rose-600">{auth.overdue_issues}</span>
+                  <span className="text-slate-400">Overdue:</span>
+                  <span className="font-bold ml-1 text-rose-400">{auth.overdue_issues}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Verified Fixes:</span>
-                  <span className="font-bold ml-1 text-teal-600">{auth.verified_repairs}</span>
+                  <span className="text-slate-400">Verified:</span>
+                  <span className="font-bold ml-1 text-teal-400">{auth.verified_repairs}</span>
                 </div>
                 <div>
-                  <span className="text-gray-500">Avg SLA:</span>
-                  <span className="font-bold ml-1 text-slate-700">
+                  <span className="text-slate-400">Avg SLA:</span>
+                  <span className="font-bold ml-1 text-slate-300">
                     {auth.avg_response_days !== null && auth.avg_response_days !== undefined
                       ? `${auth.avg_response_days}d`
                       : 'N/A'}
